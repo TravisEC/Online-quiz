@@ -8403,7 +8403,7 @@ function lqRenderLobby(){
   h+='<div style="font-weight:900;font-size:1rem;">👥 Waiting — <span style="color:#22c55e;">'+players.length+'</span> joined</div>';
   h+='<div style="display:flex;gap:8px;">';
   h+='<button class="btn btn-ghost btn-sm" onclick="lqRefreshLobby()">🔄 Refresh</button>';
-  h+='<button class="btn btn-green" onclick="lqStartGame()" '+(players.length===0?'disabled':'')+'>▶ Start Game</button>';
+  h+='<button class="btn btn-green" onclick="lqStartGame()">▶ Start Game</button>';
   h+='<button class="btn btn-red btn-sm" onclick="lqEndSession()">✕ Cancel</button>';
   h+='</div></div>';
 
