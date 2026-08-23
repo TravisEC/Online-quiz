@@ -123,7 +123,7 @@ async function joinGame(){
 
   setStatus('Joining...','');
   try{
-    var r=await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},
+    var r=await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({action:'lqJoin',pin:pin,studentId:studentId,name:name.trim(),cls:cls.trim()})});
     var j=await r.json();
     if(!j.ok){setStatus(j.error||'Could not join.','error');return;}
@@ -244,7 +244,7 @@ async function submitMatchAns(){
 
 async function sendAnswer(answer,elapsed){
   try{
-    await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},
+    await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
       body:JSON.stringify({
         action:'lqSubmitAnswer',
         pin:sessionPin,
