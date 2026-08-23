@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<title>IT ExamPro — Student Exam</title>
+<style>
+:root{--dark:#0f172a;--dark2:#1e293b;--dark3:#334155;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--purple:#a855f7;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--dark);color:#e2e8f0;min-height:100vh;}
+
+/* ── Header ── */
+.header{background:linear-gradient(135deg,#1e3a5f,#1e293b);border-bottom:2px solid #334155;padding:1rem 1.5rem;position:sticky;top:0;z-index:100;}
+.header-inner{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;}
+.header-title{font-size:1.1rem;font-weight:900;color:#fff;}
+.header-sub{font-size:.75rem;color:#94a3b8;margin-top:2px;}
+.timer-box{background:#0f172a;border:2px solid var(--yellow);border-radius:10px;padding:.4rem 1rem;font-size:1.3rem;font-weight:900;font-family:monospace;color:var(--yellow);}
+.timer-box.danger{border-color:var(--red);color:var(--red);animation:pulse .5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+/* ── Main ── */
+.main{max-width:900px;margin:0 auto;padding:1.5rem;}
+
+/* ── Student Info Card ── */
+.info-card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;}
+.info-card h2{font-size:1rem;font-weight:900;color:#fff;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--dark3);}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+.fi-label{font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
+.fi{width:100%;padding:10px 14px;border:2px solid var(--dark3);border-radius:9px;background:#0f172a;color:#fff;font-size:.95rem;font-weight:600;outline:none;transition:border-color .2s;}
+.fi:focus{border-color:var(--blue);}
+select.fi{cursor:pointer;}
+select.fi option{background:var(--dark2);}
+select.fi optgroup{color:#94a3b8;font-size:.75rem;}
+
+/* ── Section ── */
+.section{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:1.5rem;margin-bottom:1.2rem;}
+.section-heading{display:flex;align-items:center;gap:.7rem;margin-bottom:1.2rem;padding-bottom:.7rem;border-bottom:1px solid var(--dark3);}
+.section-heading h3{font-size:1rem;font-weight:900;color:#fff;}
+.section-badge{background:var(--blue);color:#fff;font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:999px;}
+.section-marks{font-size:.75rem;color:#64748b;margin-left:auto;}
+
+/* ── Question ── */
+.question{margin-bottom:1.4rem;padding-bottom:1.4rem;border-bottom:1px solid #1e293b;}
+.question:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.q-num{font-size:.72rem;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:.3rem;}
+.q-text{font-size:.95rem;font-weight:700;color:#e2e8f0;margin-bottom:.8rem;line-height:1.5;}
+.q-marks{font-size:.72rem;color:var(--yellow);font-weight:700;margin-bottom:.6rem;}
+
+/* ── MCQ options ── */
+.opts{display:flex;flex-direction:column;gap:.5rem;}
+.opt{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;border:2px solid var(--dark3);border-radius:9px;cursor:pointer;transition:all .15s;}
+.opt:hover{border-color:var(--blue);background:rgba(59,130,246,.08);}
+.opt input[type=radio],.opt input[type=checkbox]{accent-color:var(--blue);width:16px;height:16px;flex-shrink:0;}
+.opt.selected{border-color:var(--blue);background:rgba(59,130,246,.12);}
+.opt-label{font-size:.9rem;font-weight:600;color:#e2e8f0;}
+.opt-letter{font-size:.8rem;font-weight:900;color:var(--blue);min-width:20px;}
+
+/* ── TF ── */
+.tf-opts{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+.tf-btn{padding:1rem;border:2px solid var(--dark3);border-radius:10px;font-weight:800;font-size:.95rem;cursor:pointer;text-align:center;transition:all .15s;background:transparent;color:#e2e8f0;}
+.tf-btn:hover,.tf-btn.selected{color:#fff;}
+.tf-true:hover,.tf-true.selected{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green);}
+.tf-false:hover,.tf-false.selected{border-color:var(--red);background:rgba(239,68,68,.15);color:var(--red);}
+
+/* ── Fill/Essay ── */
+.fi-ans{width:100%;padding:10px 14px;border:2px solid var(--dark3);border-radius:9px;background:#0f172a;color:#fff;font-size:.95rem;font-weight:600;outline:none;transition:border-color .2s;resize:vertical;}
+.fi-ans:focus{border-color:var(--blue);}
+
+/* ── Match ── */
+.match-row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:.5rem;align-items:center;}
+.match-left{font-size:.88rem;font-weight:700;color:#e2e8f0;background:var(--dark3);padding:.6rem .9rem;border-radius:8px;}
+.match-right select{width:100%;}
+
+/* ── Submit bar ── */
+.submit-bar{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:1.2rem 1.5rem;margin-bottom:2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;}
+.progress-info{font-size:.82rem;color:#64748b;font-weight:700;}
+.progress-info span{color:#fff;}
+.btn-submit{padding:12px 32px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:900;cursor:pointer;transition:all .15s;font-family:inherit;}
+.btn-submit:hover{background:#16a34a;transform:translateY(-1px);}
+.btn-submit:disabled{background:#334155;color:#64748b;cursor:not-allowed;transform:none;}
+
+/* ── Result screen ── */
+.result-screen{text-align:center;padding:3rem 1.5rem;}
+.result-icon{font-size:4rem;margin-bottom:1rem;}
+.result-score{font-size:3.5rem;font-weight:900;color:var(--yellow);margin-bottom:.5rem;}
+.result-label{font-size:1rem;color:#94a3b8;margin-bottom:2rem;}
+.result-card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:1.5rem;max-width:400px;margin:0 auto;}
+.result-row{display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--dark3);font-size:.88rem;}
+.result-row:last-child{border-bottom:none;}
+.result-row .label{color:#94a3b8;font-weight:600;}
+.result-row .val{color:#fff;font-weight:800;}
+
+/* ── Alert ── */
+.alert{padding:1rem 1.5rem;border-radius:10px;font-weight:700;font-size:.88rem;margin-bottom:1rem;display:none;}
+.alert.show{display:block;}
+.alert-red{background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);}
+.alert-green{background:rgba(34,197,94,.15);border:1px solid var(--green);color:var(--green);}
+
+@media(max-width:600px){
+  .info-grid{grid-template-columns:1fr;}
+  .tf-opts{grid-template-columns:1fr 1fr;}
+  .match-row{grid-template-columns:1fr;}
+  .header-inner{flex-direction:column;align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+
+<!-- EXAM CONFIG — injected by admin panel Save & Push -->
+var EXAM_CONFIG = {
+  meta:{title:'Sample Exam',term:'Term 1',duration:0,marks:20,subject:'Information Technology',grade:'9'},
+  mcq:[],tf:[],trueFalse:[],fillBlank:[],matching:[],multiSelect:[],essay:[]
+};
+
+<div id="app"></div>
+
+<script>
+/* ── CONFIG ── */
+var SURL = 'https://script.google.com/macros/s/AKfycbxrrDxbVlTP1u5oyR776zVOfG3gTMK1mIPFeh9qFIbTFYaOA8RL5tFseH99-c0JTq7p/exec';
+var ALL_CLS = ['7-1','7-2','7-3','7-4','8-1','8-2','8-3','8-4','9-1','9-2','9-3','9-4','10 Arts','10 Business','10 TVET 1','10 TVET 2','10 CVQ 1','10 CVQ 2','11 Arts','11 Business','11 TVET 1','11 TVET 2','11 CVQ 1','11 CVQ 2'];
+var L = ['A','B','C','D','E','F'];
+
+/* ── STATE ── */
+var answers = {};
+var submitted = false;
+var timerInterval = null;
+var timeLeft = 0;
+var autoScore = 0;
+
+/* ── NORMALIZE CONFIG ── */
+function getCfg(){
+  var c = EXAM_CONFIG;
+  return {
+    meta:     c.meta||{},
+    mcq:      c.mcq||[],
+    tf:       c.trueFalse||c.tf||[],
+    fill:     c.fillBlank||c.fill||[],
+    match:    c.matching||c.match||[],
+    ms:       c.multiSelect||c.ms||[],
+    essay:    c.essay||[]
+  };
+}
+
+/* ── RENDER ── */
+function render(){
+  var el = document.getElementById('app');
+  if(submitted){ el.innerHTML = renderResult(); return; }
+  var cfg = getCfg();
+  var meta = cfg.meta;
+  var h = '';
+
+  /* Header */
+  h += '<div class="header"><div class="header-inner">';
+  h += '<div><div class="header-title">'+esc(meta.title||'Exam')+'</div>';
+  h += '<div class="header-sub">'+esc(meta.subject||'')+(meta.grade?' &nbsp;·&nbsp; Grade '+esc(meta.grade):'')+(meta.term?' &nbsp;·&nbsp; '+esc(meta.term):'')+'</div></div>';
+  h += '<div class="timer-box" id="timer-display">--:--</div>';
+  h += '</div></div>';
+
+  h += '<div class="main">';
+  h += '<div id="alert-box" class="alert"></div>';
+
+  /* Student info */
+  h += '<div class="info-card">';
+  h += '<h2>📋 Student Information</h2>';
+  h += '<div class="info-grid">';
+  h += '<div><div class="fi-label">Full Name</div><input class="fi" id="s-name" type="text" placeholder="e.g. John Smith" autocomplete="off"></div>';
+  h += '<div><div class="fi-label">Student ID</div><input class="fi" id="s-id" type="text" placeholder="e.g. 2024001" autocomplete="off"></div>';
+  h += '<div><div class="fi-label">Class</div>';
+  h += '<select class="fi" id="s-cls"><option value="">-- Select Class --</option>';
+  h += '<optgroup label="Grade 7"><option>7-1</option><option>7-2</option><option>7-3</option><option>7-4</option></optgroup>';
+  h += '<optgroup label="Grade 8"><option>8-1</option><option>8-2</option><option>8-3</option><option>8-4</option></optgroup>';
+  h += '<optgroup label="Grade 9"><option>9-1</option><option>9-2</option><option>9-3</option><option>9-4</option></optgroup>';
+  h += '<optgroup label="Grade 10"><option>10 Arts</option><option>10 Business</option><option>10 TVET 1</option><option>10 TVET 2</option><option>10 CVQ 1</option><option>10 CVQ 2</option></optgroup>';
+  h += '<optgroup label="Grade 11"><option>11 Arts</option><option>11 Business</option><option>11 TVET 1</option><option>11 TVET 2</option><option>11 CVQ 1</option><option>11 CVQ 2</option></optgroup>';
+  h += '</select></div>';
+  h += '<div><div class="fi-label">Date</div><input class="fi" id="s-date" type="date" value="'+new Date().toISOString().split("T")[0]+'"></div>';
+  h += '</div></div>';
+
+  /* Sections */
+  var qNum = 0;
+  var totalMarks = 0;
+
+  /* MCQ */
+  if(cfg.mcq.length){
+    var sec_marks = cfg.mcq.reduce(function(s,q){return s+(q.marks||1);},0);
+    totalMarks += sec_marks;
+    h += '<div class="section">';
+    h += '<div class="section-heading"><h3>Section A — Multiple Choice</h3><span class="section-badge">MCQ</span><span class="section-marks">'+sec_marks+' marks</span></div>';
+    cfg.mcq.forEach(function(q,i){
+      qNum++;
+      h += renderMCQ(q, i, qNum);
+    });
+    h += '</div>';
+  }
+
+  /* True/False */
+  if(cfg.tf.length){
+    var sec_marks = cfg.tf.reduce(function(s,q){return s+(q.marks||1);},0);
+    totalMarks += sec_marks;
+    h += '<div class="section">';
+    h += '<div class="section-heading"><h3>Section B — True or False</h3><span class="section-badge">T/F</span><span class="section-marks">'+sec_marks+' marks</span></div>';
+    cfg.tf.forEach(function(q,i){
+      qNum++;
+      h += renderTF(q, i, qNum);
+    });
+    h += '</div>';
+  }
+
+  /* Fill in the Blank */
+  if(cfg.fill.length){
+    var sec_marks = cfg.fill.reduce(function(s,q){return s+(q.marks||1);},0);
+    totalMarks += sec_marks;
+    h += '<div class="section">';
+    h += '<div class="section-heading"><h3>Section C — Fill in the Blank</h3><span class="section-badge">Fill</span><span class="section-marks">'+sec_marks+' marks</span></div>';
+    cfg.fill.forEach(function(q,i){
+      qNum++;
+      h += renderFill(q, i, qNum);
+    });
+    h += '</div>';
+  }
+
+  /* Matching */
+  if(cfg.match.length){
+    var sec_marks = cfg.match.reduce(function(s,q){return s+(q.marks||1);},0);
+    totalMarks += sec_marks;
+    h += '<div class="section">';
+    h += '<div class="section-heading"><h3>Section D — Matching</h3><span class="section-badge">Match</span><span class="section-marks">'+sec_marks+' marks</span></div>';
+    cfg.match.forEach(function(q,i){
+      qNum++;
+      h += renderMatch(q, i, qNum);
+    });
+    h += '</div>';
+  }
+
+  /* Multi-Select */
+  if(cfg.ms.length){
+    var sec_marks = cfg.ms.reduce(function(s,q){return s+(q.marks||1);},0);
+    totalMarks += sec_marks;
+    h += '<div class="section">';
+    h += '<div class="section-heading"><h3>Section E — Multiple Select</h3><span class="section-badge">Multi</span><span class="section-marks">'+sec_marks+' marks</span></div>';
+    cfg.ms.forEach(function(q,i){
+      qNum++;
+      h += renderMS(q, i, qNum);
+    });
+    h += '</div>';
+  }
+
+  /* Essay */
+  if(cfg.essay.length){
+    var sec_marks = cfg.essay.reduce(function(s,q){return s+(q.marks||1);},0);
+    totalMarks += sec_marks;
+    h += '<div class="section">';
+    h += '<div class="section-heading"><h3>Section F — Short Answer / Essay</h3><span class="section-badge">Essay</span><span class="section-marks">'+sec_marks+' marks</span></div>';
+    cfg.essay.forEach(function(q,i){
+      qNum++;
+      h += renderEssay(q, i, qNum);
+    });
+    h += '</div>';
+  }
+
+  /* Submit bar */
+  h += '<div class="submit-bar">';
+  h += '<div class="progress-info">Total: <span>'+totalMarks+' marks</span> &nbsp;·&nbsp; Questions: <span>'+qNum+'</span></div>';
+  h += '<button class="btn-submit" onclick="submitExam()">Submit Exam ✓</button>';
+  h += '</div>';
+
+  h += '</div>'; /* main */
+  el.innerHTML = h;
+
+  /* Wire option clicks */
+  wireOptions();
+  /* Only start timer if duration is set in EXAM_CONFIG */
+  if(meta.duration && parseInt(meta.duration) > 0){
+    startTimer(parseInt(meta.duration));
+  } else {
+    var td = document.getElementById('timer-display');
+    if(td) td.textContent = 'No limit';
+  }
+}
+
+/* ── QUESTION RENDERERS ── */
+function renderMCQ(q,i,num){
+  var h = '<div class="question">';
+  h += '<div class="q-num">Question '+num+'</div>';
+  h += '<div class="q-text">'+esc(q.q||q.title||'')+'</div>';
+  h += '<div class="q-marks">('+( q.marks||1)+' mark'+(q.marks>1?'s':'')+')</div>';
+  h += '<div class="opts" id="mcq-opts-'+i+'">';
+  (q.opts||[]).forEach(function(opt,j){
+    h += '<label class="opt" data-type="mcq" data-qi="'+i+'" data-val="'+j+'">';
+    h += '<input type="radio" name="mcq-'+i+'" value="'+j+'">';
+    h += '<span class="opt-letter">'+L[j]+'</span>';
+    h += '<span class="opt-label">'+esc(opt)+'</span></label>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+function renderTF(q,i,num){
+  var h = '<div class="question">';
+  h += '<div class="q-num">Question '+num+'</div>';
+  h += '<div class="q-text">'+esc(q.q||q.title||'')+'</div>';
+  h += '<div class="q-marks">('+(q.marks||1)+' mark'+(q.marks>1?'s':'')+')</div>';
+  h += '<div class="tf-opts">';
+  h += '<button class="tf-btn tf-true" data-type="tf" data-qi="'+i+'" data-val="true" onclick="selectTF(this,\'tf\','+i+',true)">✓ True</button>';
+  h += '<button class="tf-btn tf-false" data-type="tf" data-qi="'+i+'" data-val="false" onclick="selectTF(this,\'tf\','+i+',false)">✗ False</button>';
+  h += '</div></div>';
+  return h;
+}
+
+function renderFill(q,i,num){
+  var h = '<div class="question">';
+  h += '<div class="q-num">Question '+num+'</div>';
+  h += '<div class="q-text">'+esc(q.q||q.title||'')+'</div>';
+  h += '<div class="q-marks">('+(q.marks||1)+' mark'+(q.marks>1?'s':'')+')</div>';
+  h += '<input class="fi-ans" id="fill-'+i+'" type="text" placeholder="Type your answer here..." oninput="answers[\'fill_\'+'+i+']=this.value">';
+  h += '</div>';
+  return h;
+}
+
+function renderMatch(q,i,num){
+  var h = '<div class="question">';
+  h += '<div class="q-num">Question '+num+' — Match each item</div>';
+  h += '<div class="q-text">'+esc(q.title||q.q||'Match the following:')+'</div>';
+  h += '<div class="q-marks">('+(q.marks||1)+' mark'+(q.marks>1?'s':'')+')</div>';
+  var rights = (q.pairs||[]).map(function(p){return p.right;}).sort(function(){return Math.random()-.5;});
+  (q.pairs||[]).forEach(function(p,j){
+    h += '<div class="match-row">';
+    h += '<div class="match-left">'+esc(p.left)+'</div>';
+    h += '<select class="fi match-right" id="match-'+i+'-'+j+'" onchange="setMatchAns('+i+','+j+',this.value)">';
+    h += '<option value="">-- Select --</option>';
+    rights.forEach(function(r){ h += '<option value="'+esc(r)+'">'+esc(r)+'</option>'; });
+    h += '</select></div>';
+  });
+  h += '</div>';
+  return h;
+}
+
+function renderMS(q,i,num){
+  var h = '<div class="question">';
+  h += '<div class="q-num">Question '+num+' — Select all that apply</div>';
+  h += '<div class="q-text">'+esc(q.q||q.title||'')+'</div>';
+  h += '<div class="q-marks">('+(q.marks||1)+' mark'+(q.marks>1?'s':'')+')</div>';
+  h += '<div class="opts" id="ms-opts-'+i+'">';
+  (q.opts||[]).forEach(function(opt,j){
+    h += '<label class="opt" data-type="ms" data-qi="'+i+'" data-val="'+j+'">';
+    h += '<input type="checkbox" name="ms-'+i+'" value="'+j+'">';
+    h += '<span class="opt-letter">'+L[j]+'</span>';
+    h += '<span class="opt-label">'+esc(opt)+'</span></label>';
+  });
+  h += '</div></div>';
+  return h;
+}
+
+function renderEssay(q,i,num){
+  var h = '<div class="question">';
+  h += '<div class="q-num">Question '+num+'</div>';
+  h += '<div class="q-text">'+esc(q.q||q.title||'')+'</div>';
+  if(q.key) h += '<div style="font-size:.78rem;color:#64748b;margin-bottom:.5rem;">Hint: '+esc(q.key)+'</div>';
+  h += '<div class="q-marks">('+(q.marks||1)+' mark'+(q.marks>1?'s':'')+')</div>';
+  h += '<textarea class="fi-ans" id="essay-'+i+'" rows="4" placeholder="Write your answer here..." oninput="answers[\'essay_\'+'+i+']=this.value"></textarea>';
+  h += '</div>';
+  return h;
+}
+
+/* ── WIRE CLICKS ── */
+function wireOptions(){
+  document.querySelectorAll('.opt').forEach(function(el){
+    el.addEventListener('click', function(){
+      var type = el.dataset.type;
+      var qi   = parseInt(el.dataset.qi);
+      var val  = parseInt(el.dataset.val);
+      if(type==='mcq'){
+        document.querySelectorAll('#mcq-opts-'+qi+' .opt').forEach(function(o){o.classList.remove('selected');});
+        el.classList.add('selected');
+        el.querySelector('input').checked = true;
+        answers['mcq_'+qi] = val;
+      } else if(type==='ms'){
+        el.classList.toggle('selected');
+        var cb = el.querySelector('input');
+        cb.checked = !cb.checked;
+        var sel = [];
+        document.querySelectorAll('#ms-opts-'+qi+' input:checked').forEach(function(c){sel.push(parseInt(c.value));});
+        answers['ms_'+qi] = sel;
+      }
+    });
+  });
+}
+
+function selectTF(btn, type, qi, val){
+  var parent = btn.parentElement;
+  parent.querySelectorAll('.tf-btn').forEach(function(b){b.classList.remove('selected');});
+  btn.classList.add('selected');
+  answers['tf_'+qi] = val;
+}
+
+function setMatchAns(qi, j, val){
+  if(!answers['match_'+qi]) answers['match_'+qi]={};
+  answers['match_'+qi][j] = val;
+}
+
+/* ── TIMER ── */
+function startTimer(minutes){
+  timeLeft = parseInt(minutes) * 60;
+  if(timerInterval) clearInterval(timerInterval);
+  updateTimerDisplay();
+  timerInterval = setInterval(function(){
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft <= 0){ clearInterval(timerInterval); submitExam(true); }
+  }, 1000);
+}
+
+function updateTimerDisplay(){
+  var el = document.getElementById('timer-display');
+  if(!el) return;
+  var m = Math.floor(timeLeft/60);
+  var s = timeLeft % 60;
+  el.textContent = (m<10?'0':'')+m+':'+(s<10?'0':'')+s;
+  if(timeLeft <= 120){ el.classList.add('danger'); } else { el.classList.remove('danger'); }
+}
+
+/* ── AUTO SCORE ── */
+function calcAutoScore(){
+  var cfg = getCfg(); var score = 0;
+  cfg.mcq.forEach(function(q,i){
+    if(answers['mcq_'+i]!==undefined && answers['mcq_'+i]===q.ans) score+=(q.marks||1);
+  });
+  cfg.tf.forEach(function(q,i){
+    if(answers['tf_'+i]!==undefined && String(answers['tf_'+i])===String(q.ans)) score+=(q.marks||1);
+  });
+  cfg.fill.forEach(function(q,i){
+    var a=String(answers['fill_'+i]||'').trim().toLowerCase();
+    var k=String(q.ans||'').trim().toLowerCase();
+    if(a&&a===k) score+=(q.marks||1);
+  });
+  cfg.ms.forEach(function(q,i){
+    var given=(answers['ms_'+i]||[]).slice().sort().join(',');
+    var correct=(q.correct||[]).slice().sort().join(',');
+    if(given===correct) score+=(q.marks||1);
+  });
+  return score;
+}
+
+function calcTotalMarks(){
+  var cfg = getCfg();
+  return ['mcq','tf','fill','match','ms','essay'].reduce(function(s,t){
+    return s+(cfg[t]||[]).reduce(function(ss,q){return ss+(q.marks||1);},0);
+  },0);
+}
+
+/* ── SUBMIT ── */
+async function submitExam(auto){
+  if(submitted) return;
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+
+  var name = (document.getElementById('s-name')||{}).value||'';
+  var sid  = (document.getElementById('s-id')||{}).value||'';
+  var cls  = (document.getElementById('s-cls')||{}).value||'';
+  var date = (document.getElementById('s-date')||{}).value||'';
+
+  if(!auto){
+    if(!name.trim()){ showAlert('Please enter your full name.','red'); return; }
+    if(!cls){ showAlert('Please select your class.','red'); return; }
+  }
+
+  var cfg = getCfg();
+  var meta = cfg.meta;
+  autoScore = calcAutoScore();
+  var totalMarks = calcTotalMarks();
+
+  /* Build payload */
+  var payload = {
+    'Exam Title':  meta.title||'Exam',
+    'Exam Grade':  meta.grade||'',
+    'Exam Term':   meta.term||'',
+    'Name':        name.trim()||'(No name)',
+    'Student ID':  sid.trim(),
+    'Class':       cls,
+    'Date':        date,
+    'Auto Score':  autoScore,
+    'Total Marks': totalMarks
+  };
+
+  /* MCQ answers */
+  cfg.mcq.forEach(function(q,i){
+    var val = answers['mcq_'+i];
+    payload['MCQ Q'+(i+1)] = val!==undefined ? L[val]+') '+(q.opts||[])[val] : '(No answer)';
+  });
+  /* TF answers */
+  cfg.tf.forEach(function(q,i){
+    var val = answers['tf_'+i];
+    payload['TF Q'+(i+1)] = val!==undefined ? (val?'True':'False') : '(No answer)';
+  });
+  /* Fill answers */
+  cfg.fill.forEach(function(q,i){
+    payload['Fill Q'+(i+1)] = answers['fill_'+i]||'(No answer)';
+  });
+  /* Match answers */
+  cfg.match.forEach(function(q,i){
+    var m = answers['match_'+i]||{};
+    var ans = (q.pairs||[]).map(function(p,j){ return p.left+' → '+(m[j]||'?'); }).join(' | ');
+    payload['Match Q'+(i+1)] = ans||'(No answer)';
+  });
+  /* MS answers */
+  cfg.ms.forEach(function(q,i){
+    var val = answers['ms_'+i]||[];
+    payload['MS Q'+(i+1)] = val.length ? val.map(function(v){return L[v]+') '+(q.opts||[])[v];}).join(', ') : '(No answer)';
+  });
+  /* Essay answers */
+  cfg.essay.forEach(function(q,i){
+    payload['Essay Q'+(i+1)] = answers['essay_'+i]||'(No answer)';
+  });
+
+  /* Submit to Apps Script */
+  showAlert('Submitting...','');
+  try{
+    var params = Object.keys(payload).map(function(k){
+      return encodeURIComponent(k)+'='+encodeURIComponent(payload[k]);
+    }).join('&');
+    await fetch(SURL+'?action=submit&'+params+'&t='+Date.now(), {method:'GET', mode:'cors'});
+  }catch(e){ console.warn('Submit error:', e); }
+
+  submitted = true;
+  render();
+}
+
+/* ── RESULT SCREEN ── */
+function renderResult(){
+  var cfg = getCfg();
+  var meta = cfg.meta;
+  var totalMarks = calcTotalMarks();
+  var pct = totalMarks>0 ? Math.round(autoScore/totalMarks*100) : 0;
+  var grade = pct>=80?'A':pct>=70?'B':pct>=60?'C':pct>=50?'D':'F';
+  var emoji = pct>=80?'🏆':pct>=60?'🎉':pct>=50?'👍':'📚';
+
+  var h = '<div class="header"><div class="header-inner">';
+  h += '<div><div class="header-title">'+esc(meta.title||'Exam')+'</div>';
+  h += '<div class="header-sub">Submitted successfully</div></div>';
+  h += '</div></div>';
+  h += '<div class="main"><div class="result-screen">';
+  h += '<div class="result-icon">'+emoji+'</div>';
+  h += '<div class="result-score">'+autoScore+' / '+totalMarks+'</div>';
+  h += '<div class="result-label">Auto-marked score &nbsp;·&nbsp; '+pct+'% &nbsp;·&nbsp; Grade '+grade+'</div>';
+  h += '<div class="result-card">';
+  h += '<div class="result-row"><span class="label">Name</span><span class="val" id="r-name">—</span></div>';
+  h += '<div class="result-row"><span class="label">Class</span><span class="val" id="r-cls">—</span></div>';
+  h += '<div class="result-row"><span class="label">Subject</span><span class="val">'+esc(meta.subject||'IT')+'</span></div>';
+  h += '<div class="result-row"><span class="label">Term</span><span class="val">'+esc(meta.term||'')+'</span></div>';
+  h += '<div class="result-row"><span class="label">Essay / Matching</span><span class="val" style="color:var(--yellow);">Marked by teacher</span></div>';
+  h += '</div></div></div>';
+  return h;
+}
+
+/* ── HELPERS ── */
+function showAlert(msg, type){
+  var el = document.getElementById('alert-box');
+  if(!el) return;
+  el.textContent = msg;
+  el.className = 'alert show' + (type==='red'?' alert-red':type==='green'?' alert-green':'');
+  if(type) setTimeout(function(){ el.classList.remove('show'); }, 4000);
+}
+
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ── INIT ── */
+render();
+
+/* Fill in name/class on result screen after render */
+setTimeout(function(){
+  var rn=document.getElementById('r-name');
+  var rc=document.getElementById('r-cls');
+  if(rn) rn.textContent=localStorage.getItem('lastStudentName')||'—';
+  if(rc) rc.textContent=localStorage.getItem('lastStudentCls')||'—';
+},100);
+</script>
+</body>
+</html>
