@@ -114,233 +114,8 @@ select.fi optgroup{color:#94a3b8;font-size:.75rem;}
 <script>
 /* EXAM CONFIG — injected by admin panel Save & Push */
 var EXAM_CONFIG = {
-  "meta": {
-    "title": "Grade 9 Information Technology – Mid-Term Examination",
-    "term": "Term 3",
-    "duration": 45,
-    "marks": 40,
-    "subject": "Information Technology",
-    "grade": "9"
-  },
-  "mcq": [
-    {
-      "q": "Buying and selling goods online is called:",
-      "opts": [
-        "E-commerce",
-        "Telecommuting",
-        "E-surveillance",
-        "Gaming"
-      ],
-      "ans": 0,
-      "marks": 2
-    },
-    {
-      "q": "Working from home using a computer is called:",
-      "opts": [
-        "E-commerce",
-        "Telecommuting",
-        "Biometrics",
-        "Data capture"
-      ],
-      "ans": 1,
-      "marks": 2
-    },
-    {
-      "q": "Which of these is hardware used in a business?",
-      "opts": [
-        "Microsoft Word",
-        "Printer",
-        "Virus",
-        "Password"
-      ],
-      "ans": 1,
-      "marks": 2
-    },
-    {
-      "q": "A supermarket barcode scanner at checkout is called:",
-      "opts": [
-        "EPOS",
-        "GPS",
-        "CCTV",
-        "USB"
-      ],
-      "ans": 0,
-      "marks": 2
-    },
-    {
-      "q": "What is Biometrics?",
-      "opts": [
-        "A computer virus",
-        "Identifying people by body features",
-        "Music software",
-        "A video game"
-      ],
-      "ans": 1,
-      "marks": 2
-    },
-    {
-      "q": "Which is a biometric device?",
-      "opts": [
-        "Keyboard",
-        "Fingerprint scanner",
-        "Mouse",
-        "Speaker"
-      ],
-      "ans": 1,
-      "marks": 2
-    },
-    {
-      "q": "An Iris Reader scans which body part?",
-      "opts": [
-        "Finger",
-        "Eye",
-        "Voice",
-        "Face"
-      ],
-      "ans": 1,
-      "marks": 2
-    },
-    {
-      "q": "Playing Call of Duty is ICT used for:",
-      "opts": [
-        "Education",
-        "Medicine",
-        "Recreation",
-        "Business"
-      ],
-      "ans": 2,
-      "marks": 2
-    },
-    {
-      "q": "Virtual DJ is an example of:",
-      "opts": [
-        "Gaming software",
-        "Music software",
-        "Business software",
-        "Police software"
-      ],
-      "ans": 1,
-      "marks": 2
-    },
-    {
-      "q": "Which device is best for racing games?",
-      "opts": [
-        "Scanner",
-        "Joystick",
-        "Printer",
-        "Fax machine"
-      ],
-      "ans": 1,
-      "marks": 2
-    }
-  ],
-  "trueFalse": [
-    {
-      "q": "E-commerce allows buying and selling goods online.",
-      "ans": true,
-      "marks": 1
-    },
-    {
-      "q": "A fingerprint scanner is biometric technology.",
-      "ans": true,
-      "marks": 1
-    },
-    {
-      "q": "Data is information that has already been processed.",
-      "ans": false,
-      "marks": 1
-    },
-    {
-      "q": "Virtual DJ is used for playing video games.",
-      "ans": false,
-      "marks": 1
-    }
-  ],
-  "fillBlank": [
-    {
-      "q": "Working from home using a computer is called ______.",
-      "ans": "telecommuting",
-      "marks": 1
-    },
-    {
-      "q": "Raw unprocessed facts are called ______.",
-      "ans": "data",
-      "marks": 1
-    },
-    {
-      "q": "An iris reader scans the ______ of a person.",
-      "ans": "eye",
-      "marks": 1
-    }
-  ],
-  "matching": [
-    {
-      "title": "Match each term to its correct definition.",
-      "pairs": [
-        {
-          "left": "E-commerce",
-          "right": "Buying and selling online"
-        },
-        {
-          "left": "Biometrics",
-          "right": "Identifying people by body features"
-        },
-        {
-          "left": "EPOS",
-          "right": "Electronic Point of Sale"
-        },
-        {
-          "left": "Telecommuting",
-          "right": "Working from home via computer"
-        }
-      ],
-      "marks": 4
-    }
-  ],
-  "multiSelect": [
-    {
-      "q": "Which are biometric devices? (Select ALL that apply)",
-      "opts": [
-        "Fingerprint scanner",
-        "Keyboard",
-        "Iris reader",
-        "Mouse",
-        "Voice recognition"
-      ],
-      "correct": [
-        0,
-        2,
-        4
-      ],
-      "marks": 3
-    },
-    {
-      "q": "Which are ICT uses in recreation? (Select ALL that apply)",
-      "opts": [
-        "Playing Call of Duty",
-        "Inventory management",
-        "Virtual DJ",
-        "Payroll system"
-      ],
-      "correct": [
-        0,
-        2
-      ],
-      "marks": 2
-    }
-  ],
-  "essay": [
-    {
-      "q": "Explain the difference between Data and Information. Give ONE example of each.",
-      "marks": 4,
-      "key": "data is raw unprocessed facts, information is data that has been processed and given meaning"
-    },
-    {
-      "q": "Describe TWO ways ICT is used in business. Give an example for each.",
-      "marks": 4,
-      "key": "e-commerce sell online, epos checkout payments, telecommuting work from home"
-    }
-  ]
+  meta:{title:'Sample Exam',term:'Term 1',duration:0,marks:20,subject:'Information Technology',grade:'9'},
+  mcq:[],tf:[],trueFalse:[],fillBlank:[],matching:[],multiSelect:[],essay:[]
 };
 
 /* ── CONFIG ── */
@@ -351,6 +126,9 @@ var L = ['A','B','C','D','E','F'];
 /* ── STATE ── */
 var answers = {};
 var submitted = false;
+var studentName = '';
+var studentCls = '';
+var studentId = '';
 var timerInterval = null;
 var timeLeft = 0;
 var autoScore = 0;
@@ -685,6 +463,13 @@ async function submitExam(auto){
   var sid  = (document.getElementById('s-id')||{}).value||'';
   var cls  = (document.getElementById('s-cls')||{}).value||'';
   var date = (document.getElementById('s-date')||{}).value||'';
+  /* Save to globals and localStorage for result screen */
+  studentName = name.trim()||'(No name)';
+  studentCls  = cls;
+  studentId   = sid.trim();
+  localStorage.setItem('lastStudentName', studentName);
+  localStorage.setItem('lastStudentCls', studentCls);
+  localStorage.setItem('lastStudentId', studentId);
 
   if(!auto){
     if(!name.trim()){ showAlert('Please enter your full name.','red'); return; }
@@ -796,12 +581,11 @@ function esc(s){
 render();
 
 /* Fill in name/class on result screen after render */
-setTimeout(function(){
-  var rn=document.getElementById('r-name');
-  var rc=document.getElementById('r-cls');
-  if(rn) rn.textContent=localStorage.getItem('lastStudentName')||'—';
-  if(rc) rc.textContent=localStorage.getItem('lastStudentCls')||'—';
-},100);
+/* Result screen — use globals set during submit */
+var rn=document.getElementById('r-name');
+var rc=document.getElementById('r-cls');
+if(rn) rn.textContent=studentName||localStorage.getItem('lastStudentName')||'—';
+if(rc) rc.textContent=studentCls||localStorage.getItem('lastStudentCls')||'—';
 </script>
 </body>
 </html>
