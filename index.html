@@ -34,10 +34,10 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--dark);color:#f
 
 /* Question */
 .question-screen{text-align:center;}
-.q-text{font-size:1.1rem;font-weight:800;color:#fff;background:#1e3a5f;border-radius:12px;padding:1.2rem;margin-bottom:1.2rem;line-height:1.4;}
+.q-text{font-size:1.1rem;font-weight:800;color:#fff;background:#1e3a5f;border-radius:12px;padding:1.4rem;margin-bottom:1.2rem;line-height:1.5;text-align:center;}
 .q-timer{font-size:2.5rem;font-weight:900;font-family:'Courier New',monospace;margin-bottom:.5rem;}
-.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem;}
-.ans-btn{padding:1.2rem .8rem;border:none;border-radius:12px;font-size:1rem;font-weight:800;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:transform .1s,opacity .2s;}
+.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem;}
+.ans-btn{padding:1.4rem .8rem;border:none;border-radius:14px;font-size:1rem;font-weight:800;color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem;transition:transform .1s,opacity .2s;min-height:90px;}
 .ans-btn:hover{transform:scale(1.03);}
 .ans-btn:disabled{opacity:.5;cursor:not-allowed;}
 .ans-btn.selected{outline:4px solid #fff;}
@@ -182,8 +182,8 @@ function renderQuestion(){
     (q.opts||[]).forEach(function(opt,i){
       var sel=submitted&&(Array.isArray(selectedAnswer)?selectedAnswer.indexOf(i)>=0:selectedAnswer==i);
       h+='<button class="ans-btn '+COLORS[i%COLORS.length]+(sel?' selected':'')
-        +'" onclick="submitAns('+i+')" '+(submitted?'disabled':'')+' style="flex-direction:column;">'
-        +'<span style="font-size:1.5rem;">'+SHAPES[i%SHAPES.length]+'</span>'
+        +'" onclick="submitAns('+i+')" '+(submitted?'disabled':'')+'>'
+        +'<span style="font-size:1.8rem;">'+SHAPES[i%SHAPES.length]+'</span>'
         +'<span style="font-size:.82rem;">'+esc(opt)+'</span></button>';
     });
     h+='</div>';
@@ -193,10 +193,10 @@ function renderQuestion(){
     var flSel=submitted&&selectedAnswer===false;
     h+='<button class="ans-btn ans-green'+(trSel?' selected':'')
       +'" onclick="submitAns(true)" '+(submitted?'disabled':'')
-      +' style="padding:2rem;font-size:1.2rem;">✓<br>TRUE</button>';
+      +' style="padding:1.5rem;font-size:1.3rem;flex-direction:column;">✓<br>TRUE</button>';
     h+='<button class="ans-btn ans-red'+(flSel?' selected':'')
       +'" onclick="submitAns(false)" '+(submitted?'disabled':'')
-      +' style="padding:2rem;font-size:1.2rem;">✗<br>FALSE</button>';
+      +' style="padding:1.5rem;font-size:1.3rem;flex-direction:column;">✗<br>FALSE</button>';
     h+='</div>';
   } else if(t==='fill'||t==='essay'){
     h+='<div style="text-align:left;margin-bottom:.5rem;font-size:.8rem;color:#94a3b8;">'+(t==='fill'?'Type your answer:' :'Write your answer:')+'</div>';
@@ -340,26 +340,39 @@ async function poll(){
     /* Question → Reveal */
     if(state==='question'&&srvStatus==='reveal'){
       stopCountdown();
-      /* Check if answer was correct */
-      var q=null;
-      try{ var qs=JSON.parse(srv.questions||'[]'); q=qs[currentQ]; }catch(e){}
-      /* For fill/essay/match we can't check client-side accurately */
-      if(q&&(q.type==='fill'||q.type==='essay'||q.type==='match')){
-        lastCorrect=null; lastGain=0;
-      } else if(q&&submitted){
-        lastCorrect=checkCorrect(q,selectedAnswer);
-        if(lastCorrect){
-          var timer=parseInt(srv.timer)||30;
-          var elapsed=(Date.now()-questionStartTime)/1000;
-          var mode=srv.scoreMode||'speed';
-          if(mode==='speed'){
-            lastGain=Math.max(500,Math.floor((1-(Math.min(elapsed,timer)/timer)/2)*1000));
+      /* Use correctAnswer sent from server */
+      var correctAns=null;
+      try{ correctAns=JSON.parse(srv.correctAnswer); }catch(e){ correctAns=srv.correctAnswer; }
+      if(!submitted){
+        lastCorrect=false; lastGain=0;
+      } else {
+        var q=null;
+        try{ var qs=JSON.parse(srv.questions||'[]'); q=qs[currentQ]; }catch(e){}
+        var qtype=q?q.type:'';
+        if(qtype==='fill'||qtype==='essay'||qtype==='match'){
+          lastCorrect=null; lastGain=0; /* server marks these */
+        } else if(correctAns!==null&&correctAns!==undefined){
+          /* Compare student answer against server correct answer */
+          if(qtype==='tf'){
+            lastCorrect=String(selectedAnswer)===String(correctAns);
+          } else if(qtype==='ms'){
+            var ca=(Array.isArray(correctAns)?correctAns:[]).slice().sort().join(',');
+            var sa=(Array.isArray(selectedAnswer)?selectedAnswer:[]).slice().sort().join(',');
+            lastCorrect=ca===sa;
           } else {
-            lastGain=1000;
+            lastCorrect=parseInt(selectedAnswer)===parseInt(correctAns);
           }
-          myScore+=lastGain;
-        } else { lastGain=0; }
-      } else { lastCorrect=false; lastGain=0; }
+          if(lastCorrect){
+            var timer=parseInt(srv.timer)||30;
+            var elapsed=(Date.now()-questionStartTime)/1000;
+            var mode=srv.scoreMode||'speed';
+            if(mode==='speed'){
+              lastGain=Math.max(500,Math.floor((1-(Math.min(elapsed,timer)/timer)/2)*1000));
+            } else { lastGain=1000; }
+            myScore+=lastGain;
+          } else { lastGain=0; }
+        } else { lastCorrect=false; lastGain=0; }
+      }
       state='result';
       render();
       startPolling();
