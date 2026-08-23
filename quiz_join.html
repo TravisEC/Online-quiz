@@ -123,8 +123,12 @@ async function joinGame(){
 
   setStatus('Joining...','');
   try{
-    var r=await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({action:'lqJoin',pin:pin,studentId:studentId,name:name.trim(),cls:cls.trim()})});
+    var joinParams='?action=lqJoin&pin='+encodeURIComponent(pin)
+      +'&studentId='+encodeURIComponent(studentId)
+      +'&name='+encodeURIComponent(name.trim())
+      +'&cls='+encodeURIComponent(cls.trim())
+      +'&t='+Date.now();
+    var r=await fetch(SURL+joinParams,{method:'GET',mode:'cors'});
     var j=await r.json();
     if(!j.ok){setStatus(j.error||'Could not join.','error');return;}
     sessionPin=pin; playerName=name.trim(); playerCls=cls.trim();
@@ -244,15 +248,13 @@ async function submitMatchAns(){
 
 async function sendAnswer(answer,elapsed){
   try{
-    await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({
-        action:'lqSubmitAnswer',
-        pin:sessionPin,
-        studentId:studentId,
-        questionIdx:currentQ,
-        answer:answer,
-        responseTime:Math.round(elapsed*10)/10
-      })});
+    var subParams='?action=lqSubmitAnswer&pin='+encodeURIComponent(sessionPin)
+      +'&studentId='+encodeURIComponent(studentId)
+      +'&questionIdx='+currentQ
+      +'&answer='+encodeURIComponent(JSON.stringify(answer))
+      +'&responseTime='+Math.round(elapsed*10)/10
+      +'&t='+Date.now();
+    await fetch(SURL+subParams,{method:'GET',mode:'cors'});
   }catch(e){ console.warn('submitAnswer error:',e); }
 }
 
