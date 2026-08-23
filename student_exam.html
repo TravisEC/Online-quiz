@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>IT Examination</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+
+
+
+
+:root{--blue:#2563eb;--blu:#dbeafe;--grn:#16a34a;--grl:#dcfce7;--red:#dc2626;--rdl:#fee2e2;--yel:#f59e0b;--yll:#fef3c7;--pur:#7c3aed;--pul:#ede9fe;--org:#ea580c;--pnk:#db2777;--g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;--g600:#475569;--g700:#334155;--g900:#0f172a;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#e0eaff,#f0f7ff 50%,#e8f5e9);min-height:100vh;color:var(--g900);}
+.topbar{background:#fff;border-bottom:3px solid var(--blu);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(37,99,235,.08);}
+.logo{font-weight:900;font-size:1.05rem;color:var(--blue);}
+.topinfo{font-size:.8rem;font-weight:700;color:var(--g600);display:flex;gap:14px;}
+.wrap{max-width:800px;margin:0 auto;padding:1.5rem 1rem 4rem;}
+.hero{background:#fff;border-radius:16px;padding:2rem 1.8rem 1.5rem;margin-bottom:1.2rem;box-shadow:0 4px 20px rgba(37,99,235,.10);border:2px solid var(--blu);}
+.hero h1{font-size:1.5rem;font-weight:900;line-height:1.25;color:var(--g900);}
+.hero h1 em{color:var(--blue);font-style:normal;}
+.hmeta{display:flex;flex-wrap:wrap;gap:8px;margin-top:1rem;}
+.hpill{background:var(--g100);border:1.5px solid var(--g200);border-radius:999px;padding:4px 14px;font-size:.8rem;font-weight:700;color:var(--g700);}
+.progwrap{background:#fff;border-radius:12px;padding:.9rem 1.3rem;margin-bottom:1.2rem;box-shadow:0 2px 10px rgba(37,99,235,.08);border:1.5px solid var(--g200);}
+.progtop{display:flex;justify-content:space-between;margin-bottom:7px;}
+.progtop span{font-weight:800;font-size:.85rem;color:var(--g700);}
+.barbg{background:var(--g200);border-radius:999px;height:9px;overflow:hidden;}
+.barfill{height:100%;background:linear-gradient(90deg,var(--blue),#60a5fa);border-radius:999px;transition:width .35s;}
+.card{background:#fff;border-radius:14px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 10px rgba(37,99,235,.07);border:1.5px solid var(--g200);}
+.card-title{font-size:.9rem;font-weight:900;color:var(--blue);text-transform:uppercase;letter-spacing:.4px;margin-bottom:1rem;}
+.frow{display:flex;gap:.8rem;flex-wrap:wrap;}
+.fgrp{flex:1;min-width:180px;}
+.fgrp label{display:block;font-weight:700;font-size:.8rem;color:var(--g700);margin-bottom:4px;}
+.fgrp input,.fgrp select{width:100%;padding:9px 12px;border:2px solid var(--g200);border-radius:9px;font-family:Nunito,sans-serif;font-size:.9rem;font-weight:600;background:var(--g50);outline:none;color:var(--g900);transition:border-color .2s;}
+.fgrp input:focus,.fgrp select:focus{border-color:var(--blue);}
+.shdr{border-radius:11px;padding:.85rem 1.3rem;margin:.8rem 0;display:flex;justify-content:space-between;align-items:center;}
+.shdr span{font-size:.9rem;font-weight:900;color:#fff;}
+.sbadge{background:rgba(255,255,255,.22);border-radius:999px;padding:3px 12px;font-size:.76rem;font-weight:800;color:#fff;}
+.sa{background:linear-gradient(90deg,#2563eb,#3b82f6);}
+.sb{background:linear-gradient(90deg,#0d9488,#14b8a6);}
+.sc{background:linear-gradient(90deg,#ea580c,#f97316);}
+.sd{background:linear-gradient(90deg,#db2777,#ec4899);}
+.se{background:linear-gradient(90deg,#7c3aed,#8b5cf6);}
+.sf{background:linear-gradient(90deg,#334155,#475569);}
+.sg{background:linear-gradient(90deg,#b45309,#d97706);}
+.qcard{background:#fff;border-radius:13px;padding:1.4rem 1.6rem;margin-bottom:1.1rem;border:2px solid var(--g200);transition:border-color .2s;}
+.qcard.answered{border-color:#93c5fd;background:#f8fbff;}
+.qnum{font-family:'Space Mono',monospace;font-size:.75rem;font-weight:700;color:var(--blue);margin-bottom:.5rem;text-transform:uppercase;}
+.mkbadge{background:var(--yll);color:#92400e;font-size:.7rem;font-weight:800;padding:2px 9px;border-radius:999px;margin-left:7px;}
+.qtxt{font-size:1.08rem;font-weight:700;color:var(--g900);margin-bottom:1rem;line-height:1.7;letter-spacing:.01em;}
+.opts{display:flex;flex-direction:column;gap:6px;}
+.opt{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:10px;border:2px solid var(--g200);cursor:pointer;font-weight:600;font-size:1rem;background:var(--g50);transition:all .15s;user-select:none;line-height:1.5;}
+.opt:hover{border-color:var(--blue);background:var(--blu);}
+.opt.sel-mcq{border-color:var(--blue);background:var(--blu);color:var(--blue);}
+.opt.sel-ms{border-color:var(--pur);background:var(--pul);color:var(--pur);}
+.oltr{font-family:'Space Mono',monospace;font-weight:700;font-size:.8rem;min-width:20px;color:var(--blue);}
+.tfopts{display:flex;gap:10px;margin-top:4px;}
+.tfbtn{flex:1;padding:14px;border-radius:10px;border:2px solid var(--g200);cursor:pointer;font-family:Nunito,sans-serif;font-weight:800;font-size:1.05rem;background:var(--g50);transition:all .15s;}
+.tfbtn.sel-t{border-color:var(--grn);background:var(--grl);color:var(--grn);}
+.tfbtn.sel-f{border-color:var(--red);background:var(--rdl);color:var(--red);}
+.finput{width:100%;padding:12px 14px;border:2px solid var(--g200);border-radius:9px;font-family:Nunito,sans-serif;font-size:1rem;font-weight:600;background:var(--g50);outline:none;transition:border-color .2s;color:var(--g900);}
+.finput:focus{border-color:var(--org);}
+.matchtbl{width:100%;border-collapse:collapse;margin-top:8px;}
+.matchtbl th{text-align:left;padding:6px 10px;background:var(--g100);border-bottom:2px solid var(--g200);font-size:.8rem;font-weight:800;color:var(--g700);}
+.matchtbl td{padding:5px 6px;border-bottom:1px solid var(--g200);}
+.matchleft{font-weight:700;font-size:.88rem;color:var(--pnk);padding:6px 10px!important;}
+.matchsel{width:100%;padding:7px 10px;border:2px solid var(--g200);border-radius:8px;font-family:Nunito,sans-serif;font-weight:600;font-size:.86rem;background:var(--g50);outline:none;color:var(--g900);}
+.matchsel:focus{border-color:var(--pnk);}
+.esarea{width:100%;min-height:140px;padding:12px 14px;border:2px solid var(--g200);border-radius:9px;font-family:Nunito,sans-serif;font-size:1rem;font-weight:600;resize:vertical;outline:none;background:var(--g50);color:var(--g900);transition:border-color .2s;line-height:1.6;}
+.esarea:focus{border-color:var(--g700);}
+.warnbox{background:var(--yll);border:2px solid #fde68a;border-radius:11px;padding:.9rem 1.2rem;font-weight:700;font-size:.83rem;color:#92400e;margin-top:1.2rem;}
+.subbtn{width:100%;padding:15px;background:linear-gradient(90deg,var(--blue),#3b82f6);color:#fff;border:none;border-radius:13px;font-family:Nunito,sans-serif;font-size:1rem;font-weight:900;cursor:pointer;box-shadow:0 4px 18px rgba(37,99,235,.28);margin-top:.9rem;transition:all .2s;}
+.subbtn:hover{transform:translateY(-2px);}
+.subbtn:disabled{background:var(--g300);box-shadow:none;cursor:not-allowed;transform:none;}
+.sending{display:none;position:fixed;inset:0;background:rgba(15,23,42,.72);backdrop-filter:blur(6px);z-index:990;align-items:center;justify-content:center;flex-direction:column;gap:1rem;}
+.spin{width:46px;height:46px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:spin .75s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.stext{color:#fff;font-weight:800;font-size:1rem;}
+.modal{display:none;position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(6px);z-index:999;align-items:center;justify-content:center;padding:1rem;}
+.mbox{background:#fff;border-radius:22px;padding:2.5rem 2rem;max-width:430px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.22);animation:pop .3s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes pop{from{transform:scale(.8);opacity:0;}to{transform:scale(1);opacity:1;}}
+.memoji{font-size:3.5rem;margin-bottom:.6rem;}
+.mname{font-size:.95rem;font-weight:700;color:var(--g600);margin-bottom:.2rem;}
+.mscore{font-size:3.5rem;font-weight:900;color:var(--blue);line-height:1;}
+.mout{font-size:.82rem;font-weight:700;color:var(--g600);margin-bottom:.8rem;}
+.mgrade{display:inline-block;padding:6px 20px;border-radius:999px;font-size:1rem;font-weight:900;margin-bottom:1rem;}
+.mmsg{font-size:.88rem;font-weight:600;color:var(--g600);margin-bottom:1.8rem;}
+.mbtnprimary{display:block;width:100%;padding:12px;background:var(--blue);color:#fff;border:none;border-radius:999px;font-family:Nunito,sans-serif;font-weight:800;font-size:.92rem;cursor:pointer;margin-bottom:8px;}
+.mbtnsec{display:block;width:100%;padding:10px;background:var(--g100);color:var(--g600);border:none;border-radius:999px;font-family:Nunito,sans-serif;font-weight:700;font-size:.86rem;cursor:pointer;}
+/* Review */
+.rvhero{background:#fff;border-radius:14px;padding:1.8rem;margin-bottom:1.2rem;text-align:center;box-shadow:0 2px 10px rgba(37,99,235,.08);border:1.5px solid var(--blu);}
+.rvsc{display:inline-block;background:var(--blu);color:var(--blue);font-size:1.3rem;font-weight:900;padding:7px 24px;border-radius:999px;margin:.8rem 0 .3rem;}
+.rvsec{font-weight:900;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--g600);margin:1.5rem 0 .6rem;padding-left:2px;}
+.rvcard{background:#fff;border-radius:12px;padding:1.1rem 1.3rem;margin-bottom:.7rem;border:2px solid var(--g200);}
+.rvcard.ok{border-color:#86efac;background:#f0fdf4;}
+.rvcard.wrong{border-color:#fca5a5;background:#fff5f5;}
+.rvcard.partial{border-color:#fde68a;background:#fffbeb;}
+.rvcard.skip{border-color:var(--g200);background:var(--g50);}
+.rvhdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.6rem;gap:.8rem;}
+.rvlbl{font-family:'Space Mono',monospace;font-size:.68rem;font-weight:700;color:var(--g600);}
+.rvbadge{font-size:.73rem;font-weight:800;padding:3px 11px;border-radius:999px;white-space:nowrap;}
+.rvbadge.ok{background:var(--grl);color:var(--grn);}
+.rvbadge.wrong{background:var(--rdl);color:var(--red);}
+.rvbadge.partial{background:var(--yll);color:#92400e;}
+.rvbadge.skip{background:var(--g200);color:var(--g600);}
+.rvq{font-weight:700;font-size:.92rem;margin-bottom:.7rem;line-height:1.5;}
+.rvanswer{background:var(--g50);border:1.5px solid var(--g200);border-radius:8px;padding:8px 12px;font-size:.88rem;font-weight:600;color:var(--g700);min-height:32px;white-space:pre-wrap;word-break:break-word;}
+.autotag{margin-top:5px;padding:4px 9px;border-radius:7px;font-size:.74rem;font-weight:700;}
+.rv-opt{padding:5px 10px;border-radius:7px;font-size:.86rem;font-weight:600;margin-bottom:3px;border:1.5px solid transparent;color:var(--g600);background:var(--g50);}
+.rv-opt-correct{padding:5px 10px;border-radius:7px;font-size:.86rem;font-weight:700;margin-bottom:3px;border:1.5px solid #86efac;color:var(--grn);background:var(--grl);}
+.rv-opt-wrong{padding:5px 10px;border-radius:7px;font-size:.86rem;font-weight:700;margin-bottom:3px;border:1.5px solid #fca5a5;color:var(--red);background:var(--rdl);}
+.rv-opt-answer{padding:5px 10px;border-radius:7px;font-size:.86rem;font-weight:700;margin-bottom:3px;border:1.5px solid #86efac;color:var(--grn);background:#f0fdf4;}
+.finbtn{width:100%;padding:14px;background:linear-gradient(90deg,var(--grn),#22c55e);color:#fff;border:none;border-radius:13px;font-family:Nunito,sans-serif;font-size:1rem;font-weight:900;cursor:pointer;box-shadow:0 4px 16px rgba(22,163,74,.28);margin-top:1.2rem;}
+@media(max-width:600px){.topinfo{display:none;}.hero h1{font-size:1.2rem;}.frow{flex-direction:column;}.matchtbl th:first-child,.matchtbl td:first-child{display:none;}.tfopts{flex-direction:column;}}
+
+
+/* Large text modes */
+body.font-large .qtxt{font-size:1.2rem;line-height:1.8;}
+body.font-large .opt{font-size:1.1rem;padding:14px 18px;}
+body.font-large .tfbtn{font-size:1.15rem;padding:16px;}
+body.font-large .esarea{font-size:1.1rem;line-height:1.7;}
+body.font-large .finput{font-size:1.1rem;}
+body.font-large .qnum{font-size:.82rem;}
+body.font-large .mkbadge{font-size:.78rem;}
+body.font-large .shdr span{font-size:1rem;}
+body.font-large .qcard{padding:1.6rem 1.8rem;}
+
+body.font-xlarge .qtxt{font-size:1.35rem;line-height:1.9;}
+body.font-xlarge .opt{font-size:1.2rem;padding:16px 20px;gap:14px;}
+body.font-xlarge .tfbtn{font-size:1.25rem;padding:18px;}
+body.font-xlarge .esarea{font-size:1.2rem;min-height:160px;line-height:1.8;}
+body.font-xlarge .finput{font-size:1.2rem;padding:14px;}
+body.font-xlarge .qnum{font-size:.88rem;}
+body.font-xlarge .mkbadge{font-size:.82rem;}
+body.font-xlarge .shdr span{font-size:1.05rem;}
+body.font-xlarge .qcard{padding:1.8rem 2rem;margin-bottom:1.3rem;}
+body.font-xlarge .matchleft{font-size:1rem;}
+body.font-xlarge .matchsel{font-size:1rem;padding:10px 12px;}
+
+/* ── STUDENT INFO FORM ── */
+.info-card{background:#fff;border-radius:16px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid #e2e8f0;}
+.info-title{font-size:.75rem;font-weight:900;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;margin-bottom:1rem;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.info-field{display:flex;flex-direction:column;gap:.35rem;}
+.info-label{font-size:.82rem;font-weight:700;color:var(--g600);}
+.info-input{padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:Nunito,sans-serif;font-size:.95rem;font-weight:600;color:#1e293b;background:#fff;outline:none;transition:border-color .2s;}
+.info-input:focus{border-color:var(--blue);}
+/* ── WARNING BOX ── */
+.warn-box{background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:.9rem 1.1rem;font-size:.85rem;font-weight:700;color:#92400e;margin-bottom:1rem;}
+@media(max-width:600px){.info-grid{grid-template-columns:1fr;}}
+
+/* ── STUDENT INFO FORM ── */
+.info-card{background:#fff;border-radius:16px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 12px rgba(0,0,0,.06);border:1px solid #e2e8f0;}
+.info-title{font-size:.75rem;font-weight:900;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;margin-bottom:1rem;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.info-field{display:flex;flex-direction:column;gap:.35rem;}
+.info-label{font-size:.82rem;font-weight:700;color:var(--g600);}
+.info-input{padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-family:Nunito,sans-serif;font-size:.95rem;font-weight:600;color:#1e293b;background:#fff;outline:none;transition:border-color .2s;}
+.info-input:focus{border-color:var(--blue);}
+.warn-box{background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:.9rem 1.1rem;font-size:.85rem;font-weight:700;color:#92400e;margin-bottom:1rem;}
+@media(max-width:600px){.info-grid{grid-template-columns:1fr;}}
+
+
+
+</style>
+</head>
+<body>
+
+<!-- Result Modal -->
+<div class="modal" id="result-modal" style="display:none;">
+  <div class="mbox">
+    <div class="memoji" id="rm-emoji">&#x1F389;</div>
+    <div class="mname" id="rm-name"></div>
+    <div class="mscore" id="rm-score">0</div>
+    <div class="mout" id="rm-out">out of 40 marks</div>
+    <div class="mgrade" id="rm-grade"></div>
+    <div class="mmsg" id="rm-msg"></div>
+    <button class="mbtnprimary" onclick="goReview()">&#x1F441; Review My Answers</button>
+    <button class="mbtnsec" onclick="finishReview()">Skip Review &mdash; Done</button>
+  </div>
+</div>
+
+<!-- Sending overlay -->
+<div id="sending" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.72);backdrop-filter:blur(6px);z-index:990;align-items:center;justify-content:center;flex-direction:column;gap:1rem;">
+  <div class="spin"></div>
+  <div class="stext">Submitting... please wait</div>
+</div>
+
+<!-- EXAM PAGE -->
+<div id="page-exam" style="display:block;">
+<div class="wrap">
+
+  <!-- Accessibility bar -->
+  <div style="display:flex;justify-content:flex-end;padding:.5rem 0;margin-bottom:.3rem;">
+    <div style="background:rgba(255,255,255,.85);border:1px solid #e2e8f0;border-radius:999px;padding:4px 12px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:.72rem;font-weight:700;color:#64748b;">Text:</span>
+      <button onclick="setFontSize('normal')" id="fs-normal" style="padding:3px 10px;border-radius:999px;border:none;cursor:pointer;font-family:Nunito,sans-serif;font-size:.78rem;font-weight:700;background:var(--blue);color:#fff;">A</button>
+      <button onclick="setFontSize('large')" id="fs-large" style="padding:3px 10px;border-radius:999px;border:none;cursor:pointer;font-family:Nunito,sans-serif;font-size:.85rem;font-weight:700;background:transparent;color:#64748b;">A+</button>
+      <button onclick="setFontSize('xlarge')" id="fs-xlarge" style="padding:3px 10px;border-radius:999px;border:none;cursor:pointer;font-family:Nunito,sans-serif;font-size:.93rem;font-weight:700;background:transparent;color:#64748b;">A++</button>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <h1 id="ex-title">IT Examination</h1>
+    <p id="ex-subject" style="font-size:1rem;font-weight:600;color:#475569;margin:.2rem 0 .6rem;display:none;"></p>
+    <div class="hmeta">
+      <div class="hpill">&#x1F4DA; <span id="ex-term">Term 3</span></div>
+      <div class="hpill">&#x23F1; <span id="ex-dur">45 Minutes</span></div>
+      <div class="hpill">&#x1F3C6; <span id="ex-marks">40 Marks</span></div>
+      <div class="hpill">&#x1F4CC; Answer ALL Questions</div>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progwrap">
+    <div class="progtop">
+      <span id="prog-text">0 of 0 answered</span>
+      <span id="prog-pct">0%</span>
+    </div>
+    <div class="barbg"><div class="barfill" id="bar-fill" style="width:0%;"></div></div>
+  </div>
+
+  <!-- Student Info -->
+  <div class="card">
+    <div class="card-title">Your Information</div>
+    <div class="frow">
+      <div class="fgrp">
+        <label>Full Name <span style="color:#ef4444;">*</span></label>
+        <input id="stu-name" type="text" placeholder="Enter your full name" autocomplete="name">
+      </div>
+      <div class="fgrp">
+        <label>Student ID</label>
+        <input id="stu-id" type="text" placeholder="e.g. 2024-0123">
+      </div>
+      <div class="fgrp">
+        <label>Class <span style="color:#ef4444;">*</span></label>
+        <select id="stu-class">
+          <option value="">-- Select class --</option>
+          <optgroup label="Grade 7"><option>7-1</option><option>7-2</option><option>7-3</option><option>7-4</option></optgroup>
+          <optgroup label="Grade 8"><option>8-1</option><option>8-2</option><option>8-3</option><option>8-4</option></optgroup>
+          <optgroup label="Grade 9"><option>9-1</option><option>9-2</option><option>9-3</option><option>9-4</option></optgroup>
+        </select>
+      </div>
+      <div class="fgrp">
+        <label>Date</label>
+        <input id="stu-date" type="date">
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions rendered here -->
+  <div id="sections"></div>
+
+  <!-- Warning + Submit at bottom -->
+  <div class="warnbox" style="margin-top:1.2rem;">
+    &#x26A0; Review all answers carefully before submitting. You cannot change answers after submitting.
+  </div>
+  <button class="subbtn" id="submit-btn" onclick="submitExam()">&#x1F680; Submit Examination</button>
+
+</div>
+</div>
+
+<!-- REVIEW PAGE -->
+<div id="page-review" style="display:none;">
+<div class="wrap">
+  <div class="rvhero">
+    <div style="font-size:2rem;">&#x1F4CB;</div>
+    <h2 style="font-size:1.3rem;font-weight:900;">Answer Review</h2>
+    <div class="rvsc" id="rv-score">Score: 0</div>
+    <p id="rv-name" style="color:#64748b;font-weight:700;font-size:.85rem;margin-top:4px;"></p>
+    <div style="display:inline-block;background:#fef9c3;color:#92400e;font-size:.76rem;font-weight:800;padding:4px 13px;border-radius:999px;margin-top:.4rem;">&#x1F512; Read only</div>
+  </div>
+  <div id="rv-container"></div>
+  <button class="finbtn" onclick="finishReview()">&#x1F3E0; Done &mdash; Back to Exam</button>
+</div>
+</div>
+
+<script>
+/* IT ExamPro — Student Exam — clean rebuild */
+
+var EXAM_CONFIG = {
+  "meta": {
+    "title": "Grade 7 assessment 3",
+    "subject": "Digital literacy",
+    "grade": "7",
+    "duration": 45,
+    "term": "Term 3",
+    "marks": 25
+  },
+  "mcq": [
+    {
+      "q": "What is a digital footprint?",
+      "marks": 2,
+      "opts": [
+        "A virus that damages your computer",
+        "The trail of data you leave behind when you use the internet",
+        "The memory space used by your photos",
+        "A type of password manager"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "What does the 20-20-20 rule help prevent?",
+      "marks": 2,
+      "opts": [
+        "Software piracy",
+        "Digital eye strain from staring at screens",
+        "Cyberbullying",
+        "Identity theft"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is a PHYSICAL health risk of spending too much time on digital devices?",
+      "marks": 2,
+      "opts": [
+        "Cyberbullying",
+        "Poor posture and back pain",
+        "Identity theft",
+        "Software piracy"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which term refers to the laws that govern the use of technology and the internet?",
+      "marks": 2,
+      "opts": [
+        "Digital etiquette",
+        "ICT legislation",
+        "Digital footprint",
+        "Netiquette"
+      ],
+      "ans": 1
+    }
+  ],
+  "trueFalse": [
+    {
+      "q": "A passive digital footprint is information you KNOWINGLY share online.",
+      "marks": 2,
+      "ans": false
+    },
+    {
+      "q": "Once something is posted online it can be very difficult to remove permanently.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Using digital devices late at night can make it harder to fall asleep.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "The blue light from screens can make it harder for your brain to know it is time to sleep.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Laws exist to protect individuals from the misuse of their personal data online.",
+      "marks": 1,
+      "ans": true
+    },
+    {
+      "q": "Hacking into a computer system without permission is legal as long as no data is stolen.",
+      "marks": 1,
+      "ans": false
+    }
+  ],
+  "fillBlank": [
+    {
+      "q": "Information you knowingly share online, such as posting on social media, is an ______ digital footprint.",
+      "marks": 1,
+      "ans": "active"
+    }
+  ],
+  "matching": [],
+  "multiSelect": [
+    {
+      "q": "Which of the following are NEGATIVE effects of excessive screen time on mental health? (Select ALL that apply)",
+      "marks": 3,
+      "opts": [
+        "Social media anxiety",
+        "Improved problem-solving skills",
+        "Social isolation",
+        "Addiction to online activities"
+      ],
+      "correct": [
+        0,
+        2,
+        3
+      ]
+    },
+    {
+      "q": "Which of the following actions could be illegal under ICT legislation? (Select ALL that apply)",
+      "marks": 3,
+      "opts": [
+        "Hacking into a school database",
+        "Browsing a public website",
+        "Selling customers' data without consent",
+        "Copying and selling software illegally",
+        "Sending an email to a friend"
+      ],
+      "correct": [
+        0,
+        2,
+        3
+      ]
+    }
+  ],
+  "essay": []
+}
+
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzazFIFJFMCDtZJyUXpWFQj3hGKhtGtlNkPDJLaEVbfbLO2oDmrsi4-WWpvExgIRadi/exec';
+var L = ['A','B','C','D','E','F'];
+var examData = null;
+var answers = {mcq:{},tf:{},fill:{},match:{},ms:{},essay:{}};
+var lastSubmission = null;
+var totalQ = 0, answeredQ = 0;
+
+/* FONT SIZE */
+function setFontSize(size){
+  document.body.classList.remove('font-large','font-xlarge');
+  if(size==='large')  document.body.classList.add('font-large');
+  if(size==='xlarge') document.body.classList.add('font-xlarge');
+  localStorage.setItem('examFontSize',size);
+  ['normal','large','xlarge'].forEach(function(n){
+    var b=document.getElementById('fs-'+n);
+    if(b){b.style.background=n===size?'var(--blue)':'transparent';b.style.color=n===size?'#fff':'#64748b';}
+  });
+}
+(function(){var sv=localStorage.getItem('examFontSize');if(sv)setFontSize(sv);})();
+
+/* AUTO MARKER */
+function cleanTxt(t){return String(t||'').toLowerCase().replace(/[^a-z0-9 ]/g,' ').replace(/ +/g,' ').trim();}
+var STOP={a:1,an:1,the:1,is:1,are:1,was:1,of:1,in:1,on:1,to:1,for:1,with:1,by:1,or:1,and:1,but:1,not:1,it:1};
+function kwds(t){return cleanTxt(t).split(' ').filter(function(w){return w.length>2&&!STOP[w];});}
+function edist(a,b){
+  var m=a.length,n=b.length,d=[];
+  for(var i=0;i<=m;i++){d[i]=[i];for(var j=1;j<=n;j++)d[i][j]=i?0:j;}
+  for(var i=1;i<=m;i++)for(var j=1;j<=n;j++)
+    d[i][j]=a[i-1]===b[j-1]?d[i-1][j-1]:1+Math.min(d[i-1][j],d[i][j-1],d[i-1][j-1]);
+  return d[m][n];
+}
+function sim(a,b){if(a===b)return true;var len=Math.max(a.length,b.length);if(len<=3)return a===b;return edist(a,b)<=Math.floor(len*0.3);}
+function phraseScore(ans,phrase){
+  var aw=kwds(ans),pw=kwds(phrase);if(!pw.length)return 0;
+  var hits=0;pw.forEach(function(p){if(aw.some(function(a){return sim(a,p);}))hits++;});
+  return hits/pw.length;
+}
+function autoMark(ans,key,max){
+  ans=String(ans||'').trim();
+  if(!ans)return{awarded:0,conf:'none',detail:'No answer provided'};
+  if(!key||!key.trim())return{awarded:0,conf:'unset',detail:'No marking guide — teacher will mark'};
+  var phrases=key.split(/[,;]/).map(function(p){return p.trim();}).filter(Boolean);
+  var best=0;phrases.forEach(function(p){var sc=phraseScore(ans,p);if(sc>best)best=sc;});
+  var full=phraseScore(ans,key);if(full>best)best=full;
+  var pct=Math.round(best*100),awarded,conf,detail;
+  if(best>=0.75){awarded=max;conf='high';detail='Strong match ('+pct+'%)';}
+  else if(best>=0.45){awarded=Math.ceil(max/2);conf='medium';detail='Partial match ('+pct+'%) — teacher review recommended';}
+  else if(best>=0.25){awarded=max>=2?1:0;conf='low';detail='Weak match ('+pct+'%) — please review';}
+  else{awarded=0;conf='none';detail='No match ('+pct+'%) — marked 0';}
+  return{awarded:awarded,conf:conf,detail:detail};
+}
+function confStyle(conf){
+  return conf==='high'?'background:#dcfce7;color:#15803d;':
+         conf==='medium'?'background:#fef9c3;color:#854d0e;':
+         conf==='low'?'background:#fee2e2;color:#991b1b;':
+         'background:#f1f5f9;color:#475569;';
+}
+
+/* SCORE */
+function calcScore(){
+  var t=0;
+  (examData.mcq||[]).forEach(function(q,i){if(answers.mcq[i]===q.ans)t+=q.marks;});
+  (examData.trueFalse||[]).forEach(function(q,i){if(answers.tf[i]!==undefined&&answers.tf[i]===q.ans)t+=q.marks;});
+  (examData.fillBlank||[]).forEach(function(q,i){t+=autoMark(answers.fill[i]||'',q.ans,q.marks).awarded;});
+  (examData.matching||[]).forEach(function(q,qi){
+    var c=0;q.pairs.forEach(function(p,pi){if((answers.match[qi]||{})[pi]===p.right)c++;});
+    t+=c*(q.marks/q.pairs.length);
+  });
+  (examData.multiSelect||[]).forEach(function(q,i){
+    var sel=(answers.ms[i]||[]).slice().sort();var cor=q.correct.slice().sort();
+    if(sel.join()===cor.join())t+=q.marks;
+    else if(sel.filter(function(x){return cor.indexOf(x)>=0;}).length)t+=Math.floor(q.marks/2);
+  });
+  (examData.essay||[]).forEach(function(q,i){t+=autoMark(answers.essay[i]||'',q.key||'',q.marks).awarded;});
+  return Math.round(t*10)/10;
+}
+
+/* PROGRESS */
+function updateProgress(){
+  var pct=totalQ?Math.round(answeredQ/totalQ*100):0;
+  var fill=document.getElementById('bar-fill');
+  if(fill)fill.style.width=pct+'%';
+  var txt=document.getElementById('prog-text');
+  if(txt)txt.textContent=answeredQ+' of '+totalQ+' answered';
+  var pctEl=document.getElementById('prog-pct');
+  if(pctEl)pctEl.textContent=pct+'%';
+}
+function markAnswered(id){var c=document.getElementById(id);if(c)c.classList.add('answered');}
+function unmarkAnswered(id){var c=document.getElementById(id);if(c)c.classList.remove('answered');}
+
+/* ANSWER PICKERS */
+function pickMCQ(qi,oi){
+  var prev=answers.mcq[qi];
+  answers.mcq[qi]=oi;
+  var q=examData.mcq[qi];
+  for(var j=0;j<q.opts.length;j++){
+    var el=document.getElementById('mo-'+qi+'-'+j);
+    if(el)el.className='opt'+(j===oi?' sel-mcq':'');
+  }
+  if(prev===undefined)answeredQ++;
+  markAnswered('mc-'+qi);
+  updateProgress();
+}
+
+function pickTF(qi,val){
+  var prev=answers.tf[qi];
+  answers.tf[qi]=val;
+  var t=document.getElementById('tft-'+qi),f=document.getElementById('tff-'+qi);
+  if(t)t.className='tfbtn'+(val?' sel-t':'');
+  if(f)f.className='tfbtn'+(!val?' sel-f':'');
+  if(prev===undefined)answeredQ++;
+  markAnswered('tf-'+qi);
+  updateProgress();
+}
+
+function pickFill(qi){
+  var prev=answers.fill[qi];
+  var v=(document.getElementById('fi-'+qi)||{value:''}).value.trim();
+  answers.fill[qi]=v;
+  if((!prev||!prev.trim())&&v)answeredQ++;
+  else if(prev&&prev.trim()&&!v)answeredQ=Math.max(0,answeredQ-1);
+  if(v)markAnswered('fb-'+qi); else unmarkAnswered('fb-'+qi);
+  updateProgress();
+}
+
+function pickMatch(qi,pi){
+  if(!answers.match[qi])answers.match[qi]={};
+  var el=document.getElementById('ms-'+qi+'-'+pi);
+  if(el)answers.match[qi][pi]=el.value;
+  /* Mark answered when at least one pair selected */
+  var filled=Object.values(answers.match[qi]).filter(function(v){return v;}).length;
+  if(filled>0)markAnswered('ma-'+qi);
+  updateProgress();
+}
+
+/* FIXED: pickMS now correctly tracks answeredQ */
+function pickMS(qi,oi,checked){
+  if(!answers.ms[qi])answers.ms[qi]=[];
+  var wasAnswered=answers.ms[qi].length>0;
+  if(checked){
+    if(answers.ms[qi].indexOf(oi)<0)answers.ms[qi].push(oi);
+  }else{
+    answers.ms[qi]=answers.ms[qi].filter(function(x){return x!==oi;});
+  }
+  var el=document.getElementById('mso-'+qi+'-'+oi);
+  if(el)el.className='opt'+(checked?' sel-ms':'');
+  var nowAnswered=answers.ms[qi].length>0;
+  if(!wasAnswered&&nowAnswered)answeredQ++;
+  else if(wasAnswered&&!nowAnswered)answeredQ=Math.max(0,answeredQ-1);
+  if(nowAnswered)markAnswered('msc-'+qi); else unmarkAnswered('msc-'+qi);
+  updateProgress();
+}
+
+function pickEssay(qi){
+  var prev=answers.essay[qi];
+  var v=(document.getElementById('es-'+qi)||{value:''}).value;
+  answers.essay[qi]=v;
+  if((!prev||!prev.trim())&&v.trim())answeredQ++;
+  else if(prev&&prev.trim()&&!v.trim())answeredQ=Math.max(0,answeredQ-1);
+  if(v.trim())markAnswered('esc-'+qi); else unmarkAnswered('esc-'+qi);
+  updateProgress();
+}
+
+/* RENDER EXAM */
+function renderExam(){
+  examData=EXAM_CONFIG;
+  answers={mcq:{},tf:{},fill:{},match:{},ms:{},essay:{}};
+  lastSubmission=null;answeredQ=0;totalQ=0;
+  var m=examData.meta||{};
+
+  document.getElementById('ex-title').textContent=m.title||'IT Examination';
+  var subEl=document.getElementById('ex-subject');
+  if(subEl){subEl.textContent=m.subject||'';subEl.style.display=m.subject?'block':'none';}
+  document.getElementById('ex-term').textContent=m.term||'Term 3';
+  document.getElementById('ex-dur').textContent=(m.duration||45)+' Minutes';
+  document.getElementById('ex-marks').textContent='Total: '+(m.marks||40)+' Marks';
+
+  var secOrder=[];
+  if((examData.mcq||[]).length)         secOrder.push('mcq');
+  if((examData.trueFalse||[]).length)   secOrder.push('tf');
+  if((examData.fillBlank||[]).length)   secOrder.push('fill');
+  if((examData.matching||[]).length)    secOrder.push('match');
+  if((examData.multiSelect||[]).length) secOrder.push('ms');
+  if((examData.essay||[]).length)       secOrder.push('essay');
+  var ALF='ABCDEFGHIJ';
+  var SEC={};secOrder.forEach(function(k,i){SEC[k]=ALF[i];});
+  var SCSS={mcq:'sa',tf:'sb',fill:'sc',match:'sd',ms:'se',essay:'sf'};
+  var SNAME={mcq:'Multiple Choice',tf:'True or False',fill:'Fill in the Blank',match:'Matching',ms:'Multiple Select',essay:'Short Answer / Essay'};
+  var html='';
+
+  /* MCQ */
+  var mcq=examData.mcq||[];
+  if(mcq.length){
+    totalQ+=mcq.length;
+    var mks=mcq.reduce(function(a,q){return a+q.marks;},0);
+    html+='<div class="shdr '+SCSS.mcq+'"><span>Section '+SEC.mcq+' &mdash; '+SNAME.mcq+'</span><span class="sbadge">'+mks+' Marks</span></div>';
+    mcq.forEach(function(q,i){
+      html+='<div class="qcard" id="mc-'+i+'">';
+      html+='<div class="qnum">Q'+(i+1)+'<span class="mkbadge">'+q.marks+' mark'+(q.marks>1?'s':'')+'</span></div>';
+      html+='<div class="qtxt">'+q.q+'</div><div class="opts">';
+      q.opts.forEach(function(o,j){
+        html+='<div class="opt" id="mo-'+i+'-'+j+'" onclick="pickMCQ('+i+','+j+')">';
+        html+='<span class="oltr">'+L[j]+'</span><span>'+o+'</span></div>';
+      });
+      html+='</div></div>';
+    });
+  }
+
+  /* TRUE/FALSE */
+  var tf=examData.trueFalse||[];
+  if(tf.length){
+    totalQ+=tf.length;
+    var mks=tf.reduce(function(a,q){return a+q.marks;},0);
+    html+='<div class="shdr '+SCSS.tf+'"><span>Section '+SEC.tf+' &mdash; '+SNAME.tf+'</span><span class="sbadge">'+mks+' Marks</span></div>';
+    tf.forEach(function(q,i){
+      html+='<div class="qcard" id="tf-'+i+'">';
+      html+='<div class="qnum">Statement '+(i+1)+'<span class="mkbadge">'+q.marks+' mark'+(q.marks>1?'s':'')+'</span></div>';
+      html+='<div class="qtxt">'+q.q+'</div>';
+      html+='<div class="tfopts"><button class="tfbtn" id="tft-'+i+'" onclick="pickTF('+i+',true)">&#10003; True</button>';
+      html+='<button class="tfbtn" id="tff-'+i+'" onclick="pickTF('+i+',false)">&#10007; False</button></div></div>';
+    });
+  }
+
+  /* FILL BLANK */
+  var fb=examData.fillBlank||[];
+  if(fb.length){
+    totalQ+=fb.length;
+    var mks=fb.reduce(function(a,q){return a+q.marks;},0);
+    html+='<div class="shdr '+SCSS.fill+'"><span>Section '+SEC.fill+' &mdash; '+SNAME.fill+'</span><span class="sbadge">'+mks+' Marks</span></div>';
+    fb.forEach(function(q,i){
+      html+='<div class="qcard" id="fb-'+i+'">';
+      html+='<div class="qnum">Q'+(i+1)+'<span class="mkbadge">'+q.marks+' mark'+(q.marks>1?'s':'')+'</span></div>';
+      html+='<div class="qtxt">'+q.q+'</div>';
+      html+='<input class="finput" id="fi-'+i+'" type="text" placeholder="Type your answer here..." oninput="pickFill('+i+')">';
+      html+='</div>';
+    });
+  }
+
+  /* MATCHING */
+  var mat=examData.matching||[];
+  if(mat.length){
+    totalQ+=mat.length;
+    var mks=mat.reduce(function(a,q){return a+q.marks;},0);
+    html+='<div class="shdr '+SCSS.match+'"><span>Section '+SEC.match+' &mdash; '+SNAME.match+'</span><span class="sbadge">'+mks+' Marks</span></div>';
+    mat.forEach(function(q,qi){
+      var rights=q.pairs.map(function(p){return p.right;}).slice().sort(function(){return Math.random()-.5;});
+      html+='<div class="qcard" id="ma-'+qi+'">';
+      html+='<div class="qnum">Exercise '+(qi+1)+'<span class="mkbadge">'+q.marks+' marks</span></div>';
+      html+='<div class="qtxt">'+q.title+'</div>';
+      html+='<table class="matchtbl"><thead><tr><th>Term</th><th>Match</th></tr></thead><tbody>';
+      q.pairs.forEach(function(p,pi){
+        html+='<tr><td class="matchleft">'+p.left+'</td><td>';
+        html+='<select class="matchsel" id="ms-'+qi+'-'+pi+'" onchange="pickMatch('+qi+','+pi+')">';
+        html+='<option value="">-- Select --</option>';
+        rights.forEach(function(r){html+='<option value="'+r+'">'+r+'</option>';});
+        html+='</select></td></tr>';
+      });
+      html+='</tbody></table></div>';
+    });
+  }
+
+  /* MULTI-SELECT */
+  var msc=examData.multiSelect||[];
+  if(msc.length){
+    totalQ+=msc.length;
+    var mks=msc.reduce(function(a,q){return a+q.marks;},0);
+    html+='<div class="shdr '+SCSS.ms+'"><span>Section '+SEC.ms+' &mdash; '+SNAME.ms+'</span><span class="sbadge">'+mks+' Marks</span></div>';
+    msc.forEach(function(q,i){
+      html+='<div class="qcard" id="msc-'+i+'">';
+      html+='<div class="qnum">Q'+(i+1)+'<span class="mkbadge">'+q.marks+' marks</span></div>';
+      html+='<div class="qtxt">'+q.q+'</div>';
+      html+='<div style="font-size:.78rem;font-weight:700;color:#64748b;margin-bottom:.5rem;">Select all that apply</div>';
+      html+='<div class="opts">';
+      q.opts.forEach(function(o,j){
+        html+='<div class="opt" id="mso-'+i+'-'+j+'" onclick="pickMS('+i+','+j+',this.classList.toggle(\'sel-ms\'))">';
+        html+='<span class="oltr">'+L[j]+'</span><span>'+o+'</span></div>';
+      });
+      html+='</div></div>';
+    });
+  }
+
+  /* ESSAY */
+  var es=examData.essay||[];
+  if(es.length){
+    totalQ+=es.length;
+    var mks=es.reduce(function(a,q){return a+q.marks;},0);
+    html+='<div class="shdr '+SCSS.essay+'"><span>Section '+SEC.essay+' &mdash; '+SNAME.essay+'</span><span class="sbadge">'+mks+' Marks</span></div>';
+    es.forEach(function(q,i){
+      html+='<div class="qcard" id="esc-'+i+'">';
+      html+='<div class="qnum">Q'+(i+1)+'<span class="mkbadge">'+q.marks+' marks</span></div>';
+      html+='<div class="qtxt">'+q.q+'</div>';
+      html+='<textarea class="esarea" id="es-'+i+'" placeholder="Write your answer here..." oninput="pickEssay('+i+')"></textarea>';
+      html+='</div>';
+    });
+  }
+
+  document.getElementById('sections').innerHTML=html;
+  document.getElementById('stu-date').value=new Date().toISOString().split('T')[0];
+  document.getElementById('submit-btn').disabled=false;
+  updateProgress();
+}
+
+/* SUBMIT */
+async function submitExam(){
+  var name=document.getElementById('stu-name').value.trim();
+  if(!name){alert('Please enter your full name.');return;}
+  var cls=document.getElementById('stu-class').value;
+  if(!cls){alert('Please select your class.');return;}
+  var unanswered=totalQ-answeredQ;
+  if(unanswered>0&&!confirm('You have '+unanswered+' unanswered question(s). Submit anyway?'))return;
+  var score=calcScore();
+  var max=(examData.meta||{}).marks||40;
+  var examTitle=(examData.meta&&examData.meta.title)||'IT Examination';
+  var payload={
+    Timestamp:'PENDING',Name:name,
+    'Student ID':document.getElementById('stu-id').value.trim(),
+    Class:cls,Class_Name:cls,
+    Date:document.getElementById('stu-date').value,
+    'Auto Score':score,'Total Marks':max,
+    'Exam Title':examTitle,
+    'Exam Grade':(examData.meta&&examData.meta.grade)||'',
+    'Exam Term':(examData.meta&&examData.meta.term)||''
+  };
+  (examData.mcq||[]).forEach(function(q,i){
+    var p=answers.mcq[i];
+    payload['MCQ Q'+(i+1)]=p!==undefined?L[p]+') '+q.opts[p]+' ['+(p===q.ans?'Correct':'Wrong')+']':'Not answered';
+  });
+  (examData.trueFalse||[]).forEach(function(q,i){
+    var p=answers.tf[i];
+    payload['TF Q'+(i+1)]=p!==undefined?(p?'True':'False')+' ['+(p===q.ans?'Correct':'Wrong')+']':'Not answered';
+  });
+  (examData.fillBlank||[]).forEach(function(q,i){
+    var r=autoMark(answers.fill[i]||'',q.ans,q.marks);
+    payload['Fill Q'+(i+1)]=(answers.fill[i]||'No answer')+' [Auto: '+r.awarded+'/'+q.marks+']';
+  });
+  (examData.matching||[]).forEach(function(q,qi){
+    q.pairs.forEach(function(p,pi){
+      var sel=(answers.match[qi]||{})[pi]||'Not answered';
+      payload['Match '+(qi+1)+' '+p.left]=sel+' ['+(sel===p.right?'Correct':'Wrong')+']';
+    });
+  });
+  (examData.multiSelect||[]).forEach(function(q,i){
+    payload['MultiSelect Q'+(i+1)]=(answers.ms[i]||[]).map(function(j){return L[j]+') '+q.opts[j];}).join(', ')||'Not answered';
+  });
+  (examData.essay||[]).forEach(function(q,i){
+    var r=autoMark(answers.essay[i]||'',q.key||'',q.marks);
+    payload['Essay Q'+(i+1)+'_Answer']=answers.essay[i]||'No answer';
+    payload['Essay Q'+(i+1)+'_AutoMark']=r.awarded+'/'+q.marks+' - '+r.detail;
+  });
+  payload['Exam Config']=JSON.stringify({
+    meta:examData.meta,
+    mcq:(examData.mcq||[]).map(function(q){return{q:q.q,opts:q.opts,ans:q.ans,marks:q.marks};}),
+    trueFalse:(examData.trueFalse||[]).map(function(q){return{q:q.q,ans:q.ans,marks:q.marks};}),
+    fillBlank:(examData.fillBlank||[]).map(function(q){return{q:q.q,ans:q.ans,marks:q.marks};}),
+    matching:(examData.matching||[]).map(function(q){return{title:q.title,pairs:q.pairs,marks:q.marks};}),
+    multiSelect:(examData.multiSelect||[]).map(function(q){return{q:q.q,opts:q.opts,correct:q.correct,marks:q.marks};}),
+    essay:(examData.essay||[]).map(function(q){return{q:q.q,key:q.key||'',marks:q.marks};})
+  });
+  lastSubmission={name:name,cls:cls,score:score,max:max,
+    answers:JSON.parse(JSON.stringify(answers)),
+    examData:JSON.parse(JSON.stringify(examData))};
+  document.getElementById('submit-btn').disabled=true;
+  document.getElementById('sending').style.display='flex';
+  var sent=false;
+  for(var att=0;att<3;att++){
+    try{
+      await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',
+        headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      sent=true;break;
+    }catch(e){await new Promise(function(r){setTimeout(r,1200);});}
+  }
+  document.getElementById('sending').style.display='none';
+  if(!sent)alert('Could not confirm submission. Please tell your teacher.');
+  showResult();
+}
+
+/* RESULT */
+function showResult(){
+  var sub=lastSubmission;
+  var pct=sub.score/sub.max*100;
+  var grade=pct>=90?'A+':pct>=80?'A':pct>=70?'B':pct>=60?'C':pct>=50?'D':'F';
+  var emoji=pct>=70?'&#x1F389;':pct>=50?'&#x1F44D;':'&#x1F4AA;';
+  var msg=pct>=80?'Excellent work!':pct>=60?'Good effort! Keep practising.':pct>=50?'You passed. Review the material!':'Talk to your teacher for help.';
+  document.getElementById('rm-emoji').innerHTML=emoji;
+  document.getElementById('rm-name').textContent='Well done, '+sub.name+'!';
+  document.getElementById('rm-score').textContent=sub.score;
+  document.getElementById('rm-out').textContent='out of '+sub.max+' marks (estimated)';
+  document.getElementById('rm-grade').textContent='Grade: '+grade;
+  document.getElementById('rm-msg').textContent=msg;
+  document.getElementById('result-modal').style.display='flex';
+}
+
+/* REVIEW */
+function goReview(){
+  document.getElementById('result-modal').style.display='none';
+  renderReview();
+  document.getElementById('page-exam').style.display='none';
+  document.getElementById('page-review').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function finishReview(){
+  document.getElementById('result-modal').style.display='none';
+  document.getElementById('page-review').style.display='none';
+  document.getElementById('page-exam').style.display='block';
+  ['stu-name','stu-id'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('stu-class').value='';
+  renderExam();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function renderReview(){
+  if(!lastSubmission)return;
+  var d=lastSubmission.examData,ans=lastSubmission.answers;
+  document.getElementById('rv-name').textContent=lastSubmission.name+' — Class: '+lastSubmission.cls;
+  document.getElementById('rv-score').textContent='Estimated Score: '+lastSubmission.score+' / '+lastSubmission.max;
+  var h='';
+  /* MCQ */
+  if((d.mcq||[]).length){
+    h+='<div class="rvsec">Multiple Choice</div>';
+    d.mcq.forEach(function(q,i){
+      var p=ans.mcq[i],skip=p===undefined,ok=p===q.ans;
+      var cc=skip?'skip':ok?'ok':'wrong';
+      h+='<div class="rvcard '+cc+'"><div class="rvhdr"><span class="rvlbl">MCQ Q'+(i+1)+'</span><span class="rvbadge '+cc+'">'+(skip?'Not Answered':ok?'Correct':'Wrong')+'</span></div>';
+      h+='<div class="rvq">'+q.q+'</div>';
+      q.opts.forEach(function(o,j){
+        var isSel=!skip&&j===p,isAns=j===q.ans;
+        var style=isSel&&isAns?'rv-opt-correct':isSel&&!isAns?'rv-opt-wrong':isAns?'rv-opt-answer':'rv-opt';
+        h+='<div class="'+style+'">'+L[j]+') '+o+'</div>';
+      });
+      h+='</div>';
+    });
+  }
+  /* TF */
+  if((d.trueFalse||[]).length){
+    h+='<div class="rvsec">True or False</div>';
+    d.trueFalse.forEach(function(q,i){
+      var p=ans.tf[i],skip=p===undefined,ok=p===q.ans;
+      var cc=skip?'skip':ok?'ok':'wrong';
+      h+='<div class="rvcard '+cc+'"><div class="rvhdr"><span class="rvlbl">T/F '+(i+1)+'</span><span class="rvbadge '+cc+'">'+(skip?'Not Answered':ok?'Correct':'Wrong')+'</span></div>';
+      h+='<div class="rvq">'+q.q+'</div>';
+      h+='<div style="margin-top:8px;font-size:.88rem;font-weight:700;">Your answer: '+(skip?'—':p?'True':'False')+'</div>';
+      h+='<div style="font-size:.84rem;color:#15803d;font-weight:700;">Correct: '+(q.ans?'True':'False')+'</div></div>';
+    });
+  }
+  /* Fill */
+  if((d.fillBlank||[]).length){
+    h+='<div class="rvsec">Fill in the Blank</div>';
+    d.fillBlank.forEach(function(q,i){
+      var r=autoMark(ans.fill[i]||'',q.ans,q.marks);
+      var cc=!ans.fill[i]?'skip':r.conf==='high'?'ok':r.awarded>0?'partial':'wrong';
+      h+='<div class="rvcard '+cc+'"><div class="rvhdr"><span class="rvlbl">Fill Q'+(i+1)+'</span><span class="rvbadge '+cc+'">'+r.awarded+'/'+q.marks+' marks</span></div>';
+      h+='<div class="rvq">'+q.q+'</div>';
+      h+='<div class="rvanswer">'+(ans.fill[i]||'<em>No answer</em>')+'</div>';
+      h+='<div class="autotag" style="'+confStyle(r.conf)+'">'+r.detail+'</div>';
+      h+='<div style="font-size:.82rem;color:#15803d;font-weight:700;margin-top:4px;">Expected: '+q.ans+'</div></div>';
+    });
+  }
+  /* Match */
+  if((d.matching||[]).length){
+    h+='<div class="rvsec">Matching</div>';
+    d.matching.forEach(function(q,qi){
+      var correct=0;q.pairs.forEach(function(p,pi){if((ans.match[qi]||{})[pi]===p.right)correct++;});
+      var cc=correct===q.pairs.length?'ok':correct>0?'partial':'wrong';
+      h+='<div class="rvcard '+cc+'"><div class="rvhdr"><span class="rvlbl">Matching '+(qi+1)+'</span><span class="rvbadge '+cc+'">'+correct+'/'+q.pairs.length+' correct</span></div>';
+      h+='<div class="rvq">'+q.title+'</div>';
+      h+='<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:.88rem;"><thead><tr><th style="text-align:left;padding:4px 8px;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">Term</th><th style="text-align:left;padding:4px 8px;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">Your Answer</th><th style="text-align:left;padding:4px 8px;background:#f1f5f9;border-bottom:1px solid #e2e8f0;">Correct</th></tr></thead><tbody>';
+      q.pairs.forEach(function(p,pi){
+        var sel=(ans.match[qi]||{})[pi]||'Not answered';var ok=sel===p.right;
+        h+='<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:5px 8px;font-weight:700;">'+p.left+'</td>';
+        h+='<td style="padding:5px 8px;color:'+(ok?'#15803d':'#dc2626')+';">'+sel+'</td>';
+        h+='<td style="padding:5px 8px;color:#15803d;font-weight:700;">'+p.right+'</td></tr>';
+      });
+      h+='</tbody></table></div>';
+    });
+  }
+  /* MS */
+  if((d.multiSelect||[]).length){
+    h+='<div class="rvsec">Multiple Select</div>';
+    d.multiSelect.forEach(function(q,i){
+      var sel=(ans.ms[i]||[]).slice().sort();var cor=q.correct.slice().sort();
+      var full=sel.join()===cor.join();var partial=!full&&sel.some(function(x){return cor.indexOf(x)>=0;});
+      var cc=!sel.length?'skip':full?'ok':partial?'partial':'wrong';
+      h+='<div class="rvcard '+cc+'"><div class="rvhdr"><span class="rvlbl">MS Q'+(i+1)+'</span><span class="rvbadge '+cc+'">'+(full?'Full marks':partial?'Partial':!sel.length?'Not Answered':'Wrong')+'</span></div>';
+      h+='<div class="rvq">'+q.q+'</div>';
+      q.opts.forEach(function(o,j){
+        var wasSel=sel.indexOf(j)>=0,isC=q.correct.indexOf(j)>=0;
+        var style=wasSel&&isC?'rv-opt-correct':wasSel&&!isC?'rv-opt-wrong':isC?'rv-opt-answer':'rv-opt';
+        h+='<div class="'+style+'">'+L[j]+') '+o+(isC?' (correct)':'')+'</div>';
+      });
+      h+='</div>';
+    });
+  }
+  /* Essay */
+  if((d.essay||[]).length){
+    h+='<div class="rvsec">Short Answer / Essay</div>';
+    d.essay.forEach(function(q,i){
+      var r=autoMark(ans.essay[i]||'',q.key||'',q.marks);
+      var cc=!ans.essay[i]?'skip':r.conf==='high'?'ok':r.awarded>0?'partial':'wrong';
+      h+='<div class="rvcard '+cc+'"><div class="rvhdr"><span class="rvlbl">Essay Q'+(i+1)+'</span><span class="rvbadge '+cc+'">Auto: '+r.awarded+'/'+q.marks+'</span></div>';
+      h+='<div class="rvq">'+q.q+'</div>';
+      h+='<div class="rvanswer">'+(ans.essay[i]||'<em>No answer provided</em>')+'</div>';
+      h+='<div class="autotag" style="'+confStyle(r.conf)+'">'+r.detail+'</div></div>';
+    });
+  }
+  document.getElementById('rv-container').innerHTML=h;
+}
+
+/* INIT */
+renderExam();
+</script>
+</body>
+</html>
