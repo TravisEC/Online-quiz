@@ -8225,10 +8225,19 @@ var lqQuestionStartTime = 0;
 function renderLiveQuiz(){
   var el=document.getElementById('lq-content'); if(!el) return;
   if(lqState==='idle'||lqState==='setup') { el.innerHTML=lqRenderSetup(); lqInitSetup(); }
-  else if(lqState==='lobby')   el.innerHTML=lqRenderLobby();
+  else if(lqState==='lobby')   { el.innerHTML=lqRenderLobby(); lqWireLobbyButtons(); }
   else if(lqState==='question') el.innerHTML=lqRenderQuestion();
   else if(lqState==='reveal')   el.innerHTML=lqRenderReveal();
   else if(lqState==='leaderboard') el.innerHTML=lqRenderFinalLeaderboard();
+}
+
+function lqWireLobbyButtons(){
+  var startBtn=document.getElementById('lq-start-btn');
+  var cancelBtn=document.getElementById('lq-cancel-btn');
+  var refreshBtn=document.getElementById('lq-refresh-btn');
+  if(startBtn) startBtn.addEventListener('click', function(){ lqStartGame(); });
+  if(cancelBtn) cancelBtn.addEventListener('click', function(){ lqEndSession(); });
+  if(refreshBtn) refreshBtn.addEventListener('click', function(){ lqRefreshLobby(); });
 }
 
 /* ── SETUP SCREEN ── */
@@ -8400,17 +8409,17 @@ function lqRenderLobby(){
 
   /* Player list */
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin:1rem 0 .5rem;">';
-  h+='<div style="font-weight:900;font-size:1rem;">👥 Waiting — <span style="color:#22c55e;">'+players.length+'</span> joined</div>';
+  h+='<div style="font-weight:900;font-size:1rem;">👥 Waiting — <span id="lq-player-count" style="color:#22c55e;">'+players.length+'</span> joined</div>';
   h+='<div style="display:flex;gap:8px;">';
-  h+='<button class="btn btn-ghost btn-sm" onclick="lqRefreshLobby()">🔄 Refresh</button>';
-  h+='<button class="btn btn-green" onclick="lqStartGame()">▶ Start Game</button>';
-  h+='<button class="btn btn-red btn-sm" onclick="lqEndSession()">✕ Cancel</button>';
+  h+='<button class="btn btn-ghost btn-sm" id="lq-refresh-btn">🔄 Refresh</button>';
+  h+='<button class="btn btn-green" id="lq-start-btn">▶ Start Game</button>';
+  h+='<button class="btn btn-red btn-sm" id="lq-cancel-btn">✕ Cancel</button>';
   h+='</div></div>';
 
   if(!players.length){
     h+='<div class="empty-state"><div style="font-size:2.5rem;">📱</div><p>Waiting for students to join...<br><span style="font-size:.8rem;color:#64748b;">Students enter the PIN and their name + class</span></p></div>';
   } else {
-    h+='<div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    h+='<div id="lq-player-chips" style="display:flex;flex-wrap:wrap;gap:8px;">';
     players.forEach(function(p){
       h+='<div style="background:#1e3a5f;border:1px solid #3b82f6;border-radius:8px;padding:6px 14px;font-size:.82rem;font-weight:700;">'+escH(p.name)+' <span style="color:#64748b;font-size:.72rem;">'+escH(p.cls)+'</span></div>';
     });
@@ -8829,22 +8838,16 @@ async function lqPoll(){
       }catch(e){}
     }
 
-    /* Update player list in lobby */
+    /* Update player list in lobby without re-rendering */
     if(lqState==='lobby'){
       var playerCount=Object.keys(lqPlayers).length;
-      var countEl=document.querySelector('#lq-content [style*="color:#22c55e"]');
+      var countEl=document.getElementById('lq-player-count');
       if(countEl) countEl.textContent=playerCount;
-      /* Refresh lobby player chips */
-      var lobbyEl=document.getElementById('lq-content');
-      if(lobbyEl){
-        var chips=lobbyEl.querySelector('div[style*="display:flex;flex-wrap:wrap"]');
-        if(chips||playerCount>0){
-          var playersArr=Object.values(lqPlayers);
-          var newChips=playersArr.map(function(p){
-            return '<div style="background:#1e3a5f;border:1px solid #3b82f6;border-radius:8px;padding:6px 14px;font-size:.82rem;font-weight:700;">'+escH(p.name)+' <span style="color:#64748b;font-size:.72rem;">'+escH(p.cls)+'</span></div>';
-          }).join('');
-          if(chips) chips.innerHTML=newChips;
-        }
+      var chips=document.getElementById('lq-player-chips');
+      if(chips){
+        chips.innerHTML=Object.values(lqPlayers).map(function(p){
+          return '<div style="background:#1e3a5f;border:1px solid #3b82f6;border-radius:8px;padding:6px 14px;font-size:.82rem;font-weight:700;">'+escH(p.name)+' <span style="color:#64748b;font-size:.72rem;">'+escH(p.cls)+'</span></div>';
+        }).join('');
       }
     }
   }catch(e){ console.warn('lqPoll error:',e); }
