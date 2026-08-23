@@ -363,13 +363,23 @@ async function poll(){
             lastCorrect=parseInt(selectedAnswer)===parseInt(correctAns);
           }
           if(lastCorrect){
-            var timer=parseInt(srv.timer)||30;
-            var elapsed=(Date.now()-questionStartTime)/1000;
-            var mode=srv.scoreMode||'speed';
-            if(mode==='speed'){
-              lastGain=Math.max(500,Math.floor((1-(Math.min(elapsed,timer)/timer)/2)*1000));
-            } else { lastGain=1000; }
-            myScore+=lastGain;
+            /* Read score from server to stay in sync with admin */
+            var scores={};
+            try{ scores=JSON.parse(srv.scores||'{}'); }catch(e){}
+            var myData=scores[studentId];
+            if(myData&&myData.lastGain){
+              lastGain=myData.lastGain;
+              myScore=myData.total;
+            } else {
+              /* Fallback: calculate locally */
+              var timer=parseInt(srv.timer)||30;
+              var elapsed=(Date.now()-questionStartTime)/1000;
+              var mode=srv.scoreMode||'speed';
+              if(mode==='speed'){
+                lastGain=Math.max(500,Math.floor((1-(Math.min(elapsed,timer)/timer)/2)*1000));
+              } else { lastGain=1000; }
+              myScore+=lastGain;
+            }
           } else { lastGain=0; }
         } else { lastCorrect=false; lastGain=0; }
       }
