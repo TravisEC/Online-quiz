@@ -2233,7 +2233,7 @@ var EXAM_CONFIG = {
    · Records class reassignment
 ════════════════════════════════════════════════ */
 
-var SURL        = localStorage.getItem('scriptUrl') || 'https://script.google.com/macros/s/AKfycbxNy5k-ugfgL3SHUYWpLfPetZDdlGP8DAzwEKHHBANJAb6clC65f4o2JfxWh4mmwI5n/exec';
+var SURL        = localStorage.getItem('scriptUrl') || 'https://script.google.com/macros/s/AKfycbxrrDxbVlTP1u5oyR776zVOfG3gTMK1mIPFeh9qFIbTFYaOA8RL5tFseH99-c0JTq7p/exec';
 var L           = ['A','B','C','D','E','F'];
 var ALL_CLS     = ['7-1','7-2','7-3','7-4','8-1','8-2','8-3','8-4','9-1','9-2','9-3','9-4','10 Arts','10 Business','10 Tvet 1','10 Tvet 2','CVQ 1','CVQ 2','11 Arts','11 Business','11 Tvet'];
 var GRADE_TOPICS= {"7": ["M1: Fundamentals of Digital Technologies", "M1: Importance & Impact of Digital Literacy", "M1: Selecting & Evaluating Digital Tools", "M1: Categories of Digital Tools", "M1: Digital Natives & 21st Century Skills", "M2: Introduction to Digital Citizenship", "M2: Moral & Ethical Practices", "M2: Rights, Responsibilities & Benefits", "M2: Digital Footprint", "M2: Health, Wellness & Sustainable Use", "M2: Organizations & Legislation", "M3: Digital Communication & Collaboration", "M3: Characteristics, Benefits & Limitations", "M3: Selecting Tools & Ethical Behaviours", "M3: Practical Digital Communication Skills", "M4: Digital Analysis & Design", "General"], "8": ["General"], "9": ["T1: Social & Economic Impact of ICT", "T1: Computer Security - Information Systems", "T1: Computer Security - Internal Threats", "T1: Computer Security - External Threats", "T1: Data Protection - Software Methods", "T1: Data Protection - Physical Methods", "T1: Data Recovery & Backups", "T1: Cybersecurity", "T1: Cyber Attacks & Threats", "T1: Misuse of Information", "T1: Computer Surveillance & Copyright", "T1: Personal Security Practices", "T1: Automation & Job Security", "T1: Personnel in IT Professions", "T1: Impact on Education", "T1: Impact on Medicine", "T1: Impact on Business", "T1: Impact on Law Enforcement", "T1: Impact on Recreation", "T2: Data & Information", "T2: Data Capture", "T2: Data Validation", "T2: Data Verification", "General"]};
@@ -8364,18 +8364,15 @@ async function lqLaunch(){
 
   /* Save session to Apps Script */
   try{
-    var payload={
-      action:'lqCreate',
-      pin:pin,
-      name:name,
-      timer:timer,
-      scoreMode:scoreMode,
-      questions:JSON.stringify(pubQs),
-      totalQuestions:qs.length,
-      status:'lobby',
-      currentQ:-1
-    };
-    var r=await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)});
+    var createParams='?action=lqCreate'
+      +'&pin='+encodeURIComponent(pin)
+      +'&name='+encodeURIComponent(name)
+      +'&timer='+timer
+      +'&scoreMode='+encodeURIComponent(scoreMode)
+      +'&questions='+encodeURIComponent(JSON.stringify(pubQs))
+      +'&totalQuestions='+qs.length
+      +'&t='+Date.now();
+    var r=await fetch(SURL+createParams,{method:'GET',mode:'cors'});
     var j=await r.json();
     if(!j.ok) throw new Error(j.error||'Failed to create session');
   }catch(e){
@@ -8435,8 +8432,7 @@ async function lqPushQuestion(idx){
   lqQuestionStartTime=Date.now();
 
   try{
-    await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({action:'lqNextQuestion',pin:lqSession.pin,currentQ:idx,status:'question'})});
+    await fetch(SURL+'?action=lqNextQuestion&pin='+encodeURIComponent(lqSession.pin)+'&currentQ='+idx+'&t='+Date.now(),{method:'GET',mode:'cors'});
   }catch(e){ console.warn('lqPushQuestion error:',e); }
 
   lqState='question';
@@ -8558,8 +8554,7 @@ async function lqReveal(){
 
   /* Push reveal state to server */
   try{
-    await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({action:'lqReveal',pin:lqSession.pin,status:'reveal',currentQ:lqCurrentIdx})});
+    await fetch(SURL+'?action=lqReveal&pin='+encodeURIComponent(lqSession.pin)+'&currentQ='+lqCurrentIdx+'&t='+Date.now(),{method:'GET',mode:'cors'});
   }catch(e){ console.warn('lqReveal error:',e); }
 
   lqState='reveal';
@@ -8676,8 +8671,7 @@ async function lqNext(){
 async function lqFinish(){
   if(lqCountdownTimer) clearInterval(lqCountdownTimer);
   try{
-    await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},
-      body:JSON.stringify({action:'lqEnd',pin:lqSession.pin,status:'ended'})});
+    await fetch(SURL+'?action=lqEnd&pin='+encodeURIComponent(lqSession.pin)+'&t='+Date.now(),{method:'GET',mode:'cors'});
   }catch(e){ console.warn('lqFinish error:',e); }
   lqState='leaderboard';
   lqStopPolling();
