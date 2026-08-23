@@ -8375,6 +8375,7 @@ async function lqLaunch(){
     var r=await fetch(SURL+createParams,{method:'GET',mode:'cors'});
     var j=await r.json();
     if(!j.ok) throw new Error(j.error||'Failed to create session');
+    console.log('Session created on server ✅ PIN:',pin);
   }catch(e){
     alert('Could not create session on server: '+e.message+'\n\nMake sure your Apps Script is updated to v4.');
     return;
@@ -8421,6 +8422,10 @@ function lqRenderLobby(){
 
 /* ── START GAME ── */
 async function lqStartGame(){
+  if(!lqQuestions||!lqQuestions.length){
+    alert('No questions loaded. Please set up the session again.');
+    lqState='idle'; renderLiveQuiz(); return;
+  }
   lqCurrentIdx=0;
   await lqPushQuestion(0);
 }
@@ -8445,6 +8450,7 @@ async function lqPushQuestion(idx){
 /* ── QUESTION SCREEN (host view) ── */
 function lqRenderQuestion(){
   var q=lqQuestions[lqCurrentIdx];
+  if(!q) return '<div class="empty-state"><p>Loading question...</p></div>';
   var answered=Object.keys(lqAnswers).length;
   var total=Object.keys(lqPlayers).length;
   var h='';
