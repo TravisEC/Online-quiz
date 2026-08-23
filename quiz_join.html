@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<title>IT ExamPro — Live Quiz</title>
+<style>
+:root{--dark:#0f172a;--dark2:#1e293b;--dark3:#334155;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--dark);color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;}
+.card{background:var(--dark2);border:1px solid var(--dark3);border-radius:16px;padding:2rem;width:100%;max-width:420px;}
+.logo{text-align:center;margin-bottom:1.5rem;}
+.logo h1{font-size:1.4rem;font-weight:900;color:var(--blue);}
+.logo p{font-size:.82rem;color:#64748b;margin-top:4px;}
+.fl{font-size:.76rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px;}
+.fi{width:100%;padding:12px 16px;border:2px solid var(--dark3);border-radius:10px;background:var(--dark3);color:#fff;font-size:1rem;font-weight:600;outline:none;transition:border-color .2s;margin-bottom:1rem;}
+.fi:focus{border-color:var(--blue);}
+.fi-pin{font-size:2rem;font-weight:900;text-align:center;letter-spacing:8px;font-family:'Courier New',monospace;}
+.btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .15s;margin-bottom:.5rem;}
+.btn-blue{background:#2563eb;color:#fff;}
+.btn-blue:hover{background:#1d4ed8;}
+.btn-blue:disabled{background:#334155;color:#64748b;cursor:not-allowed;}
+.status{text-align:center;padding:1.5rem;font-size:.88rem;color:#64748b;font-weight:600;}
+.status.error{color:var(--red);}
+.status.success{color:var(--green);}
+
+/* Lobby */
+.lobby{text-align:center;padding:1rem 0;}
+.lobby .name-badge{font-size:1.3rem;font-weight:900;color:#fff;background:#1e3a5f;border:2px solid var(--blue);border-radius:10px;padding:.6rem 1.5rem;display:inline-block;margin-bottom:1rem;}
+.lobby .waiting{font-size:.88rem;color:#64748b;margin-bottom:1rem;}
+.pulse{animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* Question */
+.question-screen{text-align:center;}
+.q-text{font-size:1.1rem;font-weight:800;color:#fff;background:#1e3a5f;border-radius:12px;padding:1.2rem;margin-bottom:1.2rem;line-height:1.4;}
+.q-timer{font-size:2.5rem;font-weight:900;font-family:'Courier New',monospace;margin-bottom:.5rem;}
+.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem;}
+.ans-btn{padding:1.2rem .8rem;border:none;border-radius:12px;font-size:1rem;font-weight:800;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:transform .1s,opacity .2s;}
+.ans-btn:hover{transform:scale(1.03);}
+.ans-btn:disabled{opacity:.5;cursor:not-allowed;}
+.ans-btn.selected{outline:4px solid #fff;}
+.ans-btn.correct{outline:4px solid #22c55e;}
+.ans-btn.wrong{opacity:.4;}
+.ans-red{background:#ef4444;}.ans-blue{background:#3b82f6;}.ans-green{background:#22c55e;}.ans-yellow{background:#f59e0b;}
+.ans-purple{background:#a855f7;}.ans-pink{background:#ec4899;}
+
+/* Score reveal */
+.result-screen{text-align:center;padding:1rem 0;}
+.result-icon{font-size:4rem;margin-bottom:.5rem;}
+.result-label{font-size:1.2rem;font-weight:900;margin-bottom:.3rem;}
+.result-points{font-size:2rem;font-weight:900;color:var(--yellow);}
+.result-total{font-size:.88rem;color:#64748b;margin-top:.3rem;}
+
+/* Final */
+.final-screen{text-align:center;}
+.final-score{font-size:3rem;font-weight:900;color:var(--yellow);margin:1rem 0;}
+
+/* Text input for fill/essay */
+.fi-answer{width:100%;padding:12px;border:2px solid var(--dark3);border-radius:10px;background:var(--dark3);color:#fff;font-size:1rem;font-weight:600;outline:none;margin-bottom:.8rem;resize:vertical;}
+.fi-answer:focus{border-color:var(--blue);}
+</style>
+</head>
+<body>
+<div class="card" id="app">
+  <!-- JS renders into here -->
+</div>
+
+<script>
+var SURL = 'https://script.google.com/macros/s/AKfycbxrrDxbVlTP1u5oyR776zVOfG3gTMK1mIPFeh9qFIbTFYaOA8RL5tFseH99-c0JTq7p/exec';
+
+var state = 'join'; /* join | lobby | question | result | final */
+var studentId = 'st_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+var playerName = '';
+var playerCls  = '';
+var sessionPin = '';
+var session    = null;
+var currentQ   = -1;
+var submitted  = false;
+var myScore    = 0;
+var lastGain   = 0;
+var lastCorrect = null;
+var questionStartTime = 0;
+var pollTimer  = null;
+var countdownTimer = null;
+var timeLeft   = 0;
+var selectedAnswer = null;
+
+var COLORS = ['ans-red','ans-blue','ans-green','ans-yellow','ans-purple','ans-pink'];
+var SHAPES = ['▲','◆','●','■','★','♥'];
+var L = ['A','B','C','D','E','F'];
+
+/* ── RENDER ── */
+function render(){
+  var el=document.getElementById('app');
+  if(state==='join')     el.innerHTML=renderJoin();
+  else if(state==='lobby')    el.innerHTML=renderLobby();
+  else if(state==='question') el.innerHTML=renderQuestion();
+  else if(state==='result')   el.innerHTML=renderResult();
+  else if(state==='final')    el.innerHTML=renderFinal();
+}
+
+function renderJoin(){
+  return '<div class="logo"><h1>📺 IT ExamPro</h1><p>Live Quiz — Enter your PIN to join</p></div>'
+    +'<div class="fl">Game PIN</div>'
+    +'<input class="fi fi-pin" id="j-pin" type="tel" maxlength="6" placeholder="000000" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">'
+    +'<div class="fl">Your Full Name</div>'
+    +'<input class="fi" id="j-name" type="text" placeholder="e.g. John Smith" autocomplete="off">'
+    +'<div class="fl">Class</div>'
+    +'<input class="fi" id="j-cls" type="text" placeholder="e.g. 9-2" autocomplete="off">'
+    +'<button class="btn btn-blue" onclick="joinGame()">Join</button>'
+    +'<div id="j-status" class="status"></div>';
+}
+
+async function joinGame(){
+  var pin=(document.getElementById('j-pin')||{}).value||'';
+  var name=(document.getElementById('j-name')||{}).value||'';
+  var cls=(document.getElementById('j-cls')||{}).value||'';
+  if(!pin||pin.length!==6){setStatus('Enter the 6-digit PIN.','error');return;}
+  if(!name.trim()){setStatus('Enter your full name.','error');return;}
+  if(!cls.trim()){setStatus('Enter your class.','error');return;}
+
+  setStatus('Joining...','');
+  try{
+    var r=await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'lqJoin',pin:pin,studentId:studentId,name:name.trim(),cls:cls.trim()})});
+    var j=await r.json();
+    if(!j.ok){setStatus(j.error||'Could not join.','error');return;}
+    sessionPin=pin; playerName=name.trim(); playerCls=cls.trim();
+    session=j.session;
+    state='lobby';
+    render();
+    startPolling();
+  }catch(e){setStatus('Connection error. Check your internet.','error');}
+}
+
+function setStatus(msg,type){
+  var el=document.getElementById('j-status');
+  if(el){el.textContent=msg;el.className='status'+(type?' '+type:'');}
+}
+
+/* ── LOBBY ── */
+function renderLobby(){
+  return '<div class="lobby">'
+    +'<div style="font-size:.82rem;color:#64748b;margin-bottom:.8rem;">You\'re in! Waiting for the teacher to start...</div>'
+    +'<div class="name-badge">'+esc(playerName)+'</div>'
+    +'<div style="font-size:.76rem;color:#64748b;margin-bottom:1.5rem;">'+esc(playerCls)+'</div>'
+    +'<div class="waiting pulse">⏳ Waiting for game to start...</div>'
+    +'</div>';
+}
+
+/* ── QUESTION ── */
+function renderQuestion(){
+  if(!session) return '<div class="status">Loading...</div>';
+  var q=null;
+  try{ var qs=JSON.parse(session.questions||'[]'); q=qs[currentQ]; }catch(e){}
+  if(!q) return '<div class="status">Loading question...</div>';
+
+  var t=q.type;
+  var h='<div class="question-screen">';
+  h+='<div style="font-size:.76rem;color:#94a3b8;margin-bottom:.4rem;">Question '+(currentQ+1)+'</div>';
+  h+='<div class="q-timer" id="q-timer" style="color:'+(timeLeft<=5?'#ef4444':timeLeft<=10?'#f59e0b':'#f59e0b')+'">'+timeLeft+'</div>';
+
+  /* Timer bar */
+  var timer=parseInt(session.timer)||30;
+  var pct=Math.round(timeLeft/timer*100);
+  h+='<div style="background:#334155;border-radius:999px;height:6px;margin-bottom:1rem;overflow:hidden;">';
+  h+='<div id="q-bar" style="width:'+pct+'%;background:'+(pct>33?'#22c55e':pct>15?'#f59e0b':'#ef4444')+';height:100%;transition:width 1s linear;"></div></div>';
+
+  if(submitted){
+    h+='<div style="font-size:.9rem;color:#22c55e;font-weight:800;margin-bottom:1rem;">✅ Answer submitted! Waiting for results...</div>';
+  }
+
+  /* Answer UI */
+  if(t==='mcq'||t==='ms'){
+    h+='<div class="answers-grid">';
+    (q.opts||[]).forEach(function(opt,i){
+      var sel=submitted&&(Array.isArray(selectedAnswer)?selectedAnswer.indexOf(i)>=0:selectedAnswer==i);
+      h+='<button class="ans-btn '+COLORS[i%COLORS.length]+(sel?' selected':'')
+        +'" onclick="submitAns('+i+')" '+(submitted?'disabled':'')+' style="flex-direction:column;">'
+        +'<span style="font-size:1.5rem;">'+SHAPES[i%SHAPES.length]+'</span>'
+        +'<span style="font-size:.82rem;">'+esc(opt)+'</span></button>';
+    });
+    h+='</div>';
+  } else if(t==='tf'){
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:1rem;">';
+    var trSel=submitted&&selectedAnswer===true;
+    var flSel=submitted&&selectedAnswer===false;
+    h+='<button class="ans-btn ans-green'+(trSel?' selected':'')
+      +'" onclick="submitAns(true)" '+(submitted?'disabled':'')
+      +' style="padding:2rem;font-size:1.2rem;">✓<br>TRUE</button>';
+    h+='<button class="ans-btn ans-red'+(flSel?' selected':'')
+      +'" onclick="submitAns(false)" '+(submitted?'disabled':'')
+      +' style="padding:2rem;font-size:1.2rem;">✗<br>FALSE</button>';
+    h+='</div>';
+  } else if(t==='fill'||t==='essay'){
+    h+='<div style="text-align:left;margin-bottom:.5rem;font-size:.8rem;color:#94a3b8;">'+(t==='fill'?'Type your answer:' :'Write your answer:')+'</div>';
+    h+='<textarea class="fi-answer" id="ans-text" rows="'+(t==='essay'?4:2)+'" placeholder="Your answer..." '+(submitted?'disabled':'')+'></textarea>';
+    h+='<button class="btn btn-blue" onclick="submitTextAns()" '+(submitted?'disabled':'')+'>Submit Answer</button>';
+  } else if(t==='match'){
+    h+='<div style="text-align:left;margin-bottom:.8rem;">';
+    (q.pairs||[]).forEach(function(p,i){
+      h+='<div style="margin-bottom:.5rem;">';
+      h+='<div style="font-size:.8rem;color:#94a3b8;margin-bottom:3px;">'+esc(p.left)+'</div>';
+      h+='<input class="fi" id="match-'+i+'" placeholder="Type the match..." '+(submitted?'disabled':'')+'style="margin-bottom:0;">';
+      h+='</div>';
+    });
+    h+='</div>';
+    h+='<button class="btn btn-blue" onclick="submitMatchAns()" '+(submitted?'disabled':'')+'>Submit Answers</button>';
+  }
+
+  h+='</div>';
+  return h;
+}
+
+async function submitAns(val){
+  if(submitted) return;
+  selectedAnswer=val;
+  submitted=true;
+  var elapsed=(Date.now()-questionStartTime)/1000;
+  await sendAnswer(val,elapsed);
+  render();
+}
+async function submitTextAns(){
+  if(submitted) return;
+  var val=(document.getElementById('ans-text')||{}).value||'';
+  if(!val.trim()){return;}
+  submitted=true;
+  var elapsed=(Date.now()-questionStartTime)/1000;
+  await sendAnswer(val.trim(),elapsed);
+  render();
+}
+async function submitMatchAns(){
+  if(submitted) return;
+  var pairs=[];
+  var inputs=document.querySelectorAll('[id^="match-"]');
+  inputs.forEach(function(inp){ pairs.push(inp.value.trim()); });
+  submitted=true;
+  var elapsed=(Date.now()-questionStartTime)/1000;
+  await sendAnswer(pairs,elapsed);
+  render();
+}
+
+async function sendAnswer(answer,elapsed){
+  try{
+    await fetch(SURL,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        action:'lqSubmitAnswer',
+        pin:sessionPin,
+        studentId:studentId,
+        questionIdx:currentQ,
+        answer:answer,
+        responseTime:Math.round(elapsed*10)/10
+      })});
+  }catch(e){ console.warn('submitAnswer error:',e); }
+}
+
+/* ── RESULT SCREEN ── */
+function renderResult(){
+  var icon=lastCorrect===null?'📝':lastCorrect?'✅':'❌';
+  var label=lastCorrect===null?'Submitted!':lastCorrect?'Correct!':'Wrong!';
+  var color=lastCorrect===null?'#94a3b8':lastCorrect?'#22c55e':'#ef4444';
+  return '<div class="result-screen">'
+    +'<div class="result-icon">'+icon+'</div>'
+    +'<div class="result-label" style="color:'+color+';">'+label+'</div>'
+    +(lastGain>0?'<div class="result-points">+'+lastGain+'</div>':'')
+    +'<div class="result-total">Total: '+myScore+' points</div>'
+    +'<div style="margin-top:1.5rem;font-size:.82rem;color:#64748b;" class="pulse">Waiting for next question...</div>'
+    +'</div>';
+}
+
+/* ── FINAL SCREEN ── */
+function renderFinal(){
+  return '<div class="final-screen">'
+    +'<div style="font-size:2.5rem;margin-bottom:.5rem;">🏆</div>'
+    +'<div style="font-size:1.3rem;font-weight:900;margin-bottom:.3rem;">Game Over!</div>'
+    +'<div style="font-size:.82rem;color:#64748b;margin-bottom:.5rem;">Your final score</div>'
+    +'<div class="final-score">'+myScore+'</div>'
+    +'<div style="font-size:.82rem;color:#64748b;margin-bottom:1.5rem;">points</div>'
+    +'<div style="font-size:.88rem;color:#94a3b8;">'+esc(playerName)+' • '+esc(playerCls)+'</div>'
+    +'</div>';
+}
+
+/* ── POLLING ── */
+function startPolling(){
+  stopPolling();
+  pollTimer=setInterval(poll, state==='lobby'?3000:2000);
+}
+function stopPolling(){
+  if(pollTimer) clearInterval(pollTimer);
+  pollTimer=null;
+}
+
+async function poll(){
+  if(!sessionPin) return;
+  try{
+    var r=await fetch(SURL+'?action=lqGetSession&pin='+sessionPin+'&t='+Date.now(),{method:'GET',mode:'cors'});
+    if(!r.ok) return;
+    var j=await r.json();
+    if(!j.ok||!j.session) return;
+    var srv=j.session;
+    session=srv;
+
+    var srvStatus=srv.status;
+    var srvQ=parseInt(srv.currentQ);
+
+    /* Lobby → Question */
+    if(state==='lobby'&&srvStatus==='question'){
+      state='question';
+      currentQ=srvQ;
+      submitted=false;
+      selectedAnswer=null;
+      lastCorrect=null;
+      questionStartTime=Date.now();
+      timeLeft=parseInt(srv.timer)||30;
+      render();
+      startCountdown();
+      startPolling();
+      return;
+    }
+
+    /* New question while in result */
+    if(state==='result'&&srvStatus==='question'&&srvQ!==currentQ){
+      state='question';
+      currentQ=srvQ;
+      submitted=false;
+      selectedAnswer=null;
+      lastCorrect=null;
+      questionStartTime=Date.now();
+      timeLeft=parseInt(srv.timer)||30;
+      render();
+      startCountdown();
+      startPolling();
+      return;
+    }
+
+    /* Question → Reveal */
+    if(state==='question'&&srvStatus==='reveal'){
+      stopCountdown();
+      /* Check if answer was correct */
+      var q=null;
+      try{ var qs=JSON.parse(srv.questions||'[]'); q=qs[currentQ]; }catch(e){}
+      /* For fill/essay/match we can't check client-side accurately */
+      if(q&&(q.type==='fill'||q.type==='essay'||q.type==='match')){
+        lastCorrect=null; lastGain=0;
+      } else if(q&&submitted){
+        lastCorrect=checkCorrect(q,selectedAnswer);
+        if(lastCorrect){
+          var timer=parseInt(srv.timer)||30;
+          var elapsed=(Date.now()-questionStartTime)/1000;
+          var mode=srv.scoreMode||'speed';
+          if(mode==='speed'){
+            lastGain=Math.max(500,Math.floor((1-(Math.min(elapsed,timer)/timer)/2)*1000));
+          } else {
+            lastGain=1000;
+          }
+          myScore+=lastGain;
+        } else { lastGain=0; }
+      } else { lastCorrect=false; lastGain=0; }
+      state='result';
+      render();
+      startPolling();
+      return;
+    }
+
+    /* Session ended */
+    if(srvStatus==='ended'){
+      stopPolling();
+      stopCountdown();
+      state='final';
+      render();
+    }
+  }catch(e){ console.warn('poll error:',e); }
+}
+
+function checkCorrect(q,ans){
+  if(ans===null||ans===undefined) return false;
+  var t=q.type;
+  if(t==='mcq') return parseInt(ans)===parseInt(q.ans);
+  if(t==='tf')  return String(ans)===String(q.ans);
+  return false; /* fill/essay/match checked server-side */
+}
+
+/* ── COUNTDOWN ── */
+function startCountdown(){
+  stopCountdown();
+  countdownTimer=setInterval(function(){
+    timeLeft--;
+    var td=document.getElementById('q-timer');
+    var bar=document.getElementById('q-bar');
+    var timer=session?parseInt(session.timer)||30:30;
+    if(td){ td.textContent=timeLeft; td.style.color=timeLeft<=5?'#ef4444':timeLeft<=10?'#f59e0b':'#f59e0b'; }
+    var pct=Math.round(timeLeft/timer*100);
+    if(bar){ bar.style.width=pct+'%'; bar.style.background=pct>33?'#22c55e':pct>15?'#f59e0b':'#ef4444'; }
+    if(timeLeft<=0){ stopCountdown(); if(!submitted){ submitted=true; render(); } }
+  },1000);
+}
+function stopCountdown(){
+  if(countdownTimer) clearInterval(countdownTimer);
+  countdownTimer=null;
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* Init */
+render();
+</script>
+</body>
+</html>
