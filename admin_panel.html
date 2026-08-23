@@ -8267,6 +8267,7 @@ function lqRenderSetup(){
   h+='<div><div class="fl">Session Name</div><input class="fi" id="lq-name" placeholder="e.g. Grade 9 IT Quiz"></div>';
   h+='<div><div class="fl">Timer (seconds)</div><input class="fi" type="number" id="lq-timer" value="30" min="5" max="120"></div>';
   h+='<div><div class="fl">Score Mode</div><select class="fi-sel" id="lq-scoremode"><option value="speed">⚡ Speed (faster = more points)</option><option value="accuracy">🎯 Accuracy (correct = full points)</option></select></div>';
+h+='<div><div class="fl">Points Per Question</div><select class="fi-sel" id="lq-points"><option value="1000">1000 (classic)</option><option value="500">500</option><option value="100">100</option><option value="marks">Use question marks</option></select></div>';
   h+='</div>';
 
   h+='<div id="lq-preview" style="margin-bottom:1rem;font-size:.82rem;color:#64748b;"></div>';
@@ -8551,7 +8552,8 @@ async function lqReveal(){
   /* Calculate scores for this question */
   var q=lqQuestions[lqCurrentIdx];
   var timer=lqSession.timer;
-  var pointsPossible=1000;
+  var pointsSetting=(document.getElementById('lq-points')||{}).value||'1000';
+  var pointsPossible=pointsSetting==='marks'?(q.marks||1)*100:parseInt(pointsSetting)||1000;
 
   Object.keys(lqAnswers).forEach(function(sid){
     var ans=lqAnswers[sid];
@@ -8575,7 +8577,8 @@ async function lqReveal(){
   try{
     var q=lqQuestions[lqCurrentIdx];
     var correctAns=encodeURIComponent(JSON.stringify(q.ans!==undefined?q.ans:(q.correct||null)));
-    await fetch(SURL+'?action=lqReveal&pin='+encodeURIComponent(lqSession.pin)+'&currentQ='+lqCurrentIdx+'&correctAnswer='+correctAns+'&t='+Date.now(),{method:'GET',mode:'cors'});
+    var scoresParam=encodeURIComponent(JSON.stringify(lqScores));
+    await fetch(SURL+'?action=lqReveal&pin='+encodeURIComponent(lqSession.pin)+'&currentQ='+lqCurrentIdx+'&correctAnswer='+correctAns+'&scores='+scoresParam+'&t='+Date.now(),{method:'GET',mode:'cors'});
   }catch(e){ console.warn('lqReveal error:',e); }
 
   lqState='reveal';
