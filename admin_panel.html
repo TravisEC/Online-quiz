@@ -8468,7 +8468,7 @@ function lqRenderQuestion(){
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">';
   h+='<div style="font-size:.82rem;font-weight:800;color:#94a3b8;">Question '+(lqCurrentIdx+1)+' of '+lqQuestions.length+'</div>';
   h+='<div style="display:flex;align-items:center;gap:12px;">';
-  h+='<div style="font-size:.82rem;color:#22c55e;font-weight:800;">'+answered+'/'+total+' answered</div>';
+  h+='<div id="lq-ans-count" style="font-size:.82rem;color:#22c55e;font-weight:800;">'+answered+'/'+total+' answered</div>';
   h+='<div id="lq-timer-display" style="font-size:2rem;font-weight:900;color:'+(lqTimeLeft<=5?'#ef4444':'#f59e0b');+'font-family:\'Space Mono\',monospace;min-width:60px;text-align:center;">'+lqTimeLeft+'</div>';
   h+='<button class="btn btn-blue btn-sm" onclick="lqReveal()">⏭ Reveal Answer</button>';
   h+='</div></div>';
@@ -8514,7 +8514,7 @@ function lqRenderQuestion(){
   h+='<div style="font-size:.76rem;font-weight:800;color:#94a3b8;text-transform:uppercase;margin-bottom:.5rem;">Live Responses</div>';
   h+='<div style="display:flex;align-items:center;gap:12px;">';
   h+='<div style="flex:1;background:#334155;border-radius:999px;height:14px;overflow:hidden;">';
-  h+='<div style="width:'+(total>0?Math.round(answered/total*100):0)+'%;background:#22c55e;height:100%;transition:width .5s;"></div></div>';
+  h+='<div id="lq-ans-bar" style="width:'+(total>0?Math.round(answered/total*100):0)+'%;background:#22c55e;height:100%;transition:width .5s;"></div></div>';
   h+='<div style="font-size:.9rem;font-weight:900;color:#22c55e;white-space:nowrap;">'+answered+' / '+total+'</div></div></div>';
 
   return h;
@@ -8569,7 +8569,9 @@ async function lqReveal(){
 
   /* Push reveal state to server */
   try{
-    await fetch(SURL+'?action=lqReveal&pin='+encodeURIComponent(lqSession.pin)+'&currentQ='+lqCurrentIdx+'&t='+Date.now(),{method:'GET',mode:'cors'});
+    var q=lqQuestions[lqCurrentIdx];
+    var correctAns=encodeURIComponent(JSON.stringify(q.ans!==undefined?q.ans:(q.correct||null)));
+    await fetch(SURL+'?action=lqReveal&pin='+encodeURIComponent(lqSession.pin)+'&currentQ='+lqCurrentIdx+'&correctAnswer='+correctAns+'&t='+Date.now(),{method:'GET',mode:'cors'});
   }catch(e){ console.warn('lqReveal error:',e); }
 
   lqState='reveal';
@@ -8825,16 +8827,13 @@ async function lqPoll(){
         lqAnswers={};
         answers.forEach(function(a){ lqAnswers[a.studentId]=a; });
         /* Update live count in DOM */
-        var countEl=document.querySelector('#lq-content [style*="color:#22c55e;font-weight:800"]');
-        if(countEl&&countEl.textContent.indexOf('answered')>-1){
-          countEl.textContent=Object.keys(lqAnswers).length+'/'+Object.keys(lqPlayers).length+' answered';
-        }
-        /* Update progress bar */
-        var total=Object.keys(lqPlayers).length;
         var answered=Object.keys(lqAnswers).length;
+        var total=Object.keys(lqPlayers).length;
+        var countEl=document.getElementById('lq-ans-count');
+        if(countEl) countEl.textContent=answered+'/'+total+' answered';
         var pct=total>0?Math.round(answered/total*100):0;
-        var bars=document.querySelectorAll('#lq-content div[style*="background:#22c55e;height:100%;transition"]');
-        if(bars.length>0) bars[bars.length-1].style.width=pct+'%';
+        var bar=document.getElementById('lq-ans-bar');
+        if(bar) bar.style.width=pct+'%';
       }catch(e){}
     }
 
