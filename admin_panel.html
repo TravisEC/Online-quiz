@@ -3139,7 +3139,7 @@ function saveAllToRecords(){
 }
 function delRecord(safeId){
   if(!confirm('Delete this record?'))return;
-  records=records.filter(function(r){return r.id.replace(/[^a-z0-9]/gi,'_')!==safeId;});
+  records=records.filter(function(r){var rid=(r.id||(r.name||'')+'|'+(r.examTitle||'')+'|'+(r.date||'')).replace(/[^a-z0-9]/gi,'_');return rid!==safeId;});
   localStorage.setItem('examRecords',JSON.stringify(records));cloudQueueSave('records');renderRecords();
 }
 function clearAllRecords(){
@@ -7684,11 +7684,10 @@ function mbExport(){
 
   var entry={mb:mb,sorted:sorted,totals:totals,totalMax:totalMax,avg:avg,high:high,low:low,passed:passed,failed:failed,pctPass:pctPass,pctFail:pctFail};
   var html=mbBuildExportHTML([entry],d,false);
-  var _html=h||combined||'';
-var _blob=new Blob([_html],{type:'text/html'});var _url=URL.createObjectURL(_blob);
-var w=window.open(_url,'_blank');if(!w){alert('Allow popups then try again.');return;}
-  w.document.write(html);w.document.close();w.focus();
-  /* Set document title to filename so PDF saves with correct name */
+  var blob=new Blob([html],{type:'text/html'});
+  var url=URL.createObjectURL(blob);
+  var w=window.open(url,'_blank');
+  if(!w){alert('Allow popups then try again.');return;}
   w.document.title=mbFilename(mb);
   setTimeout(function(){w.print();},800);
 }
