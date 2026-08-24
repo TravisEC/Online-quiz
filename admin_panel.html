@@ -2887,11 +2887,10 @@ function exportPDF(selectedClass){
     });
   });
   h+='<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:8px 16px;background:#2563eb;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:11px;">🖨 Print</button></body></html>';
-  var _html=h||combined||'';
-var _blob=new Blob([_html],{type:'text/html'});var _url=URL.createObjectURL(_blob);
-var w=window.open(_url,'_blank');if(!w){alert('Allow popups then try again.');return;}
-  w.document.write(h);w.document.close();w.focus();setTimeout(function(){w.print();},900);
-}
+  var _blob=new Blob([h||''],{type:'text/html'});
+  var _url=URL.createObjectURL(_blob);
+  var w=window.open(_url,'_blank');
+  if(!w){alert('Allow popups then try again.');return;}}
 
 
 
@@ -3307,10 +3306,12 @@ function exportRecordsClass(safeGroupId){
   openExportWindow(buildRecordExportHTML(matched,matched[0].cls+' — '+matched[0].examTitle,new Date().toLocaleDateString('en-GB'),true));
 }
 function openExportWindow(html){
-  var _html=h||combined||'';
-var _blob=new Blob([_html],{type:'text/html'});var _url=URL.createObjectURL(_blob);
-var w=window.open(_url,'_blank');if(!w){alert('Allow popups then try again.');return;}
-  w.document.write(html);w.document.close();w.focus();setTimeout(function(){w.print();},900);
+  var blob=new Blob([html],{type:'text/html'});
+  var url=URL.createObjectURL(blob);
+  var w=window.open(url,'_blank');
+  if(!w){alert('Allow popups then try again.');return;}
+  w.document.title='Export';
+  setTimeout(function(){w.print();},900);
 }
 
 function buildRecordExportHTML(recs,title,d,showAnalysis){
@@ -3690,11 +3691,11 @@ function showAssessmentPlanModal(safeGroupId){
     var mode=document.querySelector('input[name="ap-mode"]:checked').value;
     document.getElementById('ap-modal').style.display='none';
     var html=buildAssessmentPlanHTML(sample.examTitle,sample.cls,grp,mode);
-    var _html=h||combined||'';
-var _blob=new Blob([_html],{type:'text/html'});var _url=URL.createObjectURL(_blob);
-var w=window.open(_url,'_blank');
-    if(!w){alert('Allow popups then try again.');return;}
-    w.document.write(html);w.document.close();w.focus();
+    var _blob=new Blob([html||''],{type:'text/html'});
+  var _url=URL.createObjectURL(_blob);
+  var w=window.open(_url,'_blank');
+  if(!w){alert('Allow popups then try again.');return;}    if(!w){alert('Allow popups then try again.');return;}
+    w.document.title='Export';
     setTimeout(function(){w.print();},900);
   };
 
@@ -3747,11 +3748,11 @@ function exportAllAssessmentPlans(exam){
   });
   combined+='</body></html>';
 
-  var _html=h||combined||'';
-var _blob=new Blob([_html],{type:'text/html'});var _url=URL.createObjectURL(_blob);
-var w=window.open(_url,'_blank');
-  if(!w){alert('Allow popups then try again.');return;}
-  w.document.write(combined);w.document.close();w.focus();
+  var _blob=new Blob([combined||''],{type:'text/html'});
+  var _url=URL.createObjectURL(_blob);
+  var w=window.open(_url,'_blank');
+  if(!w){alert('Allow popups then try again.');return;}  if(!w){alert('Allow popups then try again.');return;}
+  w.document.title='Export';
   setTimeout(function(){w.print();},900);
 }
 
@@ -3996,11 +3997,11 @@ function lapExport(){
   finalHtml+=allCombined+'</body></html>';
 
   modal.style.display='none';
-  var _html=h||combined||'';
-var _blob=new Blob([_html],{type:'text/html'});var _url=URL.createObjectURL(_blob);
-var w=window.open(_url,'_blank');
-  if(!w){alert('Allow popups then try again.');return;}
-  w.document.write(finalHtml);w.document.close();w.focus();
+  var _blob=new Blob([h||''],{type:'text/html'});
+  var _url=URL.createObjectURL(_blob);
+  var w=window.open(_url,'_blank');
+  if(!w){alert('Allow popups then try again.');return;}  if(!w){alert('Allow popups then try again.');return;}
+  w.document.title='Export';
   setTimeout(function(){w.print();},900);
 }
 
@@ -4468,11 +4469,10 @@ function attExportPDF(){
   h+='<div class="summary" style="margin-top:12px;background:#1e3a5f;color:#fff;border-color:#1e3a5f;"><span>Class Summary:</span><span>Boys: <b>'+boys.length+'</b></span><span>Girls: <b>'+girls.length+'</b></span><span>Total: <b>'+(boys.length+girls.length)+'</b></span><span>Sessions: <b>'+sessions+'</b></span></div>';
   h+='</body></html>';
 
-  var _html=h||combined||'';
-var _blob=new Blob([_html],{type:'text/html'});var _url=URL.createObjectURL(_blob);
-var w=window.open(_url,'_blank');if(!w){alert('Allow popups.');return;}
-  w.document.write(h);w.document.close();w.focus();setTimeout(function(){w.print();},900);
-}
+  var _blob=new Blob([h||''],{type:'text/html'});
+  var _url=URL.createObjectURL(_blob);
+  var w=window.open(_url,'_blank');
+  if(!w){alert('Allow popups then try again.');return;}}
 
 
 
@@ -7846,10 +7846,12 @@ function mbExportAll(){
   });
   if(!entries.length){alert('No mark books with students to export.');return;}
   var h=mbBuildExportHTML(entries,d,true);
-  var _html=h||combined||'';
-var _blob=new Blob([_html],{type:'text/html'});var _url=URL.createObjectURL(_blob);
-var w=window.open(_url,'_blank');if(!w){alert('Allow popups then try again.');return;}
-  w.document.write(h);w.document.close();w.focus();setTimeout(function(){w.print();},900);
+  var blob=new Blob([html],{type:'text/html'});
+  var url=URL.createObjectURL(blob);
+  var w=window.open(url,'_blank');
+  if(!w){alert('Allow popups then try again.');return;}
+  w.document.title='Export';
+  setTimeout(function(){w.print();},900);
 }
 
 /* ── CLOUD STORAGE ── */
@@ -8194,11 +8196,6 @@ function exportAdminFile(){
 }
 
 /* ── INIT ── */
-function init(){
-  loadAll();hookCloudSaves();
-  fetchSubs();
-}
-init();
 
 
 
