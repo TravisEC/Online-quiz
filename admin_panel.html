@@ -8486,7 +8486,7 @@ function lqRenderQuestion(){
   h+='<div style="display:flex;align-items:center;gap:12px;margin-bottom:1.2rem;">';
   h+='<div id="lq-timer-display" style="font-size:2.5rem;font-weight:900;color:'+(lqTimeLeft<=5?'#ef4444':lqTimeLeft<=10?'#f59e0b':'#fff')+';font-family:monospace;min-width:60px;text-align:center;line-height:1;">'+lqTimeLeft+'</div>';
   h+='<div style="flex:1;background:#334155;border-radius:999px;height:12px;overflow:hidden;">';
-  h+='<div style="width:'+pct+'%;background:'+(pct>33?'#22c55e':pct>15?'#f59e0b':'#ef4444')+';height:100%;transition:width 1s linear;border-radius:999px;"></div></div>';
+  h+='<div id="lq-timer-bar" style="width:'+pct+'%;background:'+(pct>33?'#22c55e':pct>15?'#f59e0b':'#ef4444')+';height:100%;transition:width 1s linear;border-radius:999px;"></div></div>';
   h+='</div>';
 
   /* ── Row 3: Question text ── */
@@ -8542,10 +8542,11 @@ function lqStartCountdown(){
       disp.style.color=lqTimeLeft<=5?'#ef4444':lqTimeLeft<=10?'#f59e0b':'#f59e0b';
     }
     var pct=Math.round(lqTimeLeft/lqSession.timer*100);
-    var bar=document.querySelector('#lq-content .view');
-    /* Update timer bar width */
-    var bars=document.querySelectorAll('#lq-content div[style*="transition:width 1s"]');
-    if(bars.length) bars[0].style.width=pct+'%';
+    var bar=document.getElementById('lq-timer-bar');
+    if(bar){
+      bar.style.width=pct+'%';
+      bar.style.background=pct>33?'#22c55e':pct>15?'#f59e0b':'#ef4444';
+    }
     if(lqTimeLeft<=0){ clearInterval(lqCountdownTimer); lqReveal(); }
   },1000);
 }
