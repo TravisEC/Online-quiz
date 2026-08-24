@@ -14,7 +14,13 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-height:100vh;}
 .layout{display:flex;min-height:100vh;}
-.sidebar{width:220px;background:var(--dark2);border-right:1px solid var(--dark3);display:flex;flex-direction:column;padding:1.5rem 1rem;gap:4px;position:sticky;top:0;height:100vh;flex-shrink:0;}
+.sidebar{width:220px;background:var(--dark2);border-right:1px solid var(--dark3);display:flex;flex-direction:column;padding:1.5rem 1rem;gap:4px;position:sticky;top:0;height:100vh;flex-shrink:0;transition:width .25s ease,padding .25s ease;overflow:hidden;}
+.sidebar.collapsed{width:56px;padding:1.5rem .4rem;}
+.sidebar.collapsed .logo{display:none;}
+.sidebar.collapsed .nav-item{padding:.6rem;justify-content:center;font-size:1.1rem;}
+.sidebar.collapsed .nav-item-label{display:none;}
+.sidebar-toggle{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1.1rem;padding:.4rem;border-radius:6px;margin-bottom:.5rem;align-self:flex-end;transition:color .15s;}
+.sidebar-toggle:hover{color:#fff;}
 .logo{font-weight:900;font-size:1rem;color:var(--blue);margin-bottom:1.2rem;padding:0 .5rem;}
 .logo small{font-size:.6rem;background:var(--blue);color:#fff;padding:2px 7px;border-radius:999px;margin-left:6px;}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;cursor:pointer;font-weight:700;font-size:.83rem;color:var(--g400);transition:all .15s;border:none;background:none;width:100%;text-align:left;}
@@ -177,6 +183,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
 
 <div class="layout">
   <aside class="sidebar" id="sidebar">
+    <button class="sidebar-toggle" onclick="toggleSidebarCollapse()" title="Collapse sidebar" id="sidebar-toggle-btn">◀</button>
     <div class="logo">💻 ExamPro <small>ADMIN</small></div>
     <button class="nav-item active" onclick="showTab('dashboard',this);closeSidebar();">📊 Dashboard</button>
     <button class="nav-item" onclick="showTab('records',this);closeSidebar();">📁 Records</button>
@@ -2882,6 +2889,17 @@ var w=window.open(_url,'_blank');if(!w){alert('Allow popups then try again.');re
   w.document.write(h);w.document.close();w.focus();setTimeout(function(){w.print();},900);
 }
 
+
+
+function toggleSidebarCollapse(){
+  var sb=document.getElementById('sidebar');
+  var btn=document.getElementById('sidebar-toggle-btn');
+  if(!sb) return;
+  sb.classList.toggle('collapsed');
+  var collapsed=sb.classList.contains('collapsed');
+  if(btn) btn.textContent=collapsed?'▶':'◀';
+  localStorage.setItem('sidebarCollapsed', collapsed?'1':'0');
+}
 
 function toggleSidebar(){var sb=document.getElementById('sidebar');var ov=document.getElementById('sidebar-overlay');sb.classList.toggle('open');ov.classList.toggle('open');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('open');}
@@ -8119,6 +8137,13 @@ function checkAdminAccess(){
 
 function init(){
   if(!checkAdminAccess()) return;
+  /* Restore sidebar collapsed state */
+  if(localStorage.getItem('sidebarCollapsed')==='1'){
+    var sb=document.getElementById('sidebar');
+    var btn=document.getElementById('sidebar-toggle-btn');
+    if(sb) sb.classList.add('collapsed');
+    if(btn) btn.textContent='▶';
+  }
   loadAll();hookCloudSaves();
   fetchSubs();
 }
@@ -8226,8 +8251,20 @@ function renderLiveQuiz(){
   var el=document.getElementById('lq-content'); if(!el) return;
   if(lqState==='idle'||lqState==='setup') { el.innerHTML=lqRenderSetup(); lqInitSetup(); }
   else if(lqState==='lobby')   { el.innerHTML=lqRenderLobby(); lqWireLobbyButtons(); }
-  else if(lqState==='question') el.innerHTML=lqRenderQuestion();
-  else if(lqState==='reveal')   el.innerHTML=lqRenderReveal();
+  else if(lqState==='question'){
+    el.innerHTML=lqRenderQuestion();
+    var cancelQ=document.getElementById('lq-cancel-question-btn');
+    if(cancelQ) cancelQ.addEventListener('click',function(){ if(confirm('Cancel this session and return to setup?')) lqNewSession(); });
+  }
+  else if(lqState==='reveal'){
+    el.innerHTML=lqRenderReveal();
+    var nextBtn=document.getElementById('lq-next-btn');
+    var cancelR=document.getElementById('lq-cancel-reveal-btn');
+    var finishBtn=document.getElementById('lq-finish-btn');
+    if(nextBtn) nextBtn.addEventListener('click',function(){ lqNext(); });
+    if(finishBtn) finishBtn.addEventListener('click',function(){ lqFinish(); });
+    if(cancelR) cancelR.addEventListener('click',function(){ if(confirm('Cancel this session and return to setup?')) lqNewSession(); });
+  }
   else if(lqState==='leaderboard'){
     el.innerHTML=lqRenderFinalLeaderboard();
     var saveBtn=document.getElementById('lq-save-records-btn');
@@ -8480,6 +8517,7 @@ function lqRenderQuestion(){
   h+='<div style="display:flex;align-items:center;gap:12px;">';
   h+='<div id="lq-ans-count" style="font-size:.82rem;color:#22c55e;font-weight:800;">'+answered+'/'+total+' answered</div>';
   h+='<button class="btn btn-blue btn-sm" onclick="lqReveal()">⏭ Reveal</button>';
+h+='<button class="btn btn-red btn-sm" id="lq-cancel-question-btn">✕ Cancel</button>';
   h+='</div></div>';
 
   /* ── Row 2: Timer bar + countdown ── */
@@ -8619,9 +8657,10 @@ function lqRenderReveal(){
   h+='<div style="font-weight:900;font-size:1rem;">Question '+(lqCurrentIdx+1)+' — Results</div>';
   h+='<div style="display:flex;gap:8px;">';
   if(lqCurrentIdx+1<lqQuestions.length){
-    h+='<button class="btn btn-green" onclick="lqNext()">▶ Next Question</button>';
+    h+='<button class="btn btn-green" id="lq-next-btn">▶ Next Question</button>';
+h+='<button class="btn btn-red btn-sm" id="lq-cancel-reveal-btn">✕ Cancel</button>';
   } else {
-    h+='<button class="btn btn-blue" onclick="lqFinish()">🏆 Show Final Leaderboard</button>';
+    h+='<button class="btn btn-blue" id="lq-finish-btn">🏆 Show Final Leaderboard</button>';
   }
   h+='</div></div>';
 
