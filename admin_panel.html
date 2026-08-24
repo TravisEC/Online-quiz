@@ -3252,7 +3252,7 @@ function renderRecords(){
       grp.forEach(function(r,i){
         var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
         var gc=r.grade==='A+'||r.grade==='A'?'#22c55e':r.grade==='B'?'#3b82f6':r.grade==='C'?'#f59e0b':r.grade==='D'?'#f97316':'#ef4444';
-        var safeId=r.id.replace(/[^a-z0-9]/gi,'_');
+        var safeId=(r.id||(r.name||'')+'|'+(r.examTitle||'')+'|'+(r.date||'')).replace(/[^a-z0-9]/gi,'_');
         html+='<tr onmouseover="this.style.background=\'rgba(255,255,255,.03)\'" onmouseout="this.style.background=\'none\'">';
         html+='<td style="'+TD+'font-weight:800;color:#64748b;text-align:center;">'+medal+(i+1)+'</td>';
         html+='<td style="'+TD+'font-weight:700;color:#e2e8f0;">'+escH(r.name)+'</td>';
@@ -8857,10 +8857,12 @@ function lqSaveToRecords(){
   sorted.forEach(function(s){
     if(!s.name) return;
     var pct=Math.round(s.total/maxScore*100);
+    var recDate=new Date().toLocaleDateString('en-GB');
     records.push({
+      id: (s.name||'')+'|'+title+'|'+recDate,
       name:s.name, cls:s.cls||'', examTitle:title,
       score:s.total, total:maxScore, pct:pct,
-      grade:calcGrade(pct), date:new Date().toLocaleDateString('en-GB'),
+      grade:calcGrade(pct), date:recDate,
       savedAt:new Date().toISOString()
     });
     added++;
