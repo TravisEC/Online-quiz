@@ -6744,7 +6744,15 @@ async function saveAll(){
   await generateAndPublishStudentFile();
   renderLibrarySelector();
   var a=document.getElementById('save-alert');
-  if(a){a.textContent='Saved & Pushed! "'+((activeExam.meta&&activeExam.meta.title)||'Exam')+'" added to Exam Library.';a.className='alert alert-green show';setTimeout(function(){a.className='alert alert-green';},7000);}
+  if(a){
+    var examTitle=(activeExam.meta&&activeExam.meta.title)||'Exam';
+    a.innerHTML='✅ <strong>Saved & Pushed!</strong> &nbsp;"'+examTitle+'" — Students can now access at: '
+      +'<a href="https://travisec.github.io/Online-quiz/student_exam.html" target="_blank" '
+      +'style="color:#fff;text-decoration:underline;">travisec.github.io/Online-quiz/student_exam.html</a>';
+    a.className='alert alert-green show';
+    a.style.cssText='display:block;padding:1rem 1.5rem;background:rgba(34,197,94,.15);border:1px solid #22c55e;border-radius:10px;font-weight:700;font-size:.88rem;color:#22c55e;margin-bottom:1rem;';
+    setTimeout(function(){a.className='alert alert-green';a.style.cssText='';},10000);
+  }
 }
 async function generateAndPublishStudentFile(){
   /* Build the updated student HTML */
