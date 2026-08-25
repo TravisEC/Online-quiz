@@ -489,7 +489,9 @@ async function poll(){
       submitted=false;
       selectedAnswer=null;
       lastCorrect=null;
-      timeLeft=parseInt(srv.timer)||30;
+      /* Use remainingTime from server so student syncs with admin */
+      var rt=parseInt(srv.remainingTime)||parseInt(srv.timer)||30;
+      timeLeft=rt;
       questionStartTime=Date.now();
       render();
       startCountdown();
@@ -506,8 +508,9 @@ async function poll(){
       submitted=false;
       selectedAnswer=null;
       lastCorrect=null;
-      /* Use full timer — admin controls reveal manually */
-      timeLeft=parseInt(srv.timer)||30;
+      /* Use remainingTime from server to sync with admin */
+      var rt=parseInt(srv.remainingTime)||parseInt(srv.timer)||30;
+      timeLeft=rt;
       questionStartTime=Date.now();
       render();
       startCountdown();
@@ -612,16 +615,20 @@ function checkCorrect(q,ans){
 /* ── COUNTDOWN ── */
 function startCountdown(){
   stopCountdown();
+  var fullDuration=(session?parseInt(session.timer)||30:30)*1000;
+  var startedAt=Date.now();
   countdownTimer=setInterval(function(){
-    timeLeft--;
+    var elapsed=Date.now()-startedAt;
+    var remaining=Math.max(0, Math.ceil((fullDuration-elapsed)/1000));
+    timeLeft=remaining;
     var td=document.getElementById('q-timer');
     var bar=document.getElementById('q-bar');
     var timer=session?parseInt(session.timer)||30:30;
-    if(td){ td.textContent=timeLeft; td.style.color=timeLeft<=5?'#ef4444':timeLeft<=10?'#f59e0b':'#f59e0b'; }
-    var pct=Math.round(timeLeft/timer*100);
+    if(td){ td.textContent=remaining; td.style.color=remaining<=5?'#ef4444':remaining<=10?'#f59e0b':'#fff'; }
+    var pct=Math.round(remaining/timer*100);
     if(bar){ bar.style.width=pct+'%'; bar.style.background=pct>33?'#22c55e':pct>15?'#f59e0b':'#ef4444'; }
-    if(timeLeft<=0){ stopCountdown(); if(!submitted){ submitted=true; render(); } }
-  },1000);
+    if(remaining<=0){ stopCountdown(); if(!submitted){ submitted=true; render(); } }
+  },500);
 }
 function stopCountdown(){
   if(countdownTimer) clearInterval(countdownTimer);

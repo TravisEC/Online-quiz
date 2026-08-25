@@ -8537,7 +8537,10 @@ async function lqPushQuestion(idx){
   lqQuestionStartTime=Date.now();
 
   try{
-    await fetch(SURL+'?action=lqNextQuestion&pin='+encodeURIComponent(lqSession.pin)+'&currentQ='+idx+'&t='+Date.now(),{method:'GET',mode:'cors'});
+    await fetch(SURL+'?action=lqNextQuestion&pin='+encodeURIComponent(lqSession.pin)
+      +'&currentQ='+idx
+      +'&remainingTime='+lqSession.timer  /* full timer on new question */
+      +'&t='+Date.now(),{method:'GET',mode:'cors'});
   }catch(e){ console.warn('lqPushQuestion error:',e); }
 
   lqState='question';
