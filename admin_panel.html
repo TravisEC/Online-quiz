@@ -4605,6 +4605,7 @@ function renderSubjectRegister(){
   h+='<button class="btn btn-blue btn-sm" onclick="srAddSession()">➕ Add Session</button>';
   h+='<button class="btn btn-ghost btn-sm" onclick="srExport()">📄 Print / Export</button>';
   h+='<button class="btn btn-ghost btn-sm" onclick="srEditStudents()">✏️ Edit Students</button>';
+  h+='<button class="btn btn-red btn-sm" onclick="srClearSessions()">🗑️ Clear All Sessions</button>';
   h+='</div></div></div>';
 
   /* ── No sessions state ── */
@@ -4790,6 +4791,14 @@ function srConfirmAddSession(){
   }
   reg.sessions.push({date:dateStr,attendance:{}});
   reg.sessions.sort(function(a,b){return a.date.localeCompare(b.date);});
+  srSave();
+  renderSubjectRegister();
+}
+
+/* ── CLEAR ALL SESSIONS ── */
+function srClearSessions(){
+  if(!confirm('Delete ALL sessions for '+srCurrentClass+'? This cannot be undone.')) return;
+  srData[srCurrentClass].sessions=[];
   srSave();
   renderSubjectRegister();
 }
