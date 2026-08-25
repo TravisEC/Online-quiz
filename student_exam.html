@@ -6,121 +6,76 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>IT ExamPro — Student Exam</title>
 <style>
-:root{
-  --canvas:#F8FAFC;
-  --canvas2:#EFF3F8;
-  --dark:#111827;
-  --dark2:#1A1D23;
-  --dark3:#2D3748;
-  --charcoal:#1E1F22;
-  --slate:#64748B;
-  --border:#E2E8F0;
-  --blue:#3B82F6;
-  --blue-d:#2563EB;
-  --green:#10B981;
-  --red:#EF4444;
-  --amber:#F59E0B;
-  --text:#1E1F22;
-  --text2:#64748B;
-}
+:root{--dark:#0f172a;--dark2:#1e293b;--dark3:#334155;--blue:#3b82f6;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--canvas);color:var(--text);min-height:100vh;}
-
-/* ── Header ── */
-.header{background:#fff;border-bottom:2px solid var(--border);padding:1rem 1.5rem;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--dark);color:#e2e8f0;min-height:100vh;}
+.header{background:linear-gradient(135deg,#1e3a5f,#1e293b);border-bottom:2px solid #334155;padding:1rem 1.5rem;position:sticky;top:0;z-index:100;}
 .header-inner{max-width:900px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;}
-.header-title{font-size:1.1rem;font-weight:800;color:var(--charcoal);}
-.header-sub{font-size:.75rem;color:var(--slate);margin-top:2px;}
-.timer-box{background:var(--canvas2);border:2px solid var(--amber);border-radius:10px;padding:.4rem 1rem;font-size:1.2rem;font-weight:900;font-family:monospace;color:var(--amber);}
+.header-title{font-size:1.1rem;font-weight:900;color:#fff;}
+.header-sub{font-size:.75rem;color:#94a3b8;margin-top:2px;}
+.timer-box{background:#0f172a;border:2px solid var(--yellow);border-radius:10px;padding:.4rem 1rem;font-size:1.3rem;font-weight:900;font-family:monospace;color:var(--yellow);}
 .timer-box.danger{border-color:var(--red);color:var(--red);animation:pulse .5s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
-
-/* ── Main ── */
 .main{max-width:900px;margin:0 auto;padding:1.5rem;}
-
-/* ── Info Card ── */
-.info-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;box-shadow:0 1px 3px rgba(0,0,0,.05);}
-.info-card h2{font-size:1rem;font-weight:800;color:var(--charcoal);margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border);}
+.info-card{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;}
+.info-card h2{font-size:1rem;font-weight:900;color:#fff;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--dark3);}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
-.fi-label{font-size:.72rem;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
-.fi{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:9px;background:#fff;color:var(--charcoal);font-size:.95rem;font-weight:600;outline:none;transition:border-color .2s;}
+.fi-label{font-size:.72rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;}
+.fi{width:100%;padding:10px 14px;border:2px solid var(--dark3);border-radius:9px;background:#0f172a;color:#fff;font-size:.95rem;font-weight:600;outline:none;transition:border-color .2s;}
 .fi:focus{border-color:var(--blue);}
 select.fi{cursor:pointer;}
-select.fi option{background:#fff;color:var(--charcoal);}
-select.fi optgroup{color:var(--slate);font-size:.75rem;}
-
-/* ── Section ── */
-.section{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 1px 3px rgba(0,0,0,.05);}
-.section-heading{display:flex;align-items:center;gap:.7rem;margin-bottom:1.2rem;padding-bottom:.7rem;border-bottom:1px solid var(--border);}
-.section-heading h3{font-size:1rem;font-weight:800;color:var(--charcoal);}
+select.fi option{background:var(--dark2);}
+select.fi optgroup{color:#94a3b8;font-size:.75rem;}
+.section{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:1.5rem;margin-bottom:1.2rem;}
+.section-heading{display:flex;align-items:center;gap:.7rem;margin-bottom:1.2rem;padding-bottom:.7rem;border-bottom:1px solid var(--dark3);}
+.section-heading h3{font-size:1rem;font-weight:900;color:#fff;}
 .section-badge{background:var(--blue);color:#fff;font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:999px;}
-.section-marks{font-size:.75rem;color:var(--slate);margin-left:auto;font-weight:700;}
-
-/* ── Question ── */
-.question{margin-bottom:1.4rem;padding-bottom:1.4rem;border-bottom:1px solid var(--canvas2);}
+.section-marks{font-size:.75rem;color:#64748b;margin-left:auto;}
+.question{margin-bottom:1.4rem;padding-bottom:1.4rem;border-bottom:1px solid #1e293b;}
 .question:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
-.q-num{font-size:.72rem;font-weight:800;color:var(--slate);text-transform:uppercase;margin-bottom:.3rem;}
-.q-text{font-size:.98rem;font-weight:700;color:var(--charcoal);margin-bottom:.8rem;line-height:1.6;}
-.q-marks{font-size:.72rem;color:var(--amber);font-weight:700;margin-bottom:.6rem;}
-
-/* ── MCQ Options ── */
+.q-num{font-size:.72rem;font-weight:800;color:#64748b;text-transform:uppercase;margin-bottom:.3rem;}
+.q-text{font-size:.95rem;font-weight:700;color:#e2e8f0;margin-bottom:.8rem;line-height:1.5;}
+.q-marks{font-size:.72rem;color:var(--yellow);font-weight:700;margin-bottom:.6rem;}
 .opts{display:flex;flex-direction:column;gap:.5rem;}
-.opt{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;background:#fff;}
-.opt:hover{border-color:var(--blue);background:rgba(59,130,246,.04);}
+.opt{display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;border:2px solid var(--dark3);border-radius:9px;cursor:pointer;transition:all .15s;}
+.opt:hover{border-color:var(--blue);background:rgba(59,130,246,.08);}
 .opt input[type=radio],.opt input[type=checkbox]{accent-color:var(--blue);width:16px;height:16px;flex-shrink:0;}
-.opt.selected{border-color:var(--blue);background:rgba(59,130,246,.06);}
-.opt.correct{border-color:var(--green);background:rgba(16,185,129,.08);}
-.opt.wrong{border-color:var(--red);background:rgba(239,68,68,.05);opacity:.7;}
-.opt-label{font-size:.92rem;font-weight:600;color:var(--charcoal);}
+.opt.selected{border-color:var(--blue);background:rgba(59,130,246,.12);}
+.opt.correct{border-color:var(--green);background:rgba(34,197,94,.12);}
+.opt.wrong{border-color:var(--red);background:rgba(239,68,68,.08);opacity:.6;}
+.opt-label{font-size:.9rem;font-weight:600;color:#e2e8f0;}
 .opt-letter{font-size:.8rem;font-weight:900;color:var(--blue);min-width:20px;}
-
-/* ── True/False ── */
 .tf-opts{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
-.tf-btn{padding:1rem;border:2px solid var(--border);border-radius:10px;font-weight:800;font-size:.95rem;cursor:pointer;text-align:center;transition:all .15s;background:#fff;color:var(--charcoal);}
-.tf-true:hover,.tf-true.selected{border-color:var(--green);background:rgba(16,185,129,.08);color:var(--green);}
-.tf-false:hover,.tf-false.selected{border-color:var(--red);background:rgba(239,68,68,.08);color:var(--red);}
-.tf-btn.correct{border-color:var(--green);background:rgba(16,185,129,.1);}
-.tf-btn.wrong{opacity:.5;}
-
-/* ── Fill / Essay ── */
-.fi-ans{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:9px;background:#fff;color:var(--charcoal);font-size:.95rem;font-weight:600;outline:none;transition:border-color .2s;resize:vertical;}
+.tf-btn{padding:1rem;border:2px solid var(--dark3);border-radius:10px;font-weight:800;font-size:.95rem;cursor:pointer;text-align:center;transition:all .15s;background:transparent;color:#e2e8f0;}
+.tf-btn.selected,.tf-true.selected{border-color:var(--green);background:rgba(34,197,94,.15);color:var(--green);}
+.tf-false.selected{border-color:var(--red);background:rgba(239,68,68,.15);color:var(--red);}
+.tf-btn.correct{border-color:var(--green);background:rgba(34,197,94,.2);}
+.tf-btn.wrong{border-color:var(--red);opacity:.5;}
+.fi-ans{width:100%;padding:10px 14px;border:2px solid var(--dark3);border-radius:9px;background:#0f172a;color:#fff;font-size:.95rem;font-weight:600;outline:none;transition:border-color .2s;resize:vertical;}
 .fi-ans:focus{border-color:var(--blue);}
-.fi-ans:disabled{background:var(--canvas2);opacity:.8;cursor:not-allowed;}
-
-/* ── Match ── */
+.fi-ans:disabled{opacity:.7;cursor:not-allowed;}
 .match-row{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:.5rem;align-items:center;}
-.match-left{font-size:.88rem;font-weight:700;color:var(--charcoal);background:var(--canvas2);padding:.6rem .9rem;border-radius:8px;border:1px solid var(--border);}
-
-/* ── Answer Key ── */
-.answer-key{font-size:.78rem;color:var(--green);font-weight:700;margin-top:.5rem;padding:.4rem .8rem;background:rgba(16,185,129,.08);border-radius:6px;border:1px solid rgba(16,185,129,.25);}
-.your-answer{font-size:.78rem;color:var(--slate);font-weight:600;margin-top:.3rem;}
-
-/* ── Submit Bar ── */
-.submit-bar{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.5rem;margin-bottom:2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;box-shadow:0 1px 3px rgba(0,0,0,.05);}
-.progress-info{font-size:.82rem;color:var(--slate);font-weight:700;}
-.progress-info span{color:var(--charcoal);}
+.match-left{font-size:.88rem;font-weight:700;color:#e2e8f0;background:var(--dark3);padding:.6rem .9rem;border-radius:8px;}
+.answer-key{font-size:.78rem;color:var(--green);font-weight:700;margin-top:.4rem;padding:.4rem .8rem;background:rgba(34,197,94,.1);border-radius:6px;border:1px solid rgba(34,197,94,.3);}
+.your-answer{font-size:.78rem;color:#94a3b8;font-weight:600;margin-top:.3rem;}
+.submit-bar{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:1.2rem 1.5rem;margin-bottom:2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;}
+.progress-info{font-size:.82rem;color:#64748b;font-weight:700;}
+.progress-info span{color:#fff;}
 .btn-submit{padding:12px 32px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:900;cursor:pointer;transition:all .15s;font-family:inherit;}
-.btn-submit:hover{background:#059669;transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,185,129,.3);}
-.btn-submit:disabled{background:var(--border);color:var(--slate);cursor:not-allowed;transform:none;box-shadow:none;}
-
-/* ── Result Banner ── */
-.result-banner{background:linear-gradient(135deg,#1e3a5f,#1A1D23);border:1px solid var(--dark3);border-radius:14px;padding:2rem;text-align:center;margin-bottom:1.5rem;color:#fff;}
-.result-score{font-size:3rem;font-weight:900;color:var(--amber);}
+.btn-submit:hover{background:#16a34a;}
+.btn-submit:disabled{background:#334155;color:#64748b;cursor:not-allowed;}
+.result-banner{background:linear-gradient(135deg,#1e3a5f,#1e293b);border:1px solid var(--dark3);border-radius:14px;padding:2rem;text-align:center;margin-bottom:1.5rem;}
+.result-score{font-size:3rem;font-weight:900;color:var(--yellow);}
 .result-grade{font-size:1.2rem;font-weight:800;margin-top:.3rem;}
 .result-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:1.5rem;}
-.result-meta-item{background:rgba(255,255,255,.08);border-radius:10px;padding:.8rem;}
-.result-meta-label{font-size:.7rem;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;margin-bottom:.3rem;}
+.result-meta-item{background:rgba(0,0,0,.2);border-radius:10px;padding:.8rem;}
+.result-meta-label{font-size:.7rem;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:.3rem;}
 .result-meta-val{font-size:1rem;font-weight:900;color:#fff;}
-
-/* ── Alert ── */
 .alert{padding:1rem 1.5rem;border-radius:10px;font-weight:700;font-size:.88rem;margin-bottom:1rem;display:none;}
 .alert.show{display:block;}
-.alert-red{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:var(--red);}
-.alert-green{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);color:var(--green);}
-
-/* ── Review Header ── */
-.review-header{background:#fff;border:1px solid var(--border);border-radius:14px;padding:1rem 1.5rem;margin-bottom:1.2rem;font-weight:700;font-size:.88rem;color:var(--slate);}
-
+.alert-red{background:rgba(239,68,68,.15);border:1px solid var(--red);color:var(--red);}
+.alert-green{background:rgba(34,197,94,.15);border:1px solid var(--green);color:var(--green);}
+.review-header{background:var(--dark2);border:1px solid var(--dark3);border-radius:14px;padding:1rem 1.5rem;margin-bottom:1.2rem;font-weight:800;font-size:.9rem;color:#94a3b8;}
 @media(max-width:600px){
   .info-grid{grid-template-columns:1fr;}
   .match-row{grid-template-columns:1fr;}
@@ -134,8 +89,140 @@ select.fi optgroup{color:var(--slate);font-size:.75rem;}
 <script>
 /* EXAM CONFIG — injected by admin panel Save & Push */
 var EXAM_CONFIG = {
-  meta:{title:'Sample Exam',term:'Term 1',duration:0,marks:20,subject:'Information Technology',grade:'9'},
-  mcq:[],tf:[],trueFalse:[],fillBlank:[],matching:[],multiSelect:[],essay:[]
+  "meta": {
+    "title": "Grade 7 Assessment 2",
+    "subject": "Digital Literacy",
+    "grade": "7-1",
+    "duration": 45,
+    "term": "Term 3",
+    "marks": 30
+  },
+  "mcq": [
+    {
+      "q": "What is digital citizenship?",
+      "marks": 2,
+      "opts": [
+        "Using as many apps as possible",
+        "The responsible, safe, and respectful use of technology when engaging with others online",
+        "Only using computers at school",
+        "Downloading as many files as possible"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is an example of NETIQUETTE?",
+      "marks": 2,
+      "opts": [
+        "Typing all your messages in CAPITAL LETTERS",
+        "Sharing someone else's password",
+        "Responding politely to others online",
+        "Ignoring messages from your teacher"
+      ],
+      "ans": 2
+    },
+    {
+      "q": "What is copyright?",
+      "marks": 2,
+      "opts": [
+        "A rule that allows anyone to copy any work",
+        "A legal right that gives creators control over how their work is used",
+        "A type of computer virus",
+        "A way to share files for free"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is an example of phishing?",
+      "marks": 2,
+      "opts": [
+        "Downloading a legal antivirus app",
+        "Receiving a fake email pretending to be your bank to steal your password",
+        "Sharing your school project with a classmate",
+        "Creating a strong password"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is a RIGHT of a digital citizen?",
+      "marks": 2,
+      "opts": [
+        "Posting false information online",
+        "Access to the internet and digital resources",
+        "Sharing others' passwords",
+        "Downloading pirated software"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is a RESPONSIBILITY of a digital citizen?",
+      "marks": 2,
+      "opts": [
+        "Using others' personal information without permission",
+        "Respecting copyright laws",
+        "Ignoring cyberbullying",
+        "Sharing passwords freely"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Copyright law protects which of the following?",
+      "marks": 2,
+      "opts": [
+        "A person's physical property",
+        "An individual's creative works",
+        "A company's buildings",
+        "A student's grades"
+      ],
+      "ans": 1
+    }
+  ],
+  "trueFalse": [
+    {
+      "q": "Cyberbullying means using digital devices to bully or harass someone online.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Typing in ALL CAPS in an online message can feel like shouting to the reader.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Plagiarism means copying someone else's work and presenting it as your own.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Identity theft involves using another person's personal information without their permission.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Every digital citizen has the right to access information freely on the internet.",
+      "marks": 2,
+      "ans": true
+    }
+  ],
+  "fillBlank": [
+    {
+      "q": "The rules and guidelines for behaving politely online are called ______.",
+      "marks": 2,
+      "ans": "netiquette"
+    },
+    {
+      "q": "The unauthorized copying or downloading of paid software without a license is called software ______.",
+      "marks": 2,
+      "ans": "piracy"
+    },
+    {
+      "q": "Using someone else's creative work without permission or credit is called ______.",
+      "marks": 2,
+      "ans": "plagiarism"
+    }
+  ],
+  "matching": [],
+  "multiSelect": [],
+  "essay": []
 };
 
 /* ── CONFIG ── */
