@@ -6755,7 +6755,7 @@ function readEditor(){
   if(!activeExam.meta)activeExam.meta={};
   Object.keys(fields).forEach(function(id){var el=document.getElementById(id);if(el)activeExam.meta[fields[id]]=el.value;});
   var dur=document.getElementById('edm_duration'),mks=document.getElementById('edm_marks');
-  if(dur)activeExam.meta.duration=parseInt(dur.value)||45;
+  if(dur)activeExam.meta.duration=dur.value===''?0:parseInt(dur.value)||0;
   if(mks)activeExam.meta.marks=parseInt(mks.value)||40;
   /* Read questions */
   (activeExam.mcq||[]).forEach(function(q,i){var el;el=document.getElementById('mq_q_'+i);if(el)q.q=el.value;el=document.getElementById('mq_m_'+i);if(el)q.marks=parseInt(el.value)||q.marks;(q.opts||[]).forEach(function(_,j){el=document.getElementById('mq_o_'+i+'_'+j);if(el)q.opts[j]=el.value;});});
