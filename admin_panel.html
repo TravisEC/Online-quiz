@@ -61,7 +61,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
 .sidebar.collapsed .sidebar-toggle{align-self:center;}
 
 .sep{height:1px;background:var(--dark3);margin:6px 0;}
-.main{flex:1;overflow-x:hidden;background:var(--dark);}
+.main{flex:1;overflow-x:auto;background:var(--dark);}
 .topbar{background:var(--dark2);border-bottom:1px solid #374151;padding:0 2rem;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
 .topbar-title{font-weight:900;font-size:1rem;}
 .topbar-sub{font-size:.78rem;color:var(--g400);}
@@ -172,7 +172,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
 
   /* Full width main */
   .main{width:100%;min-width:0;}
-  .layout{overflow:hidden;}
+  .layout{overflow-x:auto;}
 
   /* Content padding reduced */
   .content{padding:.7rem;}
@@ -4677,8 +4677,10 @@ function renderSubjectRegister(){
     var suffix=day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
     var isPast=d<today;
     var col=isPast?'background:#1e293b;color:#475569;':'background:#1e3a5f;color:#93c5fd;';
-    h+='<th style="'+TH2+col+'min-width:36px;cursor:'+(isPast?'default':'pointer')+'" title="'+s.date+(isPast?' (locked)':'')+'">';
-    h+=day+suffix+'<br><span style="font-size:.65rem;color:#64748b;">'+(isPast?'🔒':'')+'</span></th>';
+    h+='<th style="'+TH2+col+'min-width:44px;cursor:'+(isPast?'default':'pointer')+'" title="'+s.date+(isPast?' (locked)':'')+'">'+day+suffix+'<br>';
+    if(isPast){ h+='<span style="font-size:.65rem;color:#64748b;">🔒</span>'; }
+    else{ h+='<span onclick="srDeleteSession('+si+')" title="Delete" style="font-size:.65rem;color:#ef4444;cursor:pointer;">✕</span>'; }
+    h+='</th>';
   });
   h+='</tr></thead>';
 
@@ -4778,6 +4780,17 @@ function srAddSession(){
   document.body.appendChild(modal);
   var inp=document.getElementById('sr-date-input');
   if(inp) inp.focus();
+}
+
+function srDeleteSession(sessionIdx){
+  var s=srData[srCurrentClass].sessions[sessionIdx];
+  if(!s) return;
+  var d=new Date(s.date); var today=new Date(); today.setHours(0,0,0,0);
+  if(d<today){ alert('Cannot delete a past session.'); return; }
+  if(!confirm('Delete session '+s.date+'? This cannot be undone.')) return;
+  srData[srCurrentClass].sessions.splice(sessionIdx,1);
+  srSave();
+  renderSubjectRegister();
 }
 
 function srConfirmAddSession(){
