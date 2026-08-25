@@ -294,6 +294,8 @@ async function joinGame(){
     state='lobby';
     render();
     startPolling();
+    /* Immediate first poll so student doesn't wait for interval */
+    poll();
   }catch(e){setStatus('Connection error. Check your internet.','error');}
 }
 
@@ -454,7 +456,8 @@ function renderFinal(){
 /* ── POLLING ── */
 function startPolling(){
   stopPolling();
-  pollTimer=setInterval(poll, state==='lobby'?3000:2000);
+  /* 1s in lobby so question appears fast, 1.5s during question */
+  pollTimer=setInterval(poll, state==='lobby'?1000:1500);
 }
 function stopPolling(){
   if(pollTimer) clearInterval(pollTimer);
@@ -489,7 +492,8 @@ async function poll(){
       questionStartTime=Date.now()-elapsed*1000;
       render();
       startCountdown();
-      startPolling();
+      stopPolling();
+      pollTimer=setInterval(poll,1000);
       return;
     }
 
@@ -508,7 +512,8 @@ async function poll(){
       questionStartTime=Date.now()-elapsed*1000;
       render();
       startCountdown();
-      startPolling();
+      stopPolling();
+      pollTimer=setInterval(poll,1000);
       return;
     }
 
