@@ -46,8 +46,9 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
 .sidebar{width:220px;background:var(--dark2);border-right:1px solid #374151;display:flex;flex-direction:column;padding:1.5rem 1rem;gap:4px;position:sticky;top:0;height:100vh;flex-shrink:0;transition:width .25s ease,padding .25s ease;overflow:hidden;}
 .sidebar.collapsed{width:52px;padding:1.2rem .3rem;}
 .sidebar.collapsed .logo{display:none;}
-.sidebar.collapsed .sidebar-toggle{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;padding:.4rem .5rem;border-radius:6px;margin-bottom:.5rem;align-self:flex-end;transition:color .15s;line-height:1;}
-.sidebar-toggle:hover{color:#fff;background:rgba(255,255,255,.05);}
+.sidebar.collapsed .sidebar-toggle{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1.3rem;padding:.4rem .5rem;border-radius:6px;margin-bottom:.8rem;align-self:flex-start;transition:all .15s;line-height:1;letter-spacing:1px;}
+.sidebar-toggle:hover{color:#fff;background:rgba(255,255,255,.07);}
+.sidebar.collapsed .sidebar-toggle{align-self:center;}
 .logo{font-weight:900;font-size:1rem;color:var(--blue);margin-bottom:1.2rem;padding:0 .5rem;}
 .logo small{font-size:.6rem;background:var(--blue);color:#fff;padding:2px 7px;border-radius:999px;margin-left:6px;}
 .nav-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;cursor:pointer;font-weight:700;font-size:.83rem;color:var(--g400);transition:all .15s;border:none;background:none;width:100%;text-align:left;;overflow:hidden;white-space:nowrap;}
@@ -216,7 +217,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
 
 <div class="layout">
   <aside class="sidebar" id="sidebar">
-    <button class="sidebar-toggle" onclick="toggleSidebarCollapse()" title="Collapse sidebar" id="sidebar-toggle-btn">◀</button>
+    <button class="sidebar-toggle" onclick="toggleSidebarCollapse()" title="Toggle sidebar" id="sidebar-toggle-btn">&#9776;</button>
     <div class="logo">💻 ExamPro <small>ADMIN</small></div>
     <button class="nav-item active" onclick="showTab('dashboard',this);closeSidebar();"><span class="nav-icon">📊</span><span class="nav-label">Dashboard</span></button>
     <button class="nav-item" onclick="showTab('records',this);closeSidebar();"><span class="nav-icon">📁</span><span class="nav-label">Records</span></button>
@@ -2929,7 +2930,7 @@ function toggleSidebarCollapse(){
   if(!sb) return;
   sb.classList.toggle('collapsed');
   var collapsed=sb.classList.contains('collapsed');
-  if(btn) btn.textContent=collapsed?'▶':'◀';
+  if(btn) btn.innerHTML=collapsed?'&#9776;':'&#9776;';
   localStorage.setItem('sidebarCollapsed', collapsed?'1':'0');
 }
 
@@ -8184,12 +8185,17 @@ function init(){
     var sb=document.getElementById('sidebar');
     var btn=document.getElementById('sidebar-toggle-btn');
     if(sb) sb.classList.add('collapsed');
-    if(btn) btn.textContent='▶';
+    if(btn) btn.textContent='☰';
   }
   loadAll();hookCloudSaves();
   fetchSubs();
 }
-init();
+/* Wait for DOM to be fully ready before init */
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 
 
 
@@ -8338,7 +8344,7 @@ function lqRenderSetup(){
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.7rem;">';
   h+='<div><div class="fl">Grade</div><select class="fi-sel" id="lq-grade" onchange="lqUpdateTopics()"><option value="">All Grades</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option></select></div>';
   h+='<div><div class="fl">Topic</div><select class="fi-sel" id="lq-topic"><option value="">All Topics</option></select></div>';
-  h+='<div><div class="fl">Question Type</div><select class="fi-sel" id="lq-qtype"><option value="">All Types</option><option value="mcq">MCQ</option><option value="tf">True/False</option><option value="fill">Fill Blank</option><option value="match">Matching</option><option value="ms">Multi-Select</option><option value="essay">Essay</option></select></div>';
+  h+='<div><div class="fl">Question Type</div><select class="fi-sel" id="lq-qtype"><option value="">All Types</option><option value="mcq">MCQ</option><option value="tf">True/False</option></select></div>';
   h+='<div><div class="fl">Max Questions</div><input class="fi" type="number" id="lq-maxq" value="10" min="1" max="50" style="width:80px;"></div>';
   h+='</div></div>';
 
@@ -8395,7 +8401,8 @@ function lqBuildQuestions(){
 
   if(src==='exam'){
     var d=examData||loadExam();
-    var types={mcq:'mcq',tf:'trueFalse',fill:'fillBlank',match:'matching',ms:'multiSelect',essay:'essay'};
+    /* Only MCQ and True/False supported in Live Quiz */
+    var types={mcq:'mcq',tf:'trueFalse'};
     Object.keys(types).forEach(function(k){
       (d[types[k]]||[]).forEach(function(q){
         qs.push(Object.assign({},q,{_type:k}));
@@ -8406,6 +8413,8 @@ function lqBuildQuestions(){
     var topic=(document.getElementById('lq-topic')||{}).value||'';
     var qtype=(document.getElementById('lq-qtype')||{}).value||'';
     qs=bankQs.filter(function(q){
+      /* Only MCQ and True/False compatible with Live Quiz */
+      if(q.type!=='mcq'&&q.type!=='tf') return false;
       if(grade&&q.grade!==grade) return false;
       if(topic&&q.topic!==topic) return false;
       if(qtype&&q.type!==qtype) return false;
@@ -8583,13 +8592,6 @@ h+='<button class="btn btn-red btn-sm" id="lq-cancel-question-btn">✕ Cancel</b
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.2rem;">';
     h+='<div style="background:#22c55e;border-radius:12px;padding:1.5rem;font-weight:900;font-size:1.2rem;color:#fff;text-align:center;">✓ TRUE</div>';
     h+='<div style="background:#ef4444;border-radius:12px;padding:1.5rem;font-weight:900;font-size:1.2rem;color:#fff;text-align:center;">✗ FALSE</div>';
-    h+='</div>';
-  } else if(q._type==='match'){
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1.2rem;">';
-    (q.pairs||[]).forEach(function(p){
-      h+='<div style="background:#1e3a5f;border-radius:8px;padding:.7rem 1rem;font-weight:700;color:#e2e8f0;">'+escH(p.left)+'</div>';
-      h+='<div style="background:#334155;border-radius:8px;padding:.7rem 1rem;color:#94a3b8;font-style:italic;">Match...</div>';
-    });
     h+='</div>';
   }
 

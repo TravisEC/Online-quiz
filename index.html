@@ -7,53 +7,143 @@
 <title>IT ExamPro — Live Quiz</title>
 <style>
 :root{
-  --dark:#111827;
-  --dark2:#1A1D23;
-  --dark3:#2D3748;
+  --bg:#0F172A;
+  --bg2:#1E293B;
+  --bg3:#334155;
   --blue:#3B82F6;
+  --blue-d:#2563EB;
   --green:#10B981;
   --red:#EF4444;
   --amber:#F59E0B;
   --slate:#64748B;
-  --border:#E2E8F0;
+  --text:#F1F5F9;
+  --text2:#94A3B8;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--dark);color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1rem;}
-.card{background:var(--dark2);border:1px solid var(--dark3);border-radius:18px;padding:2rem;width:100%;max-width:440px;box-shadow:0 8px 32px rgba(0,0,0,.4);}
-.logo{text-align:center;margin-bottom:1.5rem;}
-.logo h1{font-size:1.4rem;font-weight:900;color:var(--blue);}
-.logo p{font-size:.82rem;color:var(--slate);margin-top:4px;}
-.fl{font-size:.72rem;font-weight:700;color:var(--slate);text-transform:uppercase;letter-spacing:.3px;margin-bottom:5px;}
-.fi{width:100%;padding:12px 16px;border:2px solid var(--dark3);border-radius:10px;background:var(--dark3);color:#fff;font-size:1rem;font-weight:600;outline:none;transition:border-color .2s;margin-bottom:1rem;}
-.fi:focus{border-color:var(--blue);}
-.fi-pin{font-size:2rem;font-weight:900;text-align:center;letter-spacing:8px;font-family:'Courier New',monospace;}
-select.fi option{background:var(--dark2);color:#fff;}
+body{
+  font-family:'Segoe UI',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:1.5rem;
+  /* Subtle grid pattern background */
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(59,130,246,.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(16,185,129,.06) 0%, transparent 50%);
+}
+
+/* Branding at top */
+.brand{text-align:center;margin-bottom:1.5rem;}
+.brand-logo{font-size:1.8rem;font-weight:900;color:#fff;letter-spacing:-1px;}
+.brand-logo span{color:var(--blue);}
+.brand-sub{font-size:.8rem;color:var(--text2);margin-top:3px;letter-spacing:.5px;text-transform:uppercase;}
+
+/* Main card */
+.card{
+  background:var(--bg2);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:20px;
+  padding:2rem;
+  width:100%;
+  max-width:420px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.05) inset;
+}
+
+/* On PC - wider layout with side decoration */
+@media(min-width:768px){
+  body{flex-direction:row;gap:4rem;justify-content:center;align-items:center;}
+  .brand{text-align:left;margin-bottom:0;max-width:300px;}
+  .brand-logo{font-size:2.5rem;}
+  .brand-desc{font-size:.95rem;color:var(--text2);margin-top:1rem;line-height:1.6;max-width:260px;}
+  .card{max-width:400px;flex-shrink:0;}
+}
+
+.fl{font-size:.72rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+
+.fi{
+  width:100%;
+  padding:12px 16px;
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:10px;
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  font-size:1rem;
+  font-weight:600;
+  outline:none;
+  transition:border-color .2s, background .2s;
+  margin-bottom:1rem;
+}
+.fi:focus{border-color:var(--blue);background:rgba(59,130,246,.08);}
+.fi-pin{
+  font-size:2.2rem;
+  font-weight:900;
+  text-align:center;
+  letter-spacing:10px;
+  font-family:'Courier New',monospace;
+  color:#fff;
+}
+select.fi{cursor:pointer;}
+select.fi option{background:var(--bg2);color:var(--text);}
 select.fi optgroup{color:var(--slate);}
-.btn{width:100%;padding:14px;border:none;border-radius:10px;font-size:1rem;font-weight:800;cursor:pointer;transition:all .15s;margin-bottom:.5rem;}
-.btn-blue{background:var(--blue);color:#fff;}
-.btn-blue:hover{background:#2563EB;transform:translateY(-1px);box-shadow:0 4px 14px rgba(59,130,246,.4);}
-.btn-blue:disabled{background:var(--dark3);color:var(--slate);cursor:not-allowed;transform:none;box-shadow:none;}
-.status{text-align:center;padding:1rem;font-size:.88rem;color:var(--slate);font-weight:600;}
+
+.btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  font-size:1rem;
+  font-weight:800;
+  cursor:pointer;
+  transition:all .2s;
+  margin-bottom:.5rem;
+  letter-spacing:.3px;
+}
+.btn-blue{
+  background:linear-gradient(135deg,var(--blue),var(--blue-d));
+  color:#fff;
+  box-shadow:0 4px 15px rgba(59,130,246,.3);
+}
+.btn-blue:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(59,130,246,.4);}
+.btn-blue:disabled{background:var(--bg3);color:var(--slate);cursor:not-allowed;transform:none;box-shadow:none;}
+
+.status{text-align:center;padding:.8rem;font-size:.85rem;color:var(--text2);font-weight:600;}
 .status.error{color:var(--red);}
 .status.success{color:var(--green);}
 
 /* Lobby */
 .lobby{text-align:center;padding:1rem 0;}
-.name-badge{font-size:1.3rem;font-weight:900;color:#fff;background:rgba(59,130,246,.15);border:2px solid var(--blue);border-radius:12px;padding:.6rem 1.5rem;display:inline-block;margin-bottom:.8rem;}
-.pulse{animation:pulse 1.5s infinite;}
+.name-badge{
+  font-size:1.2rem;font-weight:900;color:#fff;
+  background:linear-gradient(135deg,rgba(59,130,246,.2),rgba(16,185,129,.15));
+  border:1.5px solid rgba(59,130,246,.4);
+  border-radius:12px;padding:.7rem 1.5rem;
+  display:inline-block;margin-bottom:.8rem;
+}
+.waiting-text{font-size:.88rem;color:var(--text2);margin-top:.5rem;}
+.pulse{animation:pulse 1.8s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
-/* Question */
+/* Question screen */
 .question-screen{text-align:center;}
-.q-timer{font-size:2.8rem;font-weight:900;font-family:'Courier New',monospace;margin-bottom:.4rem;}
+.q-label{font-size:.72rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem;}
+.q-timer{
+  font-size:3rem;font-weight:900;
+  font-family:'Courier New',monospace;
+  margin-bottom:.3rem;
+  color:#fff;
+}
 
-/* ── Answer Buttons — bigger, more tappable ── */
-.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.9rem;margin-bottom:1rem;}
+/* Answer buttons - good size for mobile & pc */
+.answers-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.8rem;}
 .ans-btn{
-  padding:1.6rem 1rem;
+  padding:1.5rem .8rem;
   border:none;
   border-radius:14px;
-  font-size:.95rem;
+  font-size:.9rem;
   font-weight:800;
   color:#fff;
   cursor:pointer;
@@ -62,37 +152,62 @@ select.fi optgroup{color:var(--slate);}
   align-items:center;
   justify-content:center;
   gap:.5rem;
-  transition:transform .1s,opacity .2s,box-shadow .15s;
-  min-height:110px;
+  transition:transform .12s, box-shadow .12s;
+  min-height:100px;
   line-height:1.3;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
 }
-.ans-btn:hover{transform:scale(1.03);box-shadow:0 6px 20px rgba(0,0,0,.3);}
-.ans-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
-.ans-btn.selected{outline:4px solid #fff;box-shadow:0 0 0 4px rgba(255,255,255,.3);}
-.ans-btn.correct{outline:4px solid var(--green);box-shadow:0 0 0 4px rgba(16,185,129,.3);}
-.ans-btn.wrong{opacity:.35;}
-.ans-red{background:#EF4444;}
-.ans-blue{background:#3B82F6;}
-.ans-green{background:#10B981;}
-.ans-yellow{background:#F59E0B;}
-.ans-purple{background:#8B5CF6;}
-.ans-pink{background:#EC4899;}
+.ans-btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.4);}
+.ans-btn:active:not(:disabled){transform:translateY(-1px);}
+.ans-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.ans-btn.selected{outline:3px solid rgba(255,255,255,.9);outline-offset:2px;}
+.ans-btn.correct{outline:3px solid var(--green);outline-offset:2px;}
+.ans-btn.wrong{opacity:.3;}
+.ans-icon{font-size:1.6rem;line-height:1;}
+.ans-text{font-size:.82rem;font-weight:800;text-align:center;}
+
+.ans-red{background:linear-gradient(135deg,#EF4444,#DC2626);}
+.ans-blue{background:linear-gradient(135deg,#3B82F6,#2563EB);}
+.ans-green{background:linear-gradient(135deg,#10B981,#059669);}
+.ans-yellow{background:linear-gradient(135deg,#F59E0B,#D97706);}
+.ans-purple{background:linear-gradient(135deg,#8B5CF6,#7C3AED);}
+.ans-pink{background:linear-gradient(135deg,#EC4899,#DB2777);}
+
+/* Timer bar */
+.timer-bar-wrap{background:rgba(255,255,255,.1);border-radius:999px;height:6px;margin:.5rem 0 1rem;overflow:hidden;}
+.timer-bar{height:100%;border-radius:999px;transition:width 1s linear,background .5s;}
 
 /* Result */
-.result-screen{text-align:center;padding:1rem 0;}
-.result-icon{font-size:4rem;margin-bottom:.5rem;}
-.result-points{font-size:2.2rem;font-weight:900;color:var(--amber);}
-.result-total{font-size:.88rem;color:var(--slate);margin-top:.3rem;}
-.result-correct{font-size:1.1rem;font-weight:800;color:var(--green);margin:.5rem 0;}
-.result-wrong{font-size:1.1rem;font-weight:800;color:var(--red);margin:.5rem 0;}
+.result-screen{text-align:center;padding:.5rem 0;}
+.result-icon{font-size:3.5rem;margin-bottom:.5rem;}
+.result-points{font-size:2.5rem;font-weight:900;color:var(--amber);margin:.3rem 0;}
+.result-label{font-size:.9rem;color:var(--text2);margin-bottom:.3rem;}
+.result-correct{font-size:1rem;font-weight:800;color:var(--green);margin:.4rem 0;}
+.result-wrong{font-size:1rem;font-weight:800;color:var(--red);margin:.4rem 0;}
 
 /* Final */
-.final-screen{text-align:center;}
+.final-screen{text-align:center;padding:1rem 0;}
 .final-score{font-size:3rem;font-weight:900;color:var(--amber);margin:1rem 0;}
 
+/* Cancelled */
+.cancelled-screen{text-align:center;padding:2rem 0;}
+
 /* Text inputs */
-.fi-answer{width:100%;padding:12px;border:2px solid var(--dark3);border-radius:10px;background:var(--dark3);color:#fff;font-size:1rem;font-weight:600;outline:none;margin-bottom:.8rem;resize:vertical;}
+.fi-answer{
+  width:100%;padding:12px;
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:10px;
+  background:rgba(255,255,255,.05);
+  color:var(--text);font-size:1rem;font-weight:600;
+  outline:none;margin-bottom:.8rem;resize:vertical;
+}
 .fi-answer:focus{border-color:var(--blue);}
+
+@media(max-width:400px){
+  .card{padding:1.5rem;}
+  .ans-btn{min-height:85px;padding:1rem .6rem;}
+  .q-timer{font-size:2.5rem;}
+}
 </style>
 </head>
 <body>
@@ -136,7 +251,9 @@ function render(){
 }
 
 function renderJoin(){
-  return '<div class="logo"><h1>📺 IT ExamPro</h1><p>Live Quiz — Enter your PIN to join</p></div>'
+  return '<div class="brand"><div class="brand-logo">Exam<span>Pro</span></div>'
+    +'<div class="brand-sub">Live Quiz</div>'
+    +'<div class="brand-desc">Enter your PIN to join your teacher\'s live quiz session.</div></div>'
     +'<div class="fl">Game PIN</div>'
     +'<input class="fi fi-pin" id="j-pin" type="tel" maxlength="6" placeholder="000000" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')">'
     +'<div class="fl">Your Full Name</div>'
@@ -315,7 +432,7 @@ function renderResult(){
 
 /* ── FINAL SCREEN ── */
 function renderCancelled(){
-  return '<div class="lobby" style="padding:2rem 0;">'  
+  return '<div class="cancelled-screen">'  
     +'<div style="font-size:3rem;margin-bottom:1rem;">🚫</div>'
     +'<div style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:.5rem;">Session Ended</div>'
     +'<div style="font-size:.88rem;color:var(--slate);margin-bottom:1.5rem;">Your teacher has cancelled this session.</div>'
