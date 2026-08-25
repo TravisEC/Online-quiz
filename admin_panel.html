@@ -8344,7 +8344,7 @@ function lqRenderSetup(){
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.7rem;">';
   h+='<div><div class="fl">Grade</div><select class="fi-sel" id="lq-grade" onchange="lqUpdateTopics()"><option value="">All Grades</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option></select></div>';
   h+='<div><div class="fl">Topic</div><select class="fi-sel" id="lq-topic"><option value="">All Topics</option></select></div>';
-  h+='<div><div class="fl">Question Type</div><select class="fi-sel" id="lq-qtype"><option value="">All Types</option><option value="mcq">MCQ</option><option value="tf">True/False</option></select></div>';
+  h+='<div><div class="fl">Question Type</div><select class="fi-sel" id="lq-qtype"><option value="">Mixed (MCQ + T/F)</option><option value="mcq">MCQ Only</option><option value="tf">True/False Only</option></select></div>';
   h+='<div><div class="fl">Max Questions</div><input class="fi" type="number" id="lq-maxq" value="10" min="1" max="50" style="width:80px;"></div>';
   h+='</div></div>';
 
@@ -8417,6 +8417,7 @@ function lqBuildQuestions(){
       if(q.type!=='mcq'&&q.type!=='tf') return false;
       if(grade&&q.grade!==grade) return false;
       if(topic&&q.topic!==topic) return false;
+      /* Empty qtype = Mixed (both MCQ and TF) */
       if(qtype&&q.type!==qtype) return false;
       return true;
     }).map(function(q){ return Object.assign({},q,{_type:q.type}); });
