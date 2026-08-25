@@ -124,7 +124,7 @@ select.fi optgroup{color:var(--slate);font-size:.75rem;}
 .exam-locked .opt{opacity:.5;cursor:not-allowed;pointer-events:none;}
 .exam-locked .tf-btn{opacity:.5;cursor:not-allowed;pointer-events:none;}
 .exam-locked .fi-ans{opacity:.5;cursor:not-allowed;pointer-events:none;}
-/* select.fi not locked — students need to select class while waiting */
+.exam-locked select.fi{opacity:.5;cursor:not-allowed;pointer-events:none;}
 .exam-locked .btn-submit{opacity:.4;cursor:not-allowed;pointer-events:none;}
 .exam-status-bar{padding:.8rem 1.2rem;border-radius:10px;font-weight:800;font-size:.88rem;margin-bottom:1rem;text-align:center;}
 .exam-status-waiting{background:rgba(100,116,139,.1);border:1px solid rgba(100,116,139,.3);color:#64748b;}
@@ -144,8 +144,140 @@ select.fi optgroup{color:var(--slate);font-size:.75rem;}
 <script>
 /* EXAM CONFIG — injected by admin panel Save & Push */
 var EXAM_CONFIG = {
-  meta:{title:'Sample Exam',term:'Term 1',duration:0,marks:20,subject:'Information Technology',grade:'9'},
-  mcq:[],tf:[],trueFalse:[],fillBlank:[],matching:[],multiSelect:[],essay:[]
+  "meta": {
+    "title": "Grade 7 Assessment 2",
+    "subject": "Digital Literacy",
+    "grade": "7-1",
+    "duration": 50,
+    "term": "Term 3",
+    "marks": 30
+  },
+  "mcq": [
+    {
+      "q": "What is digital citizenship?",
+      "marks": 2,
+      "opts": [
+        "Using as many apps as possible",
+        "The responsible, safe, and respectful use of technology when engaging with others online",
+        "Only using computers at school",
+        "Downloading as many files as possible"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is an example of NETIQUETTE?",
+      "marks": 2,
+      "opts": [
+        "Typing all your messages in CAPITAL LETTERS",
+        "Sharing someone else's password",
+        "Responding politely to others online",
+        "Ignoring messages from your teacher"
+      ],
+      "ans": 2
+    },
+    {
+      "q": "What is copyright?",
+      "marks": 2,
+      "opts": [
+        "A rule that allows anyone to copy any work",
+        "A legal right that gives creators control over how their work is used",
+        "A type of computer virus",
+        "A way to share files for free"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is an example of phishing?",
+      "marks": 2,
+      "opts": [
+        "Downloading a legal antivirus app",
+        "Receiving a fake email pretending to be your bank to steal your password",
+        "Sharing your school project with a classmate",
+        "Creating a strong password"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is a RIGHT of a digital citizen?",
+      "marks": 2,
+      "opts": [
+        "Posting false information online",
+        "Access to the internet and digital resources",
+        "Sharing others' passwords",
+        "Downloading pirated software"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Which of the following is a RESPONSIBILITY of a digital citizen?",
+      "marks": 2,
+      "opts": [
+        "Using others' personal information without permission",
+        "Respecting copyright laws",
+        "Ignoring cyberbullying",
+        "Sharing passwords freely"
+      ],
+      "ans": 1
+    },
+    {
+      "q": "Copyright law protects which of the following?",
+      "marks": 2,
+      "opts": [
+        "A person's physical property",
+        "An individual's creative works",
+        "A company's buildings",
+        "A student's grades"
+      ],
+      "ans": 1
+    }
+  ],
+  "trueFalse": [
+    {
+      "q": "Cyberbullying means using digital devices to bully or harass someone online.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Typing in ALL CAPS in an online message can feel like shouting to the reader.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Plagiarism means copying someone else's work and presenting it as your own.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Identity theft involves using another person's personal information without their permission.",
+      "marks": 2,
+      "ans": true
+    },
+    {
+      "q": "Every digital citizen has the right to access information freely on the internet.",
+      "marks": 2,
+      "ans": true
+    }
+  ],
+  "fillBlank": [
+    {
+      "q": "The rules and guidelines for behaving politely online are called ______.",
+      "marks": 2,
+      "ans": "netiquette"
+    },
+    {
+      "q": "The unauthorized copying or downloading of paid software without a license is called software ______.",
+      "marks": 2,
+      "ans": "piracy"
+    },
+    {
+      "q": "Using someone else's creative work without permission or credit is called ______.",
+      "marks": 2,
+      "ans": "plagiarism"
+    }
+  ],
+  "matching": [],
+  "multiSelect": [],
+  "essay": []
 };
 
 /* ── CONFIG ── */
@@ -212,8 +344,8 @@ function render(){
   if(!submitted){
     h += '<div class="info-card"><h2>📋 Student Information</h2>';
     h += '<div class="info-grid">';
-    h += '<div><div class="fi-label">Full Name</div><input class="fi" id="s-name" type="text" placeholder="e.g. John Smith" autocomplete="off" value="'+esc(sName||localStorage.getItem('lastStudentName')||'')+'"></div>';
-    h += '<div><div class="fi-label">Student ID</div><input class="fi" id="s-id" type="text" placeholder="e.g. 2024001" autocomplete="off" value="'+esc(sSid||localStorage.getItem('lastStudentId')||'')+'"></div>';
+    h += '<div><div class="fi-label">Full Name</div><input class="fi" id="s-name" type="text" placeholder="e.g. John Smith" autocomplete="off" value="'+esc(sName)+'"></div>';
+    h += '<div><div class="fi-label">Student ID</div><input class="fi" id="s-id" type="text" placeholder="e.g. 2024001" autocomplete="off" value="'+esc(sSid)+'"></div>';
     h += '<div><div class="fi-label">Class</div>';
     h += '<select class="fi" id="s-cls">';
     h += '<option value="">-- Select Class --</option>';
@@ -679,13 +811,6 @@ async function ecPoll(){
     if(newStatus===examStatus) return;
     examStatus=newStatus;
     if(examStatus==='running'){
-      /* Save student info before render destroys the DOM */
-      var nameEl=document.getElementById('s-name');
-      var clsEl=document.getElementById('s-cls');
-      var sidEl=document.getElementById('s-id');
-      if(nameEl&&nameEl.value) sName=nameEl.value;
-      if(clsEl&&clsEl.value) sCls=clsEl.value;
-      if(sidEl&&sidEl.value) sSid=sidEl.value;
       /* Start timer if not already running */
       var cfg=getCfg();
       var dur=parseInt(cfg.meta.duration)||0;
