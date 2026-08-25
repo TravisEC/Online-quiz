@@ -8899,8 +8899,14 @@ function lqSaveToRecords(){
 }
 
 /* ── NEW SESSION ── */
-function lqNewSession(){
+async function lqNewSession(){
   if(lqCountdownTimer) clearInterval(lqCountdownTimer);
+  /* Notify server so students get cancelled status */
+  if(lqSession&&lqSession.pin){
+    try{
+      await fetch(SURL+'?action=lqEnd&pin='+encodeURIComponent(lqSession.pin)+'&status=cancelled&t='+Date.now(),{method:'GET',mode:'cors'});
+    }catch(e){}
+  }
   lqStopPolling();
   lqState='idle';
   lqSession=null;

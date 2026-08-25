@@ -103,7 +103,7 @@ select.fi optgroup{color:var(--slate);}
 <script>
 var SURL = 'https://script.google.com/macros/s/AKfycbxrrDxbVlTP1u5oyR776zVOfG3gTMK1mIPFeh9qFIbTFYaOA8RL5tFseH99-c0JTq7p/exec';
 
-var state = 'join'; /* join | lobby | question | result | final */
+var state = 'join'; /* join | lobby | question | result | final | cancelled */
 var studentId = 'st_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
 var playerName = '';
 var playerCls  = '';
@@ -132,6 +132,7 @@ function render(){
   else if(state==='question') el.innerHTML=renderQuestion();
   else if(state==='result')   el.innerHTML=renderResult();
   else if(state==='final')    el.innerHTML=renderFinal();
+  else if(state==='cancelled') el.innerHTML=renderCancelled();
 }
 
 function renderJoin(){
@@ -313,6 +314,15 @@ function renderResult(){
 }
 
 /* ── FINAL SCREEN ── */
+function renderCancelled(){
+  return '<div class="lobby" style="padding:2rem 0;">'  
+    +'<div style="font-size:3rem;margin-bottom:1rem;">🚫</div>'
+    +'<div style="font-size:1.2rem;font-weight:900;color:#fff;margin-bottom:.5rem;">Session Ended</div>'
+    +'<div style="font-size:.88rem;color:var(--slate);margin-bottom:1.5rem;">Your teacher has cancelled this session.</div>'
+    +'<div style="font-size:.82rem;color:var(--slate);">Returning to join screen...</div>'
+    +'</div>';
+}
+
 function renderFinal(){
   return '<div class="final-screen">'
     +'<div style="font-size:2.5rem;margin-bottom:.5rem;">🏆</div>'
@@ -435,6 +445,26 @@ async function poll(){
       stopCountdown();
       state='final';
       render();
+      return;
+    }
+    /* Session cancelled by teacher */
+    if(srvStatus==='cancelled'){
+      stopPolling();
+      stopCountdown();
+      state='cancelled';
+      render();
+      /* Auto-reset to join screen after 3 seconds */
+      setTimeout(function(){
+        state='join';
+        sessionPin='';
+        submitted=false;
+        selectedAnswer=null;
+        myScore=0;
+        lastGain=0;
+        lastCorrect=null;
+        render();
+      },3000);
+      return;
     }
   }catch(e){ console.warn('poll error:',e); }
 }
