@@ -229,6 +229,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
     <button class="nav-item" onclick="showTab('logbook',this);closeSidebar();"><span class="nav-icon">📔</span><span class="nav-label">Log Book</span></button>
     <div class="sep"></div>
     <button class="nav-item" onclick="showTab('editor',this);closeSidebar();"><span class="nav-icon">✏️</span><span class="nav-label">Edit Questions</span></button>
+    <button class="nav-item" onclick="showTab('examcontrol',this);closeSidebar();"><span class="nav-icon">🎛️</span><span class="nav-label">Exam Control</span></button>
     <button class="nav-item" onclick="showTab('bank',this);closeSidebar();"><span class="nav-icon">📚</span><span class="nav-label">Question Bank</span></button>
     <button class="nav-item" onclick="showTab('converter',this);closeSidebar();"><span class="nav-icon">⚖️</span><span class="nav-label">Mark Converter</span></button>
     <div class="sep"></div>
@@ -538,6 +539,12 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
     <div id="tab-livequiz" class="view">
       <div class="ph"><div><div class="ph-title">📺 Live Quiz</div><div class="ph-sub">Kahoot-style live quiz · Students join with PIN · Host controls from here</div></div></div>
       <div id="lq-content"></div>
+    </div>
+
+    <!-- EXAM CONTROL -->
+    <div id="tab-examcontrol" class="view">
+      <div class="ph"><div><div class="ph-title">🎛️ Exam Control</div><div class="ph-sub">Start · Pause · Stop student exams in real time</div></div></div>
+      <div id="ec-content"></div>
     </div>
 
     </div>
@@ -2464,6 +2471,7 @@ function showTab(name,el){
   if(name==='reportcards'){rcLoad();renderReportCards();}
   if(name==='logbook'){lbLoad();renderLogBook();}
   if(name==='livequiz'){renderLiveQuiz();}
+  if(name==='examcontrol'){ecStopPolling();renderExamControl();}
   if(name==='marksbook')renderMBTab();
 }
 
@@ -9020,6 +9028,159 @@ function lqBuildJoinPageHtml(){
     return tmpl;
   }
   return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IT ExamPro</title></head><body><p>Please load quiz_join.html in Settings first.</p></body></html>';
+}
+
+/* ── EXAM CONTROL ── */
+/* ── EXAM CONTROL ── */
+/* ══════════════════════════════════════════════
+   IT ExamPro — Exam Control Panel
+   Admin starts/pauses/stops student exams
+   Students poll examGetStatus every 2 seconds
+══════════════════════════════════════════════ */
+
+var ecStatus    = 'waiting'; /* waiting | running | paused | stopped */
+var ecExamId    = '';
+var ecPollTimer = null;
+var ecTimer     = 0;
+
+/* ── RENDER ── */
+function renderExamControl(){
+  var el=document.getElementById('ec-content'); if(!el) return;
+
+  /* Build examId from current active exam */
+  var exam=activeExam||loadExam();
+  var meta=exam&&exam.meta?exam.meta:{};
+  ecExamId=(meta.title||'exam').replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  ecTimer=parseInt(meta.duration)||0;
+
+  var h='';
+
+  /* ── Exam Info Card ── */
+  h+='<div class="ed-card" style="margin-bottom:1.2rem;">';
+  h+='<h3>📄 Current Exam</h3>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.8rem;margin-top:.8rem;">';
+  h+='<div><div class="fl">Title</div><div style="font-weight:800;color:#fff;font-size:.9rem;">'+escH(meta.title||'No exam loaded')+'</div></div>';
+  h+='<div><div class="fl">Duration</div><div style="font-weight:800;color:#fff;font-size:.9rem;">'+(ecTimer>0?ecTimer+' min':'No limit')+'</div></div>';
+  h+='<div><div class="fl">Questions</div><div style="font-weight:800;color:#fff;font-size:.9rem;">'+ecCountQuestions(exam)+'</div></div>';
+  h+='</div>';
+  h+='<div style="margin-top:.8rem;font-size:.78rem;color:#64748b;">Exam ID: <code style="color:#93c5fd;">'+escH(ecExamId)+'</code></div>';
+  h+='</div>';
+
+  /* ── Status Card ── */
+  var statusColor=ecStatus==='running'?'#10B981':ecStatus==='paused'?'#F59E0B':ecStatus==='stopped'?'#EF4444':'#64748b';
+  var statusLabel=ecStatus==='running'?'▶ Running':ecStatus==='paused'?'⏸ Paused':ecStatus==='stopped'?'⏹ Stopped':'⏳ Waiting';
+  h+='<div class="ed-card" style="margin-bottom:1.2rem;">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;">';
+  h+='<h3>Status</h3>';
+  h+='<div style="font-size:1rem;font-weight:900;color:'+statusColor+';background:'+statusColor+'22;padding:.4rem 1rem;border-radius:999px;border:1px solid '+statusColor+'55;">'+statusLabel+'</div>';
+  h+='</div>';
+
+  /* Control buttons */
+  h+='<div style="display:flex;gap:.8rem;flex-wrap:wrap;">';
+
+  /* Start button */
+  h+='<button class="btn btn-green" id="ec-start-btn" '+(ecStatus==='running'?'disabled':'')+' style="flex:1;padding:14px;font-size:.95rem;">';
+  h+='▶ '+(ecStatus==='paused'?'Resume':'Start Exam')+'</button>';
+
+  /* Pause button */
+  h+='<button class="btn btn-ghost" id="ec-pause-btn" '+(ecStatus!=='running'?'disabled':'')+' style="flex:1;padding:14px;font-size:.95rem;border:1px solid #F59E0B;color:#F59E0B;">';
+  h+='⏸ Pause</button>';
+
+  /* Stop button */
+  h+='<button class="btn btn-red" id="ec-stop-btn" '+(ecStatus==='waiting'||ecStatus==='stopped'?'disabled':'')+' style="flex:1;padding:14px;font-size:.95rem;">';
+  h+='⏹ Stop & Submit</button>';
+
+  h+='</div>';
+
+  /* Reset */
+  if(ecStatus==='stopped'){
+    h+='<div style="margin-top:.8rem;">';
+    h+='<button class="btn btn-ghost btn-sm" id="ec-reset-btn">🔄 Reset to Waiting</button>';
+    h+='</div>';
+  }
+  h+='</div>';
+
+  /* ── Info box ── */
+  h+='<div class="ed-card">';
+  h+='<h3>ℹ️ How It Works</h3>';
+  h+='<div style="font-size:.82rem;color:#94a3b8;line-height:1.7;margin-top:.5rem;">';
+  h+='<b style="color:#e2e8f0;">⏳ Waiting</b> — Students can open the exam and read questions. All inputs are disabled (grayed out). Timer shows "Waiting for teacher..."<br>';
+  h+='<b style="color:#10B981;">▶ Start</b> — All student devices unlock simultaneously. Timer begins. Students can now answer.<br>';
+  h+='<b style="color:#F59E0B;">⏸ Pause</b> — Timer freezes on all devices. Inputs lock again. Students see "Exam paused."<br>';
+  h+='<b style="color:#EF4444;">⏹ Stop</b> — Auto-submits all student exams immediately regardless of time remaining.<br>';
+  h+='<br><b style="color:#e2e8f0;">Student link:</b> <a href="https://travisec.github.io/Online-quiz/student_exam.html" target="_blank" style="color:#3B82F6;">travisec.github.io/Online-quiz/student_exam.html</a>';
+  h+='</div></div>';
+
+  el.innerHTML=h;
+  ecWireButtons();
+  ecStartPolling();
+}
+
+function ecCountQuestions(exam){
+  if(!exam) return 0;
+  return [(exam.mcq||[]).length,(exam.trueFalse||[]).length,(exam.fillBlank||[]).length,
+          (exam.matching||[]).length,(exam.multiSelect||[]).length,(exam.essay||[]).length]
+    .reduce(function(a,b){return a+b;},0);
+}
+
+/* ── WIRE BUTTONS ── */
+function ecWireButtons(){
+  var startBtn  = document.getElementById('ec-start-btn');
+  var pauseBtn  = document.getElementById('ec-pause-btn');
+  var stopBtn   = document.getElementById('ec-stop-btn');
+  var resetBtn  = document.getElementById('ec-reset-btn');
+
+  if(startBtn) startBtn.addEventListener('click', function(){
+    if(ecStatus==='paused') ecSend('examStart', ecTimer, 'running');
+    else ecSend('examStart', ecTimer, 'running');
+  });
+  if(pauseBtn) pauseBtn.addEventListener('click', function(){
+    ecSend('examPause', 0, 'paused');
+  });
+  if(stopBtn) stopBtn.addEventListener('click', function(){
+    if(!confirm('Stop exam and force-submit all students?')) return;
+    ecSend('examStop', 0, 'stopped');
+  });
+  if(resetBtn) resetBtn.addEventListener('click', function(){
+    ecSend('examReset', 0, 'waiting');
+  });
+}
+
+/* ── SEND CONTROL SIGNAL ── */
+async function ecSend(action, timer, newStatus){
+  var params='?action='+action
+    +'&examId='+encodeURIComponent(ecExamId)
+    +'&timer='+timer
+    +'&t='+Date.now();
+  try{
+    var r=await fetch(SURL+params,{method:'GET',mode:'cors'});
+    var j=await r.json();
+    if(j.ok){
+      ecStatus=newStatus;
+      renderExamControl();
+    }
+  }catch(e){ console.warn('ecSend error:',e); }
+}
+
+/* ── POLLING ── */
+function ecStartPolling(){
+  ecStopPolling();
+  ecPollTimer=setInterval(ecPoll, 3000);
+}
+function ecStopPolling(){
+  if(ecPollTimer) clearInterval(ecPollTimer);
+  ecPollTimer=null;
+}
+async function ecPoll(){
+  if(!ecExamId) return;
+  try{
+    var r=await fetch(SURL+'?action=examGetStatus&examId='+encodeURIComponent(ecExamId)+'&t='+Date.now(),{method:'GET',mode:'cors'});
+    var j=await r.json();
+    if(j.ok&&j.status!==ecStatus){
+      ecStatus=j.status;
+      renderExamControl();
+    }
+  }catch(e){}
 }
 
 </script>
