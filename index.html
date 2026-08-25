@@ -376,32 +376,32 @@ function renderQuestion(){
   return h;
 }
 
-async function submitAns(val){
+function submitAns(val){
   if(submitted) return;
   selectedAnswer=val;
   submitted=true;
   var elapsed=(Date.now()-questionStartTime)/1000;
-  await sendAnswer(val,elapsed);
-  render();
+  render(); /* Update UI immediately — no waiting */
+  sendAnswer(val,elapsed); /* Fire and forget */
 }
-async function submitTextAns(){
+function submitTextAns(){
   if(submitted) return;
   var val=(document.getElementById('ans-text')||{}).value||'';
   if(!val.trim()){return;}
   submitted=true;
   var elapsed=(Date.now()-questionStartTime)/1000;
-  await sendAnswer(val.trim(),elapsed);
   render();
+  sendAnswer(val.trim(),elapsed);
 }
-async function submitMatchAns(){
+function submitMatchAns(){
   if(submitted) return;
   var pairs=[];
   var inputs=document.querySelectorAll('[id^="match-"]');
   inputs.forEach(function(inp){ pairs.push(inp.value.trim()); });
   submitted=true;
   var elapsed=(Date.now()-questionStartTime)/1000;
-  await sendAnswer(pairs,elapsed);
   render();
+  sendAnswer(pairs,elapsed);
 }
 
 async function sendAnswer(answer,elapsed){
@@ -481,8 +481,12 @@ async function poll(){
       submitted=false;
       selectedAnswer=null;
       lastCorrect=null;
-      questionStartTime=Date.now();
-      timeLeft=parseInt(srv.timer)||30;
+      /* Sync timer with server — subtract elapsed time */
+      var fullTimer=parseInt(srv.timer)||30;
+      var serverStart=parseInt(srv.questionStartedAt)||0;
+      var elapsed=serverStart>0?Math.floor((Date.now()-serverStart)/1000):0;
+      timeLeft=Math.max(1, fullTimer-elapsed);
+      questionStartTime=Date.now()-elapsed*1000;
       render();
       startCountdown();
       startPolling();
@@ -496,8 +500,12 @@ async function poll(){
       submitted=false;
       selectedAnswer=null;
       lastCorrect=null;
-      questionStartTime=Date.now();
-      timeLeft=parseInt(srv.timer)||30;
+      /* Sync timer with server */
+      var fullTimer=parseInt(srv.timer)||30;
+      var serverStart=parseInt(srv.questionStartedAt)||0;
+      var elapsed=serverStart>0?Math.floor((Date.now()-serverStart)/1000):0;
+      timeLeft=Math.max(1, fullTimer-elapsed);
+      questionStartTime=Date.now()-elapsed*1000;
       render();
       startCountdown();
       startPolling();
