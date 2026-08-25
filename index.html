@@ -484,12 +484,9 @@ async function poll(){
       submitted=false;
       selectedAnswer=null;
       lastCorrect=null;
-      /* Sync timer with server — subtract elapsed time */
-      var fullTimer=parseInt(srv.timer)||30;
-      var serverStart=parseInt(srv.questionStartedAt)||0;
-      var elapsed=serverStart>0?Math.floor((Date.now()-serverStart)/1000):0;
-      timeLeft=Math.max(1, fullTimer-elapsed);
-      questionStartTime=Date.now()-elapsed*1000;
+      /* Use full timer — admin controls reveal manually */
+      timeLeft=parseInt(srv.timer)||30;
+      questionStartTime=Date.now();
       render();
       startCountdown();
       stopPolling();
@@ -504,12 +501,9 @@ async function poll(){
       submitted=false;
       selectedAnswer=null;
       lastCorrect=null;
-      /* Sync timer with server */
-      var fullTimer=parseInt(srv.timer)||30;
-      var serverStart=parseInt(srv.questionStartedAt)||0;
-      var elapsed=serverStart>0?Math.floor((Date.now()-serverStart)/1000):0;
-      timeLeft=Math.max(1, fullTimer-elapsed);
-      questionStartTime=Date.now()-elapsed*1000;
+      /* Use full timer — admin controls reveal manually */
+      timeLeft=parseInt(srv.timer)||30;
+      questionStartTime=Date.now();
       render();
       startCountdown();
       stopPolling();
