@@ -219,6 +219,8 @@ select.fi optgroup{color:var(--slate);}
 var SURL = 'https://script.google.com/macros/s/AKfycbxrrDxbVlTP1u5oyR776zVOfG3gTMK1mIPFeh9qFIbTFYaOA8RL5tFseH99-c0JTq7p/exec';
 
 var state = 'join'; /* join | lobby | question | result | final | cancelled */
+var isPolling = false; /* prevent concurrent poll calls */
+var questionTransitioned = false; /* prevent double question start */
 var studentId = 'st_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
 var playerName = '';
 var playerCls  = '';
@@ -466,6 +468,8 @@ function stopPolling(){
 
 async function poll(){
   if(!sessionPin) return;
+  if(isPolling) return; /* skip if previous poll still running */
+  isPolling=true;
   try{
     var r=await fetch(SURL+'?action=lqGetSession&pin='+sessionPin+'&t='+Date.now(),{method:'GET',mode:'cors'});
     if(!r.ok) return;
@@ -478,24 +482,25 @@ async function poll(){
     var srvQ=parseInt(srv.currentQ);
 
     /* Lobby → Question */
-    if(state==='lobby'&&srvStatus==='question'){
+    if(state==='lobby'&&srvStatus==='question'&&!questionTransitioned){
+      questionTransitioned=true;
       state='question';
       currentQ=srvQ;
       submitted=false;
       selectedAnswer=null;
       lastCorrect=null;
-      /* Use full timer — admin controls reveal manually */
       timeLeft=parseInt(srv.timer)||30;
       questionStartTime=Date.now();
       render();
       startCountdown();
       stopPolling();
-      pollTimer=setInterval(poll,1000);
+      pollTimer=setInterval(poll,1500);
       return;
     }
 
     /* New question while in result */
     if(state==='result'&&srvStatus==='question'&&srvQ!==currentQ){
+      questionTransitioned=true;
       state='question';
       currentQ=srvQ;
       submitted=false;
@@ -557,9 +562,11 @@ async function poll(){
           } else { lastGain=0; }
         } else { lastCorrect=false; lastGain=0; }
       }
+      questionTransitioned=false;
       state='result';
       render();
-      startPolling();
+      stopPolling();
+      pollTimer=setInterval(poll,1500);
       return;
     }
 
@@ -591,6 +598,7 @@ async function poll(){
       return;
     }
   }catch(e){ console.warn('poll error:',e); }
+  finally{ isPolling=false; }
 }
 
 function checkCorrect(q,ans){
