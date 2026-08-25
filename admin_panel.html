@@ -4526,56 +4526,52 @@ function attExportPDF(){
 /* ══════════════════════════════════════════════
    IT ExamPro — Subject Register
    Per-class IT attendance tracker
-   4 periods per week, 30 min each
+   Grade 9: 2 periods/week | Grade 10: 4 periods/week
    Past sessions locked, future editable
 ══════════════════════════════════════════════ */
 
-var srData = {}; /* { className: { students:[], sessions:[] } } */
+var srData = {};
 var srCurrentClass = '';
 var SR_CLASSES = ['9-1','9-2','9-3','9-4','10 Arts','10 Business','10 TVET 1','10 TVET 2','10 CVQ 1','10 CVQ 2'];
 
-/* ── INIT ── */
+/* Style constants — prefixed SR_ to avoid conflicts */
+var SR_STH  = 'padding:6px 8px;background:#1e3a5f;color:#fff;font-weight:800;border:1px solid #334155;text-align:center;white-space:nowrap;';
+var SR_STH2 = 'padding:6px 8px;background:#1A1D23;color:#94a3b8;font-weight:700;border:1px solid #334155;text-align:center;white-space:nowrap;';
+var SR_STD  = 'padding:5px 6px;border:1px solid #334155;text-align:center;';
+var SR_STDL = 'padding:5px 8px;border:1px solid #334155;text-align:left;';
+
+/* ── DATA ── */
 function srLoad(){
-  try{
-    var raw = localStorage.getItem('subjectRegister');
-    srData = raw ? JSON.parse(raw) : {};
-  }catch(e){ srData={}; }
-  /* Ensure all classes exist */
+  try{ srData=JSON.parse(localStorage.getItem('subjectRegister')||'{}'); }
+  catch(e){ srData={}; }
   SR_CLASSES.forEach(function(cls){
     if(!srData[cls]) srData[cls]={students:[],sessions:[]};
-    /* Pull students from marks book or records if empty */
-    if(!srData[cls].students.length) srData[cls].students = srGetStudents(cls);
+    if(!srData[cls].students.length) srData[cls].students=srGetStudents(cls);
   });
 }
 
 function srSave(){
-  localStorage.setItem('subjectRegister', JSON.stringify(srData));
+  localStorage.setItem('subjectRegister',JSON.stringify(srData));
   cloudQueueSave('subjectRegister');
 }
 
 function srGetStudents(cls){
-  /* Pull from marks book data first, then records */
-  var students = [];
-  if(mbData && mbData[cls] && mbData[cls].students){
+  var students=[];
+  if(typeof mbData!=='undefined'&&mbData&&mbData[cls]&&mbData[cls].students){
     mbData[cls].students.forEach(function(s,i){
-      students.push({no:i+1, surname:s.surname||s.name||'', first:s.first||''});
+      students.push({no:i+1,surname:s.surname||s.name||'',first:s.first||''});
     });
   }
-  if(!students.length && records.length){
-    var seen = {};
-    records.filter(function(r){ return r.cls===cls; })
-      .forEach(function(r,i){
-        var key = r.name;
-        if(!seen[key]){
-          seen[key]=true;
-          var parts = r.name.trim().split(' ');
-          var surname = parts[0]||'';
-          var first = parts.slice(1).join(' ')||'';
-          students.push({no:students.length+1, surname:surname, first:first});
-        }
-      });
+  if(!students.length&&typeof records!=='undefined'&&records.length){
+    var seen={};
+    records.filter(function(r){return r.cls===cls;}).forEach(function(r){
+      if(!seen[r.name]){
+        seen[r.name]=true;
+        var p=r.name.trim().split(' ');
+        students.push({no:students.length+1,surname:p[0]||'',first:p.slice(1).join(' ')||''});
+      }
+    });
   }
-  /* Default empty rows if no data */
   if(!students.length){
     for(var i=1;i<=25;i++) students.push({no:i,surname:'',first:''});
   }
@@ -4585,18 +4581,24 @@ function srGetStudents(cls){
 /* ── RENDER ── */
 function renderSubjectRegister(){
   srLoad();
-  var el=document.getElementById('sr-content'); if(!el) return;
+  var el=document.getElementById('sr-content');
+  if(!el) return;
   if(!srCurrentClass) srCurrentClass=SR_CLASSES[0];
 
+  var cls=srCurrentClass;
+  var reg=srData[cls];
+  var sessions=reg.sessions||[];
+  var students=reg.students||[];
+  var today=new Date(); today.setHours(0,0,0,0);
   var h='';
 
-  /* ── Class selector ── */
+  /* ── Controls ── */
   h+='<div class="ed-card" style="margin-bottom:.8rem;padding:.8rem 1rem;">';
   h+='<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">';
   h+='<div><div class="fl">Class</div>';
   h+='<select class="fi-sel" id="sr-class-sel" onchange="srChangeClass(this.value)">';
-  SR_CLASSES.forEach(function(cls){
-    h+='<option value="'+escH(cls)+'"'+(cls===srCurrentClass?' selected':'')+'>'+escH(cls)+'</option>';
+  SR_CLASSES.forEach(function(c){
+    h+='<option value="'+escH(c)+'"'+(c===cls?' selected':'')+'>'+escH(c)+'</option>';
   });
   h+='</select></div>';
   h+='<div style="margin-left:auto;display:flex;gap:.5rem;flex-wrap:wrap;">';
@@ -4605,168 +4607,127 @@ function renderSubjectRegister(){
   h+='<button class="btn btn-ghost btn-sm" onclick="srEditStudents()">✏️ Edit Students</button>';
   h+='</div></div></div>';
 
-  /* ── Register table ── */
-  var cls = srCurrentClass;
-  var reg = srData[cls];
-  var sessions = reg.sessions||[];
-  var students = reg.students||[];
-  var today = new Date(); today.setHours(0,0,0,0);
-
+  /* ── No sessions state ── */
   if(!sessions.length){
     h+='<div class="ed-card" style="text-align:center;padding:3rem;">';
     h+='<div style="font-size:2rem;margin-bottom:.5rem;">📋</div>';
     h+='<div style="font-weight:800;color:#fff;margin-bottom:.3rem;">No sessions yet</div>';
-    h+='<div style="font-size:.82rem;color:#64748b;margin-bottom:1rem;">Click <b>➕ Add Session</b> to add your first lesson date</div>';
+    h+='<div style="font-size:.82rem;color:#64748b;">Click <b>➕ Add Session</b> to add your first lesson date</div>';
     h+='</div>';
     el.innerHTML=h;
     return;
   }
 
-  var SR_TH='padding:6px 8px;background:#1e3a5f;color:#fff;font-weight:800;border:1px solid #334155;text-align:center;white-space:nowrap;';
-  var SR_TH2='padding:6px 8px;background:#1A1D23;color:#94a3b8;font-weight:700;border:1px solid #334155;text-align:center;white-space:nowrap;';
-  var SR_TD='padding:5px 6px;border:1px solid #334155;text-align:center;';
-  var SR_TDL='padding:5px 8px;border:1px solid #334155;text-align:left;';
-
-  /* ── Split layout: fixed names | scrollable dates ── */
-  h+='<div style="display:flex;border:1px solid #334155;border-radius:8px;overflow:hidden;margin-bottom:.8rem;">';
-
-  /* ── LEFT: Fixed name columns ── */
-  h+='<div style="flex-shrink:0;">';
-  h+='<table style="border-collapse:collapse;font-size:.78rem;">';
-
-  /* Header rows - left side */
-  h+='<thead>';
-  h+='<tr>';
-  h+='<th style="'+SR_TH+'width:32px;border-right:2px solid #3b82f6;">No.</th>';
-  h+='<th style="'+SR_TH+'min-width:90px;">Surname</th>';
-  h+='<th style="'+SR_TH+'min-width:80px;border-right:2px solid #3b82f6;">First Name</th>';
-  h+='</tr>';
-  /* Row 2 */
-  h+='<tr>';
-  h+='<th colspan="3" style="'+SR_TH2+'border-right:2px solid #3b82f6;white-space:nowrap;">IT — '+escH(cls)+'</th>';
-  h+='</tr>';
-  /* Row 3 */
-  h+='<tr>';
-  h+='<th colspan="3" style="'+SR_TH2+'border-right:2px solid #3b82f6;">Name / Date</th>';
-  h+='</tr>';
-  h+='</thead>';
-
-  /* Student rows - left side */
-  h+='<tbody>';
-  students.forEach(function(stu,si){
-    var bg=si%2===0?'#111827':'#1A1D23';
-    h+='<tr style="background:'+bg+'">';
-    h+='<td style="'+SR_TD+'color:#64748b;border-right:none;">'+stu.no+'</td>';
-    h+='<td style="'+SR_TDL+'font-weight:700;color:#e2e8f0;">';
-    if(stu.surname){
-      h+=escH(stu.surname);
-    } else {
-      h+='<input type="text" value="" placeholder="Surname" style="background:transparent;border:none;outline:none;color:#e2e8f0;font-weight:700;width:80px;" onchange="srUpdateStudent('+si+',\'surname\',this.value)">';
-    }
-    h+='</td>';
-    h+='<td style="'+SR_TDL+'color:#94a3b8;border-right:2px solid #3b82f6;">';
-    if(stu.first){
-      h+=escH(stu.first);
-    } else {
-      h+='<input type="text" value="" placeholder="First" style="background:transparent;border:none;outline:none;color:#94a3b8;width:70px;" onchange="srUpdateStudent('+si+',\'first\',this.value)">';
-    }
-    h+='</td>';
-    h+='</tr>';
-  });
-  h+='</tbody>';
-  h+='</table>';
-  h+='</div>'; /* end left */
-
-  if(!sessions.length){
-    h+='<div style="flex:1;display:flex;align-items:center;justify-content:center;padding:2rem;color:#64748b;font-size:.85rem;">No sessions yet — click ➕ Add Session</div>';
-    h+='</div>';
-    el.innerHTML=h;
-    return;
-  }
-
-  /* ── RIGHT: Scrollable date columns ── */
-  h+='<div style="flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;">';
-  h+='<table style="border-collapse:collapse;font-size:.78rem;height:100%;">';
-
-  /* Group sessions by month/week for header */
-  var months=[]; var curMonth=''; var curCount=0;
+  /* ── Group sessions by month and week ── */
+  var months=[],curM='',curMC=0;
   sessions.forEach(function(s){
-    var d=new Date(s.date);
-    var m=d.toLocaleString('en-GB',{month:'long'});
-    if(m===curMonth){ curCount++; }
-    else { if(curMonth) months.push({name:curMonth,count:curCount}); curMonth=m; curCount=1; }
+    var m=new Date(s.date).toLocaleString('en-GB',{month:'long'});
+    if(m===curM){curMC++;}else{if(curM)months.push({name:curM,count:curMC});curM=m;curMC=1;}
   });
-  if(curMonth) months.push({name:curMonth,count:curCount});
+  if(curM) months.push({name:curM,count:curMC});
 
-  var weeks=[]; var curWk=''; var wkCount=0; var wkNum=0;
+  var weeks=[],curW='',curWC=0,wkNum=0;
   sessions.forEach(function(s){
     var d=new Date(s.date);
     var wk=srGetWeekNum(d);
     var wkKey=d.getFullYear()+'-W'+wk;
-    if(wkKey===curWk){ wkCount++; }
-    else { if(curWk) weeks.push({name:'Wk '+wkNum,count:wkCount}); curWk=wkKey; wkCount=1; wkNum++; }
+    if(wkKey===curW){curWC++;}else{if(curW)weeks.push({name:'Wk '+wkNum,count:curWC});curW=wkKey;curWC=1;wkNum++;}
   });
-  if(curWk) weeks.push({name:'Wk '+wkNum,count:wkCount});
+  if(curW) weeks.push({name:'Wk '+wkNum,count:curWC});
 
+  /* ── Split layout: left=names fixed, right=dates scrollable ── */
+  h+='<div style="display:flex;border:1px solid #334155;border-radius:8px;overflow:hidden;margin-bottom:.8rem;">';
+
+  /* LEFT — fixed name columns */
+  h+='<div style="flex-shrink:0;border-right:2px solid #3b82f6;">';
+  h+='<table style="border-collapse:collapse;font-size:.78rem;">';
   h+='<thead>';
+  h+='<tr>';
+  h+='<th style="'+SR_STH+'width:32px;">No.</th>';
+  h+='<th style="'+SR_STH+'min-width:90px;">Surname</th>';
+  h+='<th style="'+SR_STH+'min-width:80px;">First Name</th>';
+  h+='</tr>';
+  h+='<tr><th colspan="3" style="'+SR_STH2+'white-space:nowrap;">IT — '+escH(cls)+'</th></tr>';
+  h+='<tr><th colspan="3" style="'+SR_STH2+'">Name / Date</th></tr>';
+  h+='</thead><tbody>';
+  students.forEach(function(stu,si){
+    var bg=si%2===0?'#111827':'#1A1D23';
+    h+='<tr style="background:'+bg+'">';
+    h+='<td style="'+SR_STD+'color:#64748b;">'+stu.no+'</td>';
+    h+='<td style="'+SR_STDL+'font-weight:700;color:#e2e8f0;">';
+    if(stu.surname){ h+=escH(stu.surname); }
+    else{ h+='<input type="text" value="" placeholder="Surname" style="background:transparent;border:none;outline:none;color:#e2e8f0;font-weight:700;width:80px;" onchange="srUpdateStudent('+si+',\'surname\',this.value)">'; }
+    h+='</td>';
+    h+='<td style="'+SR_STDL+'color:#94a3b8;">';
+    if(stu.first){ h+=escH(stu.first); }
+    else{ h+='<input type="text" value="" placeholder="First" style="background:transparent;border:none;outline:none;color:#94a3b8;width:70px;" onchange="srUpdateStudent('+si+',\'first\',this.value)">'; }
+    h+='</td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+
+  /* RIGHT — scrollable date columns */
+  h+='<div style="flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;">';
+  h+='<table style="border-collapse:collapse;font-size:.78rem;">';
+  h+='<thead>';
+
   /* Row 1: Month */
   h+='<tr>';
-  months.forEach(function(m){ h+='<th colspan="'+m.count+'" style="'+SR_TH+'">'+m.name+'</th>'; });
+  months.forEach(function(m){ h+='<th colspan="'+m.count+'" style="'+SR_STH+'">'+m.name+'</th>'; });
   h+='</tr>';
+
   /* Row 2: Week */
   h+='<tr>';
-  weeks.forEach(function(w){ h+='<th colspan="'+w.count+'" style="'+SR_TH2+'">'+w.name+'</th>'; });
+  weeks.forEach(function(w){ h+='<th colspan="'+w.count+'" style="'+SR_STH2+'">'+w.name+'</th>'; });
   h+='</tr>';
+
   /* Row 3: Dates */
   h+='<tr>';
   sessions.forEach(function(s,si){
     var d=new Date(s.date);
     var day=d.getDate();
-    var suffix=day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
+    var suf=day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
     var isPast=d<today;
     var col=isPast?'background:#1e293b;color:#475569;':'background:#1e3a5f;color:#93c5fd;';
-    h+='<th style="'+TH2+col+'min-width:44px;">'+day+suffix+'<br>';
+    h+='<th style="'+SR_STH2+col+'min-width:44px;">'+day+suf+'<br>';
     if(isPast){ h+='<span style="font-size:.65rem;color:#64748b;">🔒</span>'; }
     else{ h+='<span onclick="srDeleteSession('+si+')" title="Delete" style="font-size:.65rem;color:#ef4444;cursor:pointer;">✕</span>'; }
     h+='</th>';
   });
   h+='</tr>';
-  h+='</thead>';
+  h+='</thead><tbody>';
 
-  /* Student rows - date cells */
-  h+='<tbody>';
+  /* Student attendance rows */
   students.forEach(function(stu,si){
     var bg=si%2===0?'#111827':'#1A1D23';
     h+='<tr style="background:'+bg+'">';
     sessions.forEach(function(s,ssi){
-      var d=new Date(s.date); var isPast=d<today;
-      var checked=(s.attendance&&s.attendance[si])?true:false;
+      var d=new Date(s.date);
+      var isPast=d<today;
+      var checked=!!(s.attendance&&s.attendance[si]);
       var cellBg=checked?'background:rgba(16,185,129,.15);':'';
-      h+='<td style="'+TD+cellBg+'">';
+      h+='<td style="'+SR_STD+cellBg+'">';
       if(isPast){
         h+='<span style="font-size:1rem;color:'+(checked?'#10B981':'#334155')+'">'+(checked?'✓':'—')+'</span>';
       } else {
-        h+='<input type="checkbox" '+(checked?'checked':'')+' style="width:16px;height:16px;accent-color:#10B981;cursor:pointer;" onchange="srToggle('+ssi+','+si+',this.checked)">';
+        h+='<input type="checkbox"'+(checked?' checked':'')+' style="width:16px;height:16px;accent-color:#10B981;cursor:pointer;" onchange="srToggle('+ssi+','+si+',this.checked)">';
       }
       h+='</td>';
     });
     h+='</tr>';
   });
-  h+='</tbody>';
-  h+='</table>';
-  h+='</div>'; /* end right scrollable */
+  h+='</tbody></table></div>';
   h+='</div>'; /* end split layout */
 
-  /* Summary */
-  h+='<div style="display:flex;gap:1rem;margin-top:.8rem;flex-wrap:wrap;">';
-  h+='<div class="ed-card" style="flex:1;padding:.8rem 1rem;min-width:150px;">';
-  h+='<div class="fl">Total Sessions</div><div style="font-size:1.3rem;font-weight:900;color:#fff;">'+sessions.length+'</div></div>';
+  /* Summary cards */
   var totalPresent=0;
-  sessions.forEach(function(s){ if(s.attendance) Object.keys(s.attendance).forEach(function(k){ if(s.attendance[k]) totalPresent++; }); });
-  h+='<div class="ed-card" style="flex:1;padding:.8rem 1rem;min-width:150px;">';
-  h+='<div class="fl">Total Ticks</div><div style="font-size:1.3rem;font-weight:900;color:#10B981;">'+totalPresent+'</div></div>';
-  h+='<div class="ed-card" style="flex:1;padding:.8rem 1rem;min-width:150px;">';
-  h+='<div class="fl">Students</div><div style="font-size:1.3rem;font-weight:900;color:#fff;">'+students.filter(function(s){return s.surname;}).length+'</div></div>';
+  sessions.forEach(function(s){
+    if(s.attendance) Object.keys(s.attendance).forEach(function(k){ if(s.attendance[k]) totalPresent++; });
+  });
+  h+='<div style="display:flex;gap:1rem;margin-top:.8rem;flex-wrap:wrap;">';
+  h+='<div class="ed-card" style="flex:1;padding:.8rem 1rem;min-width:120px;"><div class="fl">Sessions</div><div style="font-size:1.3rem;font-weight:900;color:#fff;">'+sessions.length+'</div></div>';
+  h+='<div class="ed-card" style="flex:1;padding:.8rem 1rem;min-width:120px;"><div class="fl">Total Ticks</div><div style="font-size:1.3rem;font-weight:900;color:#10B981;">'+totalPresent+'</div></div>';
+  h+='<div class="ed-card" style="flex:1;padding:.8rem 1rem;min-width:120px;"><div class="fl">Students</div><div style="font-size:1.3rem;font-weight:900;color:#fff;">'+students.filter(function(s){return s.surname;}).length+'</div></div>';
   h+='</div>';
 
   el.innerHTML=h;
@@ -4783,48 +4744,37 @@ function srChangeClass(cls){
   renderSubjectRegister();
 }
 
-function srToggle(sessionIdx, studentIdx, checked){
+function srToggle(sessionIdx,studentIdx,checked){
   var reg=srData[srCurrentClass];
   if(!reg.sessions[sessionIdx].attendance) reg.sessions[sessionIdx].attendance={};
   reg.sessions[sessionIdx].attendance[studentIdx]=checked;
-  /* Update cell background immediately without full re-render */
   srSave();
 }
 
-function srUpdateStudent(idx, field, val){
+function srUpdateStudent(idx,field,val){
   srData[srCurrentClass].students[idx][field]=val.trim();
   srSave();
 }
 
+/* ── ADD SESSION ── */
 function srAddSession(){
-  /* Show inline date picker */
   var existing=document.getElementById('sr-add-modal');
   if(existing){existing.remove();return;}
   var today=new Date().toISOString().split('T')[0];
   var modal=document.createElement('div');
   modal.id='sr-add-modal';
   modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e293b;border:1px solid #3b82f6;border-radius:14px;padding:1.5rem;z-index:9999;width:280px;box-shadow:0 20px 60px rgba(0,0,0,.5);';
-  modal.innerHTML='<div style="font-weight:900;color:#fff;margin-bottom:1rem;font-size:.95rem;">➕ Add Session</div>'
-    +'<div style="font-size:.75rem;color:#94a3b8;margin-bottom:.4rem;">Session Date</div>'
-    +'<input type="date" id="sr-date-input" value="'+today+'" style="width:100%;padding:10px;border:2px solid #334155;border-radius:8px;background:#0f172a;color:#fff;font-size:.95rem;outline:none;margin-bottom:1rem;box-sizing:border-box;">'
-    +'<div style="display:flex;gap:.5rem;">'
-    +'<button onclick="srConfirmAddSession()" style="flex:1;padding:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;">Add</button>'
-    +'<button onclick="document.getElementById(\'sr-add-modal\').remove()" style="flex:1;padding:10px;background:#334155;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;">Cancel</button>'
-    +'</div>';
+  modal.innerHTML=
+    '<div style="font-weight:900;color:#fff;margin-bottom:1rem;font-size:.95rem;">➕ Add Session</div>'+
+    '<div style="font-size:.75rem;color:#94a3b8;margin-bottom:.4rem;">Session Date</div>'+
+    '<input type="date" id="sr-date-input" value="'+today+'" style="width:100%;padding:10px;border:2px solid #334155;border-radius:8px;background:#0f172a;color:#fff;font-size:.95rem;outline:none;margin-bottom:1rem;box-sizing:border-box;">'+
+    '<div style="display:flex;gap:.5rem;">'+
+    '<button onclick="srConfirmAddSession()" style="flex:1;padding:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;">Add</button>'+
+    '<button onclick="document.getElementById(\'sr-add-modal\').remove()" style="flex:1;padding:10px;background:#334155;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;">Cancel</button>'+
+    '</div>';
   document.body.appendChild(modal);
   var inp=document.getElementById('sr-date-input');
   if(inp) inp.focus();
-}
-
-function srDeleteSession(sessionIdx){
-  var s=srData[srCurrentClass].sessions[sessionIdx];
-  if(!s) return;
-  var d=new Date(s.date); var today=new Date(); today.setHours(0,0,0,0);
-  if(d<today){ alert('Cannot delete a past session.'); return; }
-  if(!confirm('Delete session '+s.date+'? This cannot be undone.')) return;
-  srData[srCurrentClass].sessions.splice(sessionIdx,1);
-  srSave();
-  renderSubjectRegister();
 }
 
 function srConfirmAddSession(){
@@ -4838,25 +4788,37 @@ function srConfirmAddSession(){
   if(reg.sessions.find(function(s){return s.date===dateStr;})){
     alert('Session for '+dateStr+' already exists.'); return;
   }
-  reg.sessions.push({date:dateStr, attendance:{}});
+  reg.sessions.push({date:dateStr,attendance:{}});
   reg.sessions.sort(function(a,b){return a.date.localeCompare(b.date);});
   srSave();
   renderSubjectRegister();
 }
 
+/* ── DELETE SESSION ── */
+function srDeleteSession(sessionIdx){
+  var s=srData[srCurrentClass].sessions[sessionIdx];
+  if(!s) return;
+  var d=new Date(s.date); var today=new Date(); today.setHours(0,0,0,0);
+  if(d<today){alert('Cannot delete a past session.');return;}
+  if(!confirm('Delete session '+s.date+'? This cannot be undone.')) return;
+  srData[srCurrentClass].sessions.splice(sessionIdx,1);
+  srSave();
+  renderSubjectRegister();
+}
+
+/* ── EDIT STUDENTS ── */
 function srEditStudents(){
   srCurrentClass=document.getElementById('sr-class-sel').value;
   var reg=srData[srCurrentClass];
   var current=reg.students.filter(function(s){return s.surname;})
     .map(function(s){return s.surname+(s.first?' '+s.first:'');}).join('\n');
-  var result=prompt('Edit students (one per line):\nFormat: Surname Firstname', current);
+  var result=prompt('Edit students (one per line):\nFormat: Surname Firstname',current);
   if(result===null) return;
   var lines=result.split('\n').filter(function(l){return l.trim();});
   reg.students=lines.map(function(l,i){
     var parts=l.trim().split(' ');
-    return {no:i+1, surname:parts[0]||'', first:parts.slice(1).join(' ')||''};
+    return {no:i+1,surname:parts[0]||'',first:parts.slice(1).join(' ')||''};
   });
-  /* Pad to 30 */
   while(reg.students.length<30) reg.students.push({no:reg.students.length+1,surname:'',first:''});
   srSave();
   renderSubjectRegister();
@@ -4868,49 +4830,44 @@ function srExport(){
   var reg=srData[cls];
   var sessions=reg.sessions||[];
   var students=reg.students||[];
-  var today=new Date(); today.setHours(0,0,0,0);
   var d=new Date().toLocaleDateString('en-GB');
 
   var h='<!DOCTYPE html><html><head><meta charset="UTF-8">';
   h+='<title>Subject Register — IT — '+cls+'</title>';
-  h+='<style>';
-  h+='body{font-family:"Times New Roman",Times,serif;font-size:10pt;margin:0;padding:6mm;}';
-  h+='h2{font-size:13pt;margin:0 0 2mm;text-align:center;}';
-  h+='h3{font-size:10pt;margin:0 0 4mm;text-align:center;font-weight:normal;}';
-  h+='table{border-collapse:collapse;width:100%;}';
-  h+='th,td{border:1px solid #000;padding:3px 4px;text-align:center;font-size:8.5pt;}';
-  h+='.name-col{text-align:left;min-width:80px;}';
-  h+='.checked{font-size:12pt;font-weight:bold;}';
-  h+='@media print{@page{size:A4 landscape;margin:6mm;}button{display:none;}}';
-  h+='</style></head><body>';
+  h+='<style>body{font-family:"Times New Roman",Times,serif;font-size:10pt;margin:0;padding:6mm;}';
+  h+='h2{font-size:13pt;margin:0 0 2mm;text-align:center;}h3{font-size:10pt;margin:0 0 4mm;text-align:center;font-weight:normal;}';
+  h+='table{border-collapse:collapse;width:100%;}th,td{border:1px solid #000;padding:3px 4px;text-align:center;font-size:8.5pt;}';
+  h+='.nl{text-align:left;min-width:80px;}.ck{font-size:12pt;font-weight:bold;}';
+  h+='@media print{@page{size:A4 landscape;margin:6mm;}}</style></head><body>';
   h+='<h2>NO. 8 SECONDARY SCHOOL</h2>';
-  h+='<h3>Subject Register &mdash; Information Technology &mdash; Class: '+cls+' &mdash; Term: '+ new Date().getFullYear()+'</h3>';
-
+  h+='<h3>Subject Register — Information Technology — Class: '+cls+' — '+new Date().getFullYear()+'</h3>';
   h+='<table><thead>';
-  /* Row 1: Month */
+
+  /* Month row */
   h+='<tr><th rowspan="3" style="width:22px;">No.</th>';
-  h+='<th rowspan="3" class="name-col">Surname</th>';
-  h+='<th rowspan="3" class="name-col">First Name</th>';
-  var months=[]; var curM=''; var curMC=0;
+  h+='<th rowspan="3" class="nl">Surname</th><th rowspan="3" class="nl">First Name</th>';
+  var expMonths=[],curEM='',curEMC=0;
   sessions.forEach(function(s){
     var m=new Date(s.date).toLocaleString('en-GB',{month:'long'});
-    if(m===curM){curMC++;}else{if(curM)months.push({n:curM,c:curMC});curM=m;curMC=1;}
+    if(m===curEM){curEMC++;}else{if(curEM)expMonths.push({n:curEM,c:curEMC});curEM=m;curEMC=1;}
   });
-  if(curM) months.push({n:curM,c:curMC});
-  months.forEach(function(m){ h+='<th colspan="'+m.c+'">'+m.n+'</th>'; });
+  if(curEM) expMonths.push({n:curEM,c:curEMC});
+  expMonths.forEach(function(m){h+='<th colspan="'+m.c+'">'+m.n+'</th>';});
   h+='</tr>';
-  /* Row 2: Week */
+
+  /* Week row */
   h+='<tr>';
-  var wks=[]; var curW=''; var curWC=0; var wn=0;
+  var expWks=[],curEW='',curEWC=0,ewn=0;
   sessions.forEach(function(s){
     var wk=srGetWeekNum(new Date(s.date));
-    var wk2=new Date(s.date).getFullYear()+'-W'+wk;
-    if(wk2===curW){curWC++;}else{if(curW)wks.push({n:'Wk '+(++wn),c:curWC});curW=wk2;curWC=1;}
+    var wkKey=new Date(s.date).getFullYear()+'-W'+wk;
+    if(wkKey===curEW){curEWC++;}else{if(curEW)expWks.push({n:'Wk '+(++ewn),c:curEWC});curEW=wkKey;curEWC=1;}
   });
-  if(curW) wks.push({n:'Wk '+(++wn),c:curWC});
-  wks.forEach(function(w){ h+='<th colspan="'+w.c+'">'+w.n+'</th>'; });
+  if(curEW) expWks.push({n:'Wk '+(++ewn),c:curEWC});
+  expWks.forEach(function(w){h+='<th colspan="'+w.c+'">'+w.n+'</th>';});
   h+='</tr>';
-  /* Row 3: Dates */
+
+  /* Date row */
   h+='<tr>';
   sessions.forEach(function(s){
     var day=new Date(s.date).getDate();
@@ -4921,25 +4878,23 @@ function srExport(){
 
   students.forEach(function(stu,si){
     if(!stu.surname&&!stu.first) return;
-    h+='<tr>';
-    h+='<td>'+stu.no+'</td>';
-    h+='<td class="name-col" style="text-align:left;">'+escH(stu.surname)+'</td>';
-    h+='<td class="name-col" style="text-align:left;">'+escH(stu.first)+'</td>';
-    sessions.forEach(function(s,ssi){
+    h+='<tr><td>'+stu.no+'</td>';
+    h+='<td class="nl" style="text-align:left;">'+escH(stu.surname)+'</td>';
+    h+='<td class="nl" style="text-align:left;">'+escH(stu.first)+'</td>';
+    sessions.forEach(function(s){
       var checked=s.attendance&&s.attendance[si];
-      h+='<td class="'+(checked?'checked':'')+'">'+(checked?'✓':'')+'</td>';
+      h+='<td class="'+(checked?'ck':'')+'\">'+(checked?'✓':'')+'</td>';
     });
     h+='</tr>';
   });
   h+='</tbody></table>';
-  h+='<p style="font-size:8pt;margin-top:3mm;">Printed: '+d+' &nbsp;|&nbsp; Teacher: _______________________</p>';
+  h+='<p style="font-size:8pt;margin-top:3mm;">Printed: '+d+' | Teacher: _______________________</p>';
   h+='</body></html>';
 
   var blob=new Blob([h],{type:'text/html'});
   var url=URL.createObjectURL(blob);
   var w=window.open(url,'_blank');
   if(!w){alert('Allow popups to export.');return;}
-  w.document.title='Subject_Register_IT_'+cls.replace(/\s/g,'_');
   setTimeout(function(){w.print();},800);
 }
 
