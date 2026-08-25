@@ -4591,7 +4591,7 @@ function renderSubjectRegister(){
   var h='';
 
   /* ── Class selector ── */
-  h+='<div class="ed-card" style="margin-bottom:1rem;">';
+  h+='<div class="ed-card" style="margin-bottom:.8rem;padding:.8rem 1rem;">';
   h+='<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">';
   h+='<div><div class="fl">Class</div>';
   h+='<select class="fi-sel" id="sr-class-sel" onchange="srChangeClass(this.value)">';
@@ -4623,7 +4623,7 @@ function renderSubjectRegister(){
   }
 
   /* Group sessions by month/week for header */
-  h+='<div style="overflow-x:auto;">';
+  h+='<div style="overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch;">';
   h+='<table id="sr-table" style="border-collapse:collapse;min-width:100%;font-size:.78rem;">';
 
   /* ── Header Row 1: Month ── */
@@ -4761,16 +4761,35 @@ function srUpdateStudent(idx, field, val){
 }
 
 function srAddSession(){
-  var dateStr=prompt('Enter session date (YYYY-MM-DD):', new Date().toISOString().split('T')[0]);
-  if(!dateStr||!dateStr.match(/^\d{4}-\d{2}-\d{2}$/)){
-    if(dateStr) alert('Please use format YYYY-MM-DD (e.g. 2026-09-01)');
-    return;
-  }
+  /* Show inline date picker */
+  var existing=document.getElementById('sr-add-modal');
+  if(existing){existing.remove();return;}
+  var today=new Date().toISOString().split('T')[0];
+  var modal=document.createElement('div');
+  modal.id='sr-add-modal';
+  modal.style.cssText='position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1e293b;border:1px solid #3b82f6;border-radius:14px;padding:1.5rem;z-index:9999;width:280px;box-shadow:0 20px 60px rgba(0,0,0,.5);';
+  modal.innerHTML='<div style="font-weight:900;color:#fff;margin-bottom:1rem;font-size:.95rem;">➕ Add Session</div>'
+    +'<div style="font-size:.75rem;color:#94a3b8;margin-bottom:.4rem;">Session Date</div>'
+    +'<input type="date" id="sr-date-input" value="'+today+'" style="width:100%;padding:10px;border:2px solid #334155;border-radius:8px;background:#0f172a;color:#fff;font-size:.95rem;outline:none;margin-bottom:1rem;box-sizing:border-box;">'
+    +'<div style="display:flex;gap:.5rem;">'
+    +'<button onclick="srConfirmAddSession()" style="flex:1;padding:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;">Add</button>'
+    +'<button onclick="document.getElementById(\'sr-add-modal\').remove()" style="flex:1;padding:10px;background:#334155;color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;">Cancel</button>'
+    +'</div>';
+  document.body.appendChild(modal);
+  var inp=document.getElementById('sr-date-input');
+  if(inp) inp.focus();
+}
+
+function srConfirmAddSession(){
+  var inp=document.getElementById('sr-date-input');
+  if(!inp) return;
+  var dateStr=inp.value;
+  var modal=document.getElementById('sr-add-modal');
+  if(modal) modal.remove();
+  if(!dateStr||!dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return;
   var reg=srData[srCurrentClass];
-  /* Check duplicate */
   if(reg.sessions.find(function(s){return s.date===dateStr;})){
-    alert('Session for '+dateStr+' already exists.');
-    return;
+    alert('Session for '+dateStr+' already exists.'); return;
   }
   reg.sessions.push({date:dateStr, attendance:{}});
   reg.sessions.sort(function(a,b){return a.date.localeCompare(b.date);});
@@ -4783,7 +4802,7 @@ function srEditStudents(){
   var reg=srData[srCurrentClass];
   var current=reg.students.filter(function(s){return s.surname;})
     .map(function(s){return s.surname+(s.first?' '+s.first:'');}).join('\n');
-  var result=prompt('Enter students (one per line, Surname Firstname):\n\nCurrent list:', current);
+  var result=prompt('Edit students (one per line):\nFormat: Surname Firstname', current);
   if(result===null) return;
   var lines=result.split('\n').filter(function(l){return l.trim();});
   reg.students=lines.map(function(l,i){
