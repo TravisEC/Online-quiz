@@ -537,6 +537,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
 <script>
 
 
+
 var EXAM_CONFIG = {
   meta:{title:'Grade 9 Information Technology \u2013 Mid-Term Examination',term:'Term 3',duration:45,marks:40,subject:'Information Technology',grade:'9'},
   mcq:[
@@ -2445,7 +2446,7 @@ function showTab(name,el){
   var tab=document.getElementById('tab-'+name);if(tab)tab.classList.add('active');
   localStorage.setItem('lastTab',name);
   if(el)el.classList.add('active');
-  var titles={dashboard:'Dashboard',records:'Records',marksbook:'Marks Book',editor:'Edit Questions',bank:'Question Bank',converter:'Mark Converter',settings:'Settings'};
+  var titles={dashboard:'Dashboard',records:'Records',marksbook:'Marks Book',attendance:'Attendance',subjectreg:'Subject Register',termreport:'Term Schedule',reportcards:'Report Cards',logbook:'Log Book',editor:'Edit Questions',examcontrol:'Exam Control',bank:'Question Bank',converter:'Mark Converter',settings:'Settings',livequiz:'Live Quiz'};
   var pt=document.getElementById('page-title');if(pt)pt.textContent=titles[name]||name;
   if(name==='dashboard')fetchSubs();
   if(name==='editor'){if(!activeExam)activeExam=loadExam();renderEditor();renderLibrarySelector();}
@@ -5097,9 +5098,11 @@ function srGetStudents(cls){
 
 /* ── RENDER ── */
 function renderSubjectRegister(){
+  console.log('[SR] renderSubjectRegister called');
   srLoad();
   var el=document.getElementById('sr-content');
-  if(!el) return;
+  if(!el){ console.log('[SR] sr-content NOT FOUND'); return; }
+  console.log('[SR] sr-content found, building HTML');
   if(!srCurrentClass) srCurrentClass=SR_CLASSES[0];
 
   var cls=srCurrentClass;
@@ -5248,6 +5251,7 @@ function renderSubjectRegister(){
   h+='<div class="ed-card" style="flex:1;padding:.8rem 1rem;min-width:120px;"><div class="fl">Students</div><div style="font-size:1.3rem;font-weight:900;color:#fff;">'+students.filter(function(s){return s.surname;}).length+'</div></div>';
   h+='</div>';
 
+  console.log('[SR] innerHTML set, length=', h.length);
   el.innerHTML=h;
 }
 
@@ -10702,6 +10706,7 @@ async function ecPoll(){
     }
   }catch(e){}
 }
+
 
 
 
