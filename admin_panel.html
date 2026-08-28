@@ -2274,7 +2274,7 @@ var ALL_CLS     = ['7-1','7-2','7-3','7-4','8-1','8-2','8-3','8-4','9-1','9-2','
 var GRADE_TOPICS= {
 "7": ["Computer Fundamentals","Types of Computer Systems","Components of a Computer","Input Devices","Output Devices","Storage Devices","Software Types","File Organisation","Data Validation and Verification","M1: Fundamentals of Digital Technologies","M1: Importance & Impact of Digital Literacy","M1: Selecting & Evaluating Digital Tools","M1: Categories of Digital Tools","M1: Digital Natives & 21st Century Skills","M2: Introduction to Digital Citizenship","M2: Moral & Ethical Practices","M2: Rights, Responsibilities & Benefits","M2: Digital Footprint","M2: Health, Wellness & Sustainable Use","M2: Organizations & Legislation","M3: Digital Communication & Collaboration","M3: Characteristics, Benefits & Limitations","M3: Selecting Tools & Ethical Behaviours","M3: Practical Digital Communication Skills","M4: Digital Analysis & Design","T2: Data & Information","T2: Data Validation","T2: Data Verification","T2: Storage of Information","General"],
 "7IT": ["Computer Fundamentals","Types of Computer Systems","Components of a Computer","Input Devices","Output Devices","Storage Devices","Software Types","File Organisation","Data Validation and Verification","General"],
-"7DL": ["M1: Fundamentals of Digital Technologies","M1: Importance & Impact of Digital Literacy","M1: Selecting & Evaluating Digital Tools","M1: Categories of Digital Tools","M1: Digital Natives & 21st Century Skills","M2: Introduction to Digital Citizenship","M2: Moral & Ethical Practices","M2: Rights, Responsibilities & Benefits","M2: Digital Footprint","M2: Health, Wellness & Sustainable Use","M2: Organizations & Legislation","M3: Digital Communication & Collaboration","M3: Characteristics, Benefits & Limitations","M3: Selecting Tools & Ethical Behaviours","M3: Practical Digital Communication Skills","M4: Digital Analysis & Design","T2: Data & Information","T2: Data Validation","T2: Data Verification","T2: Storage of Information","General"],
+"7DL": ["M1: Fundamentals of Digital Technologies","M1: Importance & Impact of Digital Literacy","M1: Selecting & Evaluating Digital Tools","M1: Categories of Digital Tools","M1: Digital Natives & 21st Century Skills","M2: Introduction to Digital Citizenship","M2: Moral & Ethical Practices","M2: Rights, Responsibilities & Benefits","M2: Digital Footprint","M2: Health, Wellness & Sustainable Use","M2: Organizations & Legislation","M3: Digital Communication & Collaboration","M3: Characteristics, Benefits & Limitations","M3: Selecting Tools & Ethical Behaviours","M3: Practical Digital Communication Skills","M4: Digital Analysis & Design","T2: Data & Information","T2: Data Validation","T2: Data Verification","T2: Storage of Information"],
 "8": ["Networks: Fundamentals","Types of Networks (LAN, MAN, WAN)","Network Topology: Star Network","Network Topology: Bus Network","Network Topology: Ring Network","Wireless Networks","The Internet","Connecting to the Internet","Internet Services & Connection Methods","Modem, Router and Switch","Mobile Communication Technologies","Intranets and Extranets","Email: Parts and Creation","Email: Advantages and Disadvantages","General"],
 "9": ["T1: Social & Economic Impact of ICT","T1: Computer Security - Information Systems","T1: Computer Security - Internal Threats","T1: Computer Security - External Threats","T1: Data Protection - Software Methods","T1: Data Protection - Physical Methods","T1: Data Recovery & Backups","T1: Cybersecurity","T1: Cyber Attacks & Threats","T1: Misuse of Information","T1: Computer Surveillance & Copyright","T1: Personal Security Practices","T1: Automation & Job Security","T1: Personnel in IT Professions","T1: Impact on Education","T1: Impact on Medicine","T1: Impact on Business","T1: Impact on Law Enforcement","T1: Impact on Recreation","T2: Data & Information","T2: Data Capture","T2: Data Validation","T2: Data Verification","T2: Output of Information","T2: Storage of Information","General"],
 "10": ["Word Processing: Editing Features","Word Processing: Fonts and Formatting","Word Processing: Tables, Charts and Columns","Word Processing: Headers, Footers and File Management","Word Processing: Formal Letters","Word Processing: Mail Merge","Spreadsheets: Introduction","Spreadsheets: Functions (SUM, AVERAGE, MIN, MAX)","Spreadsheets: Formatting Features","Spreadsheets: Charts and Graphs","Databases: Terminology","Databases: Relationships and Importing Data","Databases: Queries and Calculated Fields","Databases: Forms and Subforms","General"],
@@ -7864,14 +7864,15 @@ function onBKGradeFilter(){
   var ft=(document.getElementById('bf-term')&&document.getElementById('bf-term').value)||'';
   var weekSel=document.getElementById('bf-week');
   if(weekSel){
-    var prevWeek=weekSel.value;
+    /* Clear week when grade changes — only preserve week if term is still selected */
     weekSel.innerHTML='<option value="">All Weeks</option>';
     if(ft){
       var startWeek=ft==='1'?1:ft==='2'?16:27;
       var endWeek=ft==='1'?15:ft==='2'?26:35;
       for(var w=startWeek;w<=endWeek;w++){weekSel.innerHTML+='<option value="'+w+'">Week '+w+'</option>';}
     }
-    if(prevWeek)weekSel.value=prevWeek;
+    /* Do NOT restore prevWeek — grade change should reset week filter */
+    weekSel.value='';
   }
   renderBKList();
 }
@@ -7920,14 +7921,14 @@ function renderBKList(){
     return true;
   });
   var el=document.getElementById('bk-list');
-  var ct=document.getElementById('bk-count');if(ct)ct.textContent=bankQs.length;
+  var ct=document.getElementById('bk-count');if(ct)ct.textContent=filtered.length+(filtered.length===bankQs.length?'':'/'+bankQs.length);
   if(!el)return;
   if(!filtered.length){el.innerHTML=emptyHTML(bankQs.length?'No questions match filters.':'No questions yet. Add some above!');return;}
   var gradeOrder=['7','8','9','10','11'];var gradeColors={'7':'#0d9488','8':'#7c3aed','9':'#2563eb','10':'#d97706','11':'#dc2626'};
   var gradeGroups={};
   filtered.forEach(function(q){var g=q.grade||'?';if(!gradeGroups[g])gradeGroups[g]={};var t=q.topic||'General';if(!gradeGroups[g][t])gradeGroups[g][t]=[];gradeGroups[g][t].push(q);});
   var html='';
-  var gradesToShow=fg?[fg]:gradeOrder.filter(function(g){return gradeGroups[g];});
+  var gradesToShow=fg?[fgReal]:gradeOrder.filter(function(g){return gradeGroups[g];});
   gradesToShow.forEach(function(grade){
     if(!gradeGroups[grade])return;
     html+='<div style="margin-bottom:1.5rem;">';
