@@ -415,7 +415,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
       <div class="ph"><div><div class="ph-title">📚 Question Bank</div><div class="ph-sub">692 questions · Grades 7–11 · All topics</div></div></div>
       <div class="ed-card"><h3>➕ Add Question</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-bottom:.7rem;">
-          <div><div class="fl">Grade</div><select class="fi-sel" id="bk-grade" onchange="onBKGradeChange()"><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9" selected>Grade 9</option></select></div>
+          <div><div class="fl">Grade</div><select class="fi-sel" id="bk-grade" onchange="onBKGradeChange()"><option value="">All Grades</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option></select></div>
           <div><div class="fl">Topic</div><select class="fi-sel" id="bk-topic-sel"></select></div>
           <div><div class="fl">Level</div><select class="fi-sel" id="bk-level"><option value="1">L1 Basic</option><option value="2">L2 Intermediate</option><option value="3">L3 CXC</option></select></div>
           <div><div class="fl">Type</div><select class="fi-sel" id="bk-type" onchange="renderBKForm()"><option value="mcq">MCQ</option><option value="tf">True/False</option><option value="fill">Fill Blank</option><option value="match">Matching</option><option value="ms">Multi-Select</option><option value="essay">Essay</option></select></div>
@@ -425,7 +425,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
       </div>
       <div class="ed-card"><h3>📂 Browse (<span id="bk-count">0</span> questions)</h3>
         <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem;">
-          <select class="fi-sel" id="bf-grade" onchange="onBKGradeFilter()" style="width:110px;"><option value="">All Grades</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option></select>
+          <select class="fi-sel" id="bf-grade" onchange="onBKGradeFilter()" style="width:110px;"><option value="">All Grades</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option></select>
           <select class="fi-sel" id="bf-topic" onchange="renderBKList()" style="flex:1;min-width:140px;"><option value="">All Topics</option></select>
           <select class="fi-sel" id="bf-level" onchange="renderBKList()" style="width:130px;"><option value="">All Levels</option><option value="1">L1</option><option value="2">L2</option><option value="3">L3</option></select>
           <select class="fi-sel" id="bf-type" onchange="renderBKList()" style="width:130px;"><option value="">All Types</option><option value="mcq">MCQ</option><option value="tf">True/False</option><option value="fill">Fill Blank</option><option value="match">Matching</option><option value="ms">Multi-Select</option><option value="essay">Essay</option></select>
@@ -7892,7 +7892,7 @@ function renderBKList(){
   var ct=document.getElementById('bk-count');if(ct)ct.textContent=bankQs.length;
   if(!el)return;
   if(!filtered.length){el.innerHTML=emptyHTML(bankQs.length?'No questions match filters.':'No questions yet. Add some above!');return;}
-  var gradeOrder=['7','8','9'];var gradeColors={'7':'#0d9488','8':'#7c3aed','9':'#2563eb'};
+  var gradeOrder=['7','8','9','10','11'];var gradeColors={'7':'#0d9488','8':'#7c3aed','9':'#2563eb','10':'#d97706','11':'#dc2626'};
   var gradeGroups={};
   filtered.forEach(function(q){var g=q.grade||'?';if(!gradeGroups[g])gradeGroups[g]={};var t=q.topic||'General';if(!gradeGroups[g][t])gradeGroups[g][t]=[];gradeGroups[g][t].push(q);});
   var html='';
