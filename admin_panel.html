@@ -7856,19 +7856,16 @@ function saveBKQ(){
 function onBKGradeFilter(){
   var fg=(document.getElementById('bf-grade')&&document.getElementById('bf-grade').value)||'';
   var ft=(document.getElementById('bf-term')&&document.getElementById('bf-term').value)||'';
-  /* Populate week dropdown based on grade+term */
+  /* Populate week dropdown based on term */
   var weekSel=document.getElementById('bf-week');
   if(weekSel){
-    var maxWeek=ft==='1'?15:ft==='2'?11:ft==='3'?13:35;
+    var prev=weekSel.value;
     weekSel.innerHTML='<option value="">All Weeks</option>';
-    for(var w=1;w<=maxWeek;w++){weekSel.innerHTML+='<option value="'+w+'">Week '+w+'</option>';}
-  }
-  /* Populate topic dropdown based on grade */
-  var topicSel=document.getElementById('bf-topic');
-  if(topicSel){
-    var topics=fg?GRADE_TOPICS[fg]||['General']:[];
-    if(!fg){var at={};bankQs.forEach(function(q){if(q.topic)at[q.topic]=true;});topics=Object.keys(at).sort();}
-    topicSel.innerHTML='<option value="">All Topics</option>'+topics.map(function(t){return'<option value="'+t+'">'+t+'</option>';}).join('');
+    if(ft){
+      var maxWeek=ft==='1'?15:ft==='2'?11:13;
+      for(var w=1;w<=maxWeek;w++){weekSel.innerHTML+='<option value="'+w+'">Week '+w+'</option>';}
+      if(prev)weekSel.value=prev;
+    }
   }
   renderBKList();
 }
@@ -7883,16 +7880,25 @@ function renderBKList(){
   var fy=(document.getElementById('bf-type')&&document.getElementById('bf-type').value)||'';
   var fl=(document.getElementById('bf-level')&&document.getElementById('bf-level').value)||'';
   var fs=(((document.getElementById('bf-search')&&document.getElementById('bf-search').value)||'')).toLowerCase();
-  var topicSel=document.getElementById('bf-topic');
-  if(topicSel){
-    var curTopic=topicSel.value;
-    var topics=fg?GRADE_TOPICS[fg]||['General']:[];
-    if(!fg){var allTopics={};bankQs.forEach(function(q){if(q.topic)allTopics[q.topic]=true;});topics=Object.keys(allTopics).sort();}
-    topicSel.innerHTML='<option value="">All Topics</option>'+topics.map(function(t){return'<option value="'+t+'"'+(t===curTopic?' selected':'')+'>'+t+'</option>';}).join('');
-  }
-  var ft=(topicSel&&topicSel.value)||'';
   var fterm=(document.getElementById('bf-term')&&document.getElementById('bf-term').value)||'';
   var fweek=(document.getElementById('bf-week')&&document.getElementById('bf-week').value)||'';
+  /* Populate week dropdown if term changed */
+  var weekSel=document.getElementById('bf-week');
+  if(weekSel&&!weekSel._populated){
+    weekSel.innerHTML='<option value="">All Weeks</option>';
+    var maxWeek=fterm==='1'?15:fterm==='2'?11:fterm==='3'?13:35;
+    for(var w=1;w<=maxWeek;w++){weekSel.innerHTML+='<option value="'+w+'">Week '+w+'</option>';}
+    weekSel._populated=true;
+  }
+  var topicSel=document.getElementById('bf-topic');
+  var savedTopic=topicSel?topicSel.value:'';
+  if(topicSel){
+    var topics=fg?GRADE_TOPICS[fg]||['General']:[];
+    if(!fg){var allTopics={};bankQs.forEach(function(q){if(q.topic)allTopics[q.topic]=true;});topics=Object.keys(allTopics).sort();}
+    topicSel.innerHTML='<option value="">All Topics</option>'+topics.map(function(t){return'<option value="'+t+'"'+(t===savedTopic?' selected':'')+'>'+t+'</option>';}).join('');
+    if(savedTopic)topicSel.value=savedTopic;
+  }
+  var ft=(topicSel&&topicSel.value)||'';
   var filtered=bankQs.filter(function(q){
     if(fg&&q.grade!==fg)return false;
     if(ft&&q.topic!==ft)return false;
@@ -10739,6 +10745,7 @@ async function ecPoll(){
     }
   }catch(e){}
 }
+
 
 
 </script>
