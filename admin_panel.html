@@ -2574,7 +2574,12 @@ function loadAll(){
   try{ bankQs     =JSON.parse(localStorage.getItem('questionBank')   ||'[]');}catch(e){bankQs=[];}
   try{ records    =JSON.parse(localStorage.getItem('examRecords')    ||'[]');}catch(e){records=[];}
   try{ mbData     =JSON.parse(localStorage.getItem('marksBook')      ||'{}');}catch(e){mbData={};}
+  try{ mbOrder    =JSON.parse(localStorage.getItem('marksBookOrder') ||'[]');}catch(e){mbOrder=[];}
   try{ examLibrary=JSON.parse(localStorage.getItem('examLibrary')    ||'{}');}catch(e){examLibrary={};}
+  /* Load Subject Register data */
+  if(typeof srData!=='undefined'){
+    try{ srData=JSON.parse(localStorage.getItem('subjectRegister')||'{}'); }catch(e){ srData={}; }
+  }
   seedLibraryFromEmbedded();
   seedBank();
 }
@@ -10121,8 +10126,8 @@ var cloudSaveTimer = null;
 
 var CLOUD_DATA_TYPES = [
   'records','marksBook','marksBookOrder','attendanceData',
-  'termReportData','classOverrides','awardedMarks','examLibrary',
-  'reportCardData',
+  'subjectRegister','termReportData','classOverrides','awardedMarks','examLibrary',
+  'reportCardData','questionBank',
   'logBookSchool','logBookData','logBookTermData'
 ];
 
@@ -10216,11 +10221,12 @@ async function cloudLoadAll(){
       setTimeout(function(){if(ind){ind.textContent='☁️ Cloud Sync';ind.style.color='#64748b';}},3000);}
     loadAll();
     alert('Loaded '+loaded+' data set(s) from Google Sheets ✅');
+    /* Re-render the currently active tab — works on both desktop and mobile */
     var active=document.querySelector('.view.active');
     if(active){
       var id=active.id.replace('tab-','');
-      var nb=document.querySelector('.nav-item.active');
-      if(nb)showTab(id,nb);
+      /* On mobile .nav-item.active is hidden — use any element as trigger */
+      showTab(id, document.querySelector('.nav-item.active')||document.getElementById('bnav-'+id)||null);
     }
   }catch(e){
     /* Fallback: try old getData for backwards compatibility */
@@ -10255,7 +10261,7 @@ async function cloudLoadAllLegacy(){
     loadAll();
     alert('Loaded '+loaded+' data set(s) from Google Sheets ✅');
     var active=document.querySelector('.view.active');
-    if(active){var id=active.id.replace('tab-','');var nb=document.querySelector('.nav-item.active');if(nb)showTab(id,nb);}
+    if(active){var id=active.id.replace('tab-','');showTab(id,document.querySelector('.nav-item.active')||document.getElementById('bnav-'+id)||null);}
   }catch(e){
     if(ind){ind.textContent='⚠️ Load failed';ind.style.color='#ef4444';}
     console.warn('Cloud legacy load failed:',e);
