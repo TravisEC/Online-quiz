@@ -7871,12 +7871,14 @@ function renderLibrarySelector(){
   var titles=Object.keys(examLibrary);
   if(!titles.length){el.innerHTML='<span style="font-size:.78rem;color:#64748b;">No exams in library yet. Save & Push to add one.</span>';return;}
   var cur=activeExam&&activeExam.meta&&activeExam.meta.title;
-  el.innerHTML='<span style="font-size:.78rem;font-weight:800;color:#94a3b8;margin-right:6px;">EDITING:</span>'
-    +'<select id="lib-sel" style="padding:6px 10px;border-radius:7px;border:1.5px solid var(--dark3);background:var(--dark3);color:#fff;font-family:Nunito,sans-serif;font-weight:700;font-size:.82rem;" onchange="switchExamFromLib(this.value)">'
+  el.innerHTML='<div style="display:flex;flex-wrap:wrap;align-items:center;gap:5px;width:100%;min-width:0;">'
+    +'<span style="font-size:.78rem;font-weight:800;color:#94a3b8;">EDITING:</span>'
+    +'<select id="lib-sel" style="flex:1;min-width:0;max-width:100%;padding:6px 10px;border-radius:7px;border:1.5px solid var(--dark3);background:var(--dark3);color:#fff;font-family:Nunito,sans-serif;font-weight:700;font-size:.82rem;overflow:hidden;text-overflow:ellipsis;" onchange="switchExamFromLib(this.value)">'
     +titles.map(function(t){return'<option value="'+escH(t)+'"'+(t===cur?' selected':'')+'>'+escH(t)+'</option>';}).join('')
     +'</select>'
-    +'<button class="btn btn-ghost btn-sm" onclick="newBlankExam()" style="margin-left:6px;">➕ New Exam</button>'
-    +'<button class="btn btn-red btn-sm" onclick="deleteFromLib()" style="margin-left:4px;">🗑 Remove</button>';
+    +'<button class="btn btn-ghost btn-sm" onclick="newBlankExam()">➕ New Exam</button>'
+    +'<button class="btn btn-red btn-sm" onclick="deleteFromLib()">🗑 Remove</button>'
+    +'</div>';
 }
 function switchExamFromLib(title){
   if(!examLibrary[title]){alert('Exam not found.');return;}
@@ -11408,7 +11410,7 @@ function renderExamControl(){
   h+='<div><div class="fl">Duration</div><div style="font-weight:800;color:#fff;font-size:.9rem;">'+(ecTimer>0?ecTimer+' min':'No limit')+'</div></div>';
   h+='<div><div class="fl">Questions</div><div style="font-weight:800;color:#fff;font-size:.9rem;">'+ecCountQuestions(exam)+'</div></div>';
   h+='</div>';
-  h+='<div style="margin-top:.8rem;font-size:.78rem;color:#64748b;">Exam ID: <code style="color:#93c5fd;">'+escH(ecExamId)+'</code></div>';
+  h+='<div style="margin-top:.8rem;font-size:.78rem;color:#64748b;word-break:break-all;overflow-wrap:anywhere;">Exam ID: <code style="color:#93c5fd;font-size:.72rem;">'+escH(ecExamId)+'</code></div>';
   h+='</div>';
 
   /* ── Status Card ── */
