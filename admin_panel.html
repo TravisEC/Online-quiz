@@ -9446,6 +9446,12 @@ function mbt_yearCount(y){
 function renderMBList(){
   mbt_load();
   var el=document.getElementById('mb-list'); if(!el) return;
+
+  /* Snapshot which sections are currently open before re-render */
+  var openSecs=new Set();
+  el.querySelectorAll('[id^="mbtsec-"]').forEach(function(sec){
+    if(sec.style.display==='block') openSecs.add(sec.id.replace('mbtsec-',''));
+  });
   var assigned=mbt_assignedKeys();
   var unassigned=mbOrder.filter(function(k){return !assigned[k]&&mbData[k];});
   var h='';
@@ -9518,6 +9524,29 @@ function renderMBList(){
   });
 
   el.innerHTML=h;
+
+  /* Restore previously open sections */
+  openSecs.forEach(function(id){
+    var sec=document.getElementById('mbtsec-'+id);
+    var chev=document.getElementById('mbtchev-'+id);
+    if(sec){ sec.style.display='block'; if(chev) chev.style.transform=''; }
+  });
+
+  /* If nothing was open yet and there's an active book, auto-open its parents */
+  if(!openSecs.size && mbCurrent){
+    mbt_tree.years.forEach(function(year){
+      year.terms.forEach(function(term){
+        if(term.bookKeys&&term.bookKeys.indexOf(mbCurrent)>=0){
+          var ysec=document.getElementById('mbtsec-y'+year.id);
+          var ychev=document.getElementById('mbtchev-y'+year.id);
+          var tsec=document.getElementById('mbtsec-t'+term.id);
+          var tchev=document.getElementById('mbtchev-t'+term.id);
+          if(ysec){ysec.style.display='block';if(ychev)ychev.style.transform='';}
+          if(tsec){tsec.style.display='block';if(tchev)tchev.style.transform='';}
+        }
+      });
+    });
+  }
 }
 
 /* Single book item */
