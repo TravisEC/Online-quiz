@@ -5494,6 +5494,7 @@ function renderSubjectRegister(){
   h+='<button class="btn btn-blue btn-sm" onclick="srAddSession()">➕ Add Session</button>';
   h+='<button class="btn btn-ghost btn-sm" onclick="srExport()">📄 Print / Export</button>';
   h+='<button class="btn btn-ghost btn-sm" onclick="srEditStudents()">✏️ Edit Students</button>';
+  h+='<button class="btn btn-purple btn-sm" onclick="srExportToMarksBook()">📤 → Marks Book</button>';
   h+='<button class="btn btn-red btn-sm" onclick="srClearSessions()">🗑️ Clear All Sessions</button>';
   h+='</div></div></div>';
 
@@ -5729,6 +5730,93 @@ function srEditStudents(){
 }
 
 /* ── EXPORT / PRINT ── */
+
+/* ── SR ↔ MB LINKING ── */
+
+/* Get attendance summary for a student in a class for a specific term
+   termN: 1/2/3 or 0=all. Returns {present, total} */
+function srGetAttendanceSummary(cls, stuNo, termN){
+  var reg=srData[cls]; if(!reg) return {present:0,total:0};
+  var sessions=reg.sessions||[];
+  /* Filter sessions by term if requested */
+  if(termN){
+    sessions=sessions.filter(function(s){
+      var d=srParseDate(s.date);
+      var wk=srGetWeekNum(d);
+      var t=wk<=15?1:wk<=26?2:3;
+      return t===termN;
+    });
+  }
+  var total=sessions.length;
+  var present=sessions.filter(function(s){
+    return s.attendance&&s.attendance[stuNo]===true;
+  }).length;
+  return {present:present,total:total};
+}
+
+/* Export students from Subject Register to Marks Book */
+function srExportToMarksBook(){
+  var cls=srCurrentClass;
+  var reg=srData[cls]; if(!reg) return;
+  var students=reg.students.filter(function(s){return s.surname;});
+  if(!students.length){showToast('No students in Subject Register for '+cls,'error');return;}
+  var names=students.map(function(s){return s.surname+(s.first?', '+s.first:'');});
+  /* Find matching MB keys for this class */
+  var matchingKeys=Object.keys(mbData||{}).filter(function(k){return mbKeyToCls(k)===cls;});
+
+  if(!matchingKeys.length){
+    /* No existing marks book — ask which term to create */
+    showInputModal({
+      title:'Export to Marks Book',
+      subtitle:'No Marks Book found for '+cls+'. Select a term to create one.',
+      fields:[{id:'term',label:'Term',type:'select',options:[{v:'Term 1',l:'Term 1'},{v:'Term 2',l:'Term 2'},{v:'Term 3',l:'Term 3'}]}],
+      confirmLabel:'Create & Export',
+      confirmColor:'#22c55e',
+      onConfirm:function(vals){
+        var term=vals.term||'Term 1';
+        var key=mbKey(cls,term);
+        if(!mbData[key]) mbData[key]={cls:cls,term:term,students:[],assessments:[],subject:'',year:new Date().getFullYear()};
+        names.forEach(function(name){
+          if(!mbData[key].students.find(function(s){return s.name===name;})){
+            mbData[key].students.push({id:'s_'+Date.now()+'_'+Math.random().toString(36).substr(2,4),name:name,gender:'',scores:{}});
+          }
+        });
+        saveMB();saveMBOrder();
+        showToast(names.length+' student(s) exported to '+cls+' '+term,'success');
+      }
+    });
+    return;
+  }
+
+  /* Matching marks books found — ask target + merge/replace */
+  showInputModal({
+    title:'Export '+students.length+' students → Marks Book',
+    subtitle:'From Subject Register: '+cls,
+    fields:[
+      {id:'key',label:'Target Marks Book',type:'select',options:matchingKeys.map(function(k){return{v:k,l:k.replace(/_/g,' ')};})},
+      {id:'mode',label:'If students already exist',type:'select',options:[{v:'merge',l:'Merge — add missing only'},{v:'replace',l:'Replace — overwrite all'}]}
+    ],
+    confirmLabel:'Export',
+    confirmColor:'#22c55e',
+    onConfirm:function(vals){
+      var key=vals.key; var mode=vals.mode;
+      if(!mbData[key]) return;
+      if(mode==='replace'){
+        mbData[key].students=names.map(function(name){
+          return {id:'s_'+Date.now()+'_'+Math.random().toString(36).substr(2,4),name:name,gender:'',scores:{}};
+        });
+      } else {
+        names.forEach(function(name){
+          if(!mbData[key].students.find(function(s){return s.name===name;})){
+            mbData[key].students.push({id:'s_'+Date.now()+'_'+Math.random().toString(36).substr(2,4),name:name,gender:'',scores:{}});
+          }
+        });
+      }
+      saveMB();saveMBOrder();
+      showToast(students.length+' student(s) exported to Marks Book','success');
+    }
+  });
+}
 function srExport(){
   var cls=srCurrentClass;
   var reg=srData[cls];
@@ -8922,6 +9010,7 @@ function renderMBMain(){
   html+='<div style="display:flex;gap:7px;flex-wrap:wrap;">';
   html+='<button class="btn btn-ghost btn-sm" onclick="mbSyncStudents()">🔄 Sync</button>';
   html+='<button class="btn btn-blue btn-sm" onclick="mbConvert()">⚖️ Convert</button>';
+  html+='<button class="btn btn-purple btn-sm" onclick="mbExportToSR()">📤 → Subject Reg</button>';
   html+='<div style="position:relative;display:inline-flex;align-items:stretch;">';
   html+='<button class="btn btn-green btn-sm" onclick="mbExport()" style="border-radius:7px 0 0 7px;border-right:none;">📄 Export</button>';
   html+='<button class="btn btn-green btn-sm" onclick="toggleMBExportMenu(event)" style="border-radius:0 7px 7px 0;padding:5px 9px;border-left:1px solid rgba(255,255,255,.25);">▼</button>';
@@ -8976,6 +9065,7 @@ function renderMBMain(){
   html+='<th style="'+TH+'background:#1e3a5f;">%</th>';
   html+='<th style="'+TH+'background:#1e3a5f;">Grade</th>';
   html+='<th style="'+TH+'background:#1e3a5f;">Pass/Fail</th>';
+  html+='<th style="'+TH+'background:#4c1d95;color:#c4b5fd;min-width:80px;">Attendance</th>';
   html+='<th style="'+TH+'background:#1e3a5f;"></th></tr></thead><tbody>';
 
   if(!sorted.length){
@@ -9003,6 +9093,28 @@ function renderMBMain(){
       html+='<td style="'+TD+'font-weight:800;color:'+(pct>=70?'#22c55e':pct>=50?'#f59e0b':'#ef4444')+';">'+pct+'%</td>';
       html+='<td style="'+TD+'"><span style="font-weight:800;color:'+(pct>=70?'#22c55e':pct>=50?'#f59e0b':'#ef4444')+';">'+grade+'</span></td>';
       html+='<td style="'+TD+'"><span style="font-weight:800;font-size:.78rem;padding:2px 8px;border-radius:999px;background:'+(pass?'rgba(34,197,94,.15)':'rgba(239,68,68,.15)')+';color:'+(pass?'#22c55e':'#ef4444')+'">'+(pass?'Pass':'Fail')+'</span></td>';
+      /* Attendance from Subject Register */
+      var attCell='-';
+      if(typeof srData!=='undefined'&&srData&&mb.cls&&srData[mb.cls]){
+        var termN=mbKeyToTerm(mbCurrent);
+        var reg=srData[mb.cls];
+        var stuNo=null;
+        reg.students.forEach(function(st){
+          var fullName=(st.surname+(st.first?', '+st.first:'')).toLowerCase();
+          var altName=(st.surname+(st.first?' '+st.first:'')).toLowerCase();
+          if(fullName===stu.name.toLowerCase()||altName===stu.name.toLowerCase()) stuNo=st.no;
+        });
+        if(stuNo!==null){
+          var att=srGetAttendanceSummary(mb.cls,stuNo,termN);
+          if(att.total>0){
+            var attPct=Math.round(att.present/att.total*100);
+            var attColor=attPct>=75?'#22c55e':attPct>=50?'#f59e0b':'#ef4444';
+            attCell='<span style="font-weight:800;color:'+attColor+';">'+att.present+'/'+att.total+'</span>'
+              +'<br><span style="font-size:.68rem;color:#64748b;">'+attPct+'%</span>';
+          }
+        }
+      }
+      html+='<td style="'+TD+'text-align:center;">'+attCell+'</td>';
       html+='<td style="'+TD+'"><button onclick="mbRemoveStudent(\''+stu.id+'\')" style="padding:2px 7px;border-radius:5px;background:rgba(239,68,68,.15);color:#fca5a5;border:none;cursor:pointer;font-size:.7rem;">🗑</button></td></tr>';
     });
 
@@ -9057,6 +9169,59 @@ function renderMBAnalysis(){
 }
 
 /* ── EXPORT — subject in header and filename ── */
+
+/* ── MB ↔ SR LINKING ── */
+
+function mbKeyToTerm(key){
+  var m=(key||'').match(/Term(\d)/i);
+  return m?parseInt(m[1]):0;
+}
+
+/* Export Marks Book students to Subject Register */
+function mbExportToSR(){
+  var mb=mbGet(); if(!mb){showToast('No marks book selected','error');return;}
+  var cls=mb.cls||mbKeyToCls(mbCurrent);
+  if(!cls){showToast('Cannot determine class for this marks book','error');return;}
+  var names=mb.students.map(function(s){return s.name;}).filter(Boolean);
+  if(!names.length){showToast('No students in this marks book','error');return;}
+  if(typeof srData==='undefined'||!srData){showToast('Subject Register not loaded','error');return;}
+  if(!srData[cls]) srData[cls]={students:[],sessions:[]};
+
+  showInputModal({
+    title:'Export '+names.length+' students → Subject Register',
+    subtitle:'From Marks Book: '+cls+(mb.term?' '+mb.term:''),
+    fields:[
+      {id:'mode',label:'If students already exist',type:'select',options:[{v:'merge',l:'Merge — add missing only'},{v:'replace',l:'Replace — overwrite all'}]}
+    ],
+    confirmLabel:'Export',
+    confirmColor:'#22c55e',
+    onConfirm:function(vals){
+      var mode=vals.mode;
+      var parsed=names.map(function(name,i){
+        var parts=name.split(',');
+        var surname=parts[0].trim();
+        var first=parts.length>1?parts.slice(1).join(',').trim():'';
+        if(!first){var sp=surname.split(' ');if(sp.length>1){first=sp.slice(1).join(' ');surname=sp[0];}}
+        return {no:i+1,surname:surname,first:first};
+      });
+      if(mode==='replace'){
+        srData[cls].students=parsed;
+      } else {
+        parsed.forEach(function(p){
+          var exists=srData[cls].students.find(function(s){return s.surname.toLowerCase()===p.surname.toLowerCase();});
+          if(!exists){p.no=srData[cls].students.length+1;srData[cls].students.push(p);}
+        });
+      }
+      if(typeof srSave==='function') srSave();
+      showToast(names.length+' student(s) exported to Subject Register','success');
+    }
+  });
+}
+
+/* Helper: get class from MB key */
+function mbKeyToCls(key){
+  return (key||'').replace(/_Term\d.*/i,'').replace(/_/g,'-');
+}
 function mbExport(){
   var mb=mbGet();if(!mb){alert('No mark book selected.');return;}
   if(!mb.students.length){alert('No students in this mark book.');return;}
@@ -9146,7 +9311,7 @@ function mbBuildExportHTML(entries, d, showPrintAll){
     h+='<th class="left" style="min-width:20px;">#</th>';
     h+='<th class="left">Student Name</th>';
     mb.assessments.forEach(function(a){h+='<th>'+escH(a.name)+'<br><span style="font-weight:normal;opacity:.7;">/'+a.max+'</span></th>';});
-    h+='<th>Total<br>/'+totalMax+'</th><th>%</th><th>Grade</th><th>Result</th></tr></thead><tbody>';
+    h+='<th>Total<br>/'+totalMax+'</th><th>%</th><th>Grade</th><th>Result</th><th>Attendance</th></tr></thead><tbody>';
 
     totals.forEach(function(t,i){
       h+='<tr><td>'+(i+1)+'</td><td class="left">'+escH(t.stu.name)+'</td>';
@@ -9154,7 +9319,24 @@ function mbBuildExportHTML(entries, d, showPrintAll){
       h+='<td style="font-weight:bold;">'+t.total+'</td>';
       h+='<td style="font-weight:bold;">'+t.pct+'%</td>';
       h+='<td style="font-weight:bold;">'+t.grade+'</td>';
-      h+='<td class="'+(t.pass?'pass':'fail')+'">'+(t.pass?'Pass':'Fail')+'</td></tr>';
+      h+='<td class="'+(t.pass?'pass':'fail')+'">'+(t.pass?'Pass':'Fail')+'</td>';
+      /* Attendance in export */
+      var attExp='-';
+      if(typeof srData!=='undefined'&&srData&&mb.cls&&srData[mb.cls]){
+        var termN=mbKeyToTerm(mbCurrent||'');
+        var reg=srData[mb.cls];
+        var stuNo=null;
+        reg.students.forEach(function(st){
+          var fn=(st.surname+(st.first?', '+st.first:'')).toLowerCase();
+          var fn2=(st.surname+(st.first?' '+st.first:'')).toLowerCase();
+          if(fn===t.stu.name.toLowerCase()||fn2===t.stu.name.toLowerCase()) stuNo=st.no;
+        });
+        if(stuNo!==null){
+          var att=srGetAttendanceSummary(mb.cls,stuNo,termN);
+          if(att.total>0) attExp=att.present+'/'+att.total+' ('+Math.round(att.present/att.total*100)+'%)';
+        }
+      }
+      h+='<td>'+attExp+'</td></tr>';
     });
 
     /* Class averages */
