@@ -7549,7 +7549,7 @@ function newBlankExam(){
       var name=v.n.trim();if(!name)return;
       var blank={meta:{title:name,subject:'Information Technology',grade:'9',duration:45,term:'Term 1',marks:40},mcq:[],trueFalse:[],fillBlank:[],matching:[],multiSelect:[],essay:[]};
       examLibrary[blank.meta.title]=blank;saveLibrary();
-      activeExam=blank;localStorage.setItem('activeExam',JSON.stringify(blank));
+      activeExam=blank;localStorage.setItem('examData',JSON.stringify(blank));
       renderEditor();
     }
   });
@@ -7748,6 +7748,8 @@ function generateStudentFile(){
   var link=document.createElement('a');link.href=url;link.download='student_exam.html';link.style.display='none';
   document.body.appendChild(link);link.click();document.body.removeChild(link);setTimeout(function(){URL.revokeObjectURL(url);},2000);
 }
+function exportToBank(){ exportBankToEditor(); }
+
 function previewSummary(){
   readEditor();var total=0;
   ['mcq','trueFalse','fillBlank','matching','multiSelect','essay'].forEach(function(k){(activeExam[k]||[]).forEach(function(q){total+=q.marks||0;});});
