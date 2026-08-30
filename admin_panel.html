@@ -10392,8 +10392,35 @@ async function lqPushQuestion(idx){
   lqState='question';
   lqTimeLeft=timer;
   renderLiveQuiz();
-  lqStartCountdown();
   lqStartPolling();
+
+  /* ── Sync delay before admin countdown starts ──────────────────────────────
+     Individual / pooled: 3s join window so students receive the question
+     Team shared: Team Talk duration (students can't answer during talk time)
+     This keeps admin and student timers in sync.
+  ─────────────────────────────────────────────────────────────────────────── */
+  var mode=(lqSession&&lqSession.mode)||'individual';
+  var syncDelay=mode==='shared'?parseInt(lqSession.teamTalk||0):3;
+
+  if(syncDelay>0){
+    /* Show "Get Ready" countdown on the admin timer display */
+    var syncLeft=syncDelay;
+    var disp=document.getElementById('lq-timer-display');
+    if(disp){ disp.textContent=syncLeft; disp.style.color='#7c3aed'; }
+    var bar=document.getElementById('lq-timer-bar');
+    if(bar){ bar.style.width='100%'; bar.style.background='#7c3aed'; }
+    var syncInterval=setInterval(function(){
+      syncLeft--;
+      var d=document.getElementById('lq-timer-display');
+      if(d){ d.textContent=syncLeft>0?syncLeft:'▶'; d.style.color='#7c3aed'; }
+      if(syncLeft<=0){
+        clearInterval(syncInterval);
+        lqStartCountdown();
+      }
+    },1000);
+  } else {
+    lqStartCountdown();
+  }
 }
 
 /* ── QUESTION SCREEN (host view) ── */
