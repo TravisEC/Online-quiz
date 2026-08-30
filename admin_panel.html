@@ -9944,9 +9944,9 @@ function lqRenderSetup(){
   /* Bank filters (shown when bank selected) */
   h+='<div id="lq-bank-filters" style="margin-bottom:1.2rem;">';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin-bottom:.7rem;">';
-  h+='<div><div class="fl">Grade</div><select class="fi-sel" id="lq-grade" onchange="lqGradeChange()"><option value="">All Grades</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option></select></div>';
-  h+='<div><div class="fl">Term</div><select class="fi-sel" id="lq-term" onchange="lqTermChange()"><option value="">All Terms</option><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select></div>';
-  h+='<div><div class="fl">Week</div><select class="fi-sel" id="lq-week" onchange="lqUpdateTopics()"><option value="">All Weeks</option></select></div>';
+  h+='<div><div class="fl">Grade</div><select class="fi-sel" id="lq-grade" onchange="lqGradeChange()"><option value="">All Grades</option><option value="7IT">Grade 7 — IT</option><option value="7DL">Grade 7 — DL</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option></select></div>';
+  h+='<div id="lq-term-row"><div class="fl">Term</div><select class="fi-sel" id="lq-term" onchange="lqTermChange()"><option value="">All Terms</option><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select></div>';
+  h+='<div id="lq-week-row"><div class="fl">Week</div><select class="fi-sel" id="lq-week" onchange="lqUpdateTopics()"><option value="">All Weeks</option></select></div>';
   h+='</div>';
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">';
   h+='<div><div class="fl">Topic</div><select class="fi-sel" id="lq-topic" onchange="lqPreviewCount()"><option value="">All Topics</option></select></div>';
@@ -9984,38 +9984,45 @@ function lqSetSource(src){
 
 /* Called when grade changes — reset term, week, topic */
 function lqGradeChange(){
+  var fg=(document.getElementById('lq-grade')||{}).value||'';
   var termSel=document.getElementById('lq-term');
   var weekSel=document.getElementById('lq-week');
+  var termRow=document.getElementById('lq-term-row');
+  var weekRow=document.getElementById('lq-week-row');
   if(termSel) termSel.value='';
-  if(weekSel){ weekSel.innerHTML='<option value="">All Weeks</option>'; }
+  if(weekSel) weekSel.innerHTML='<option value="">All Weeks</option>';
+  /* DL has no scheme — hide term and week filters */
+  var isDL=fg==='7DL';
+  if(termRow) termRow.style.display=isDL?'none':'';
+  if(weekRow) weekRow.style.display=isDL?'none':'';
   lqUpdateTopics();
 }
 
 /* Called when term changes — rebuild week dropdown, reset topic */
 function lqTermChange(){
-  var grade=(document.getElementById('lq-grade')||{}).value||'';
+  var fg=(document.getElementById('lq-grade')||{}).value||'';
+  var gradeReal=fg==='7IT'||fg==='7DL'?'7':fg;
   var term=(document.getElementById('lq-term')||{}).value||'';
   var weekSel=document.getElementById('lq-week'); if(!weekSel) return;
 
-  if(!grade||!term){
+  /* DL has no scheme — no week filter applies */
+  if(!gradeReal||!term||fg==='7DL'){
     weekSel.innerHTML='<option value="">All Weeks</option>';
     lqUpdateTopics();
     return;
   }
 
-  /* Determine week range for this term */
   var termN=parseInt(term)||0;
-  var maxW=(grade==='11')?32:35;
-  /* T1: 1-15, T2: 16-26, T3: 27-maxW */
+  var maxW=(gradeReal==='11')?32:35;
   var ranges={1:[1,15],2:[16,26],3:[27,maxW]};
   var range=ranges[termN]||[1,maxW];
 
   /* Only show weeks that actually have questions for this grade+term */
   var weeksWithQs={};
   bankQs.forEach(function(q){
-    if(grade&&q.grade!==grade) return;
+    if(q.grade!==gradeReal) return;
     (q.scheme||[]).forEach(function(s){
-      if(s.grade===parseInt(grade)&&s.term===termN&&s.week>=range[0]&&s.week<=range[1]){
+      if(s.grade===parseInt(gradeReal)&&s.term===termN&&s.week>=range[0]&&s.week<=range[1]){
         weeksWithQs[s.week]=true;
       }
     });
@@ -10031,21 +10038,33 @@ function lqTermChange(){
 
 /* Rebuild topic dropdown in curriculum order; also refreshes preview count */
 function lqUpdateTopics(){
-  var grade=(document.getElementById('lq-grade')||{}).value||'';
+  var fg=(document.getElementById('lq-grade')||{}).value||'';
+  var gradeReal=fg==='7IT'||fg==='7DL'?'7':fg;
   var term=(document.getElementById('lq-term')||{}).value||'';
   var week=(document.getElementById('lq-week')||{}).value||'';
   var topicSel=document.getElementById('lq-topic'); if(!topicSel) return;
+
+  /* Allowed topics for this fg (7IT uses IT list, 7DL uses DL list) */
+  var allowedTopics=(fg==='7IT'||fg==='7DL')?(GRADE_TOPICS[fg]||[]):null;
+
+  var termN=term?parseInt(term):0;
+  var weekN=week?parseInt(week):0;
 
   /* Collect topics present in the filtered question set */
   var topicsPresent={};
   bankQs.forEach(function(q){
     if(q.type!=='mcq'&&q.type!=='tf') return;
-    if(grade&&q.grade!==grade) return;
-    if(term||week){
-      var termN=term?parseInt(term):0;
-      var weekN=week?parseInt(week):0;
+    if(gradeReal&&q.grade!==gradeReal) return;
+    /* Restrict to IT or DL topic list */
+    if(allowedTopics&&allowedTopics.indexOf(q.topic)<0) return;
+    /* DL has no scheme — skip term/week filter for DL */
+    if(fg==='7DL'){
+      if(q.topic) topicsPresent[q.topic]=true;
+      return;
+    }
+    if(termN||weekN){
       var match=(q.scheme||[]).some(function(s){
-        if(grade&&s.grade!==parseInt(grade)) return false;
+        if(gradeReal&&s.grade!==parseInt(gradeReal)) return false;
         if(termN&&s.term!==termN) return false;
         if(weekN&&s.week!==weekN) return false;
         return true;
@@ -10055,10 +10074,10 @@ function lqUpdateTopics(){
     if(q.topic) topicsPresent[q.topic]=true;
   });
 
-  /* Sort by curriculum order from GRADE_TOPICS */
-  var orderKey=grade||'';
-  var ordered=[];
+  /* Sort by curriculum order from GRADE_TOPICS using fg key (7IT/7DL/8/9 etc) */
+  var orderKey=fg||gradeReal||'';
   var gtOrder=(GRADE_TOPICS[orderKey])||[];
+  var ordered=[];
   gtOrder.forEach(function(t){ if(topicsPresent[t]) ordered.push(t); });
   /* Append any topics not in GRADE_TOPICS order (e.g. General) */
   Object.keys(topicsPresent).forEach(function(t){ if(ordered.indexOf(t)<0) ordered.push(t); });
@@ -10092,24 +10111,30 @@ function lqBuildQuestions(){
       });
     });
   } else {
-    var grade=(document.getElementById('lq-grade')||{}).value||'';
+    var fg=(document.getElementById('lq-grade')||{}).value||'';
+    var gradeReal=fg==='7IT'||fg==='7DL'?'7':fg;
     var term=(document.getElementById('lq-term')||{}).value||'';
     var week=(document.getElementById('lq-week')||{}).value||'';
     var topic=(document.getElementById('lq-topic')||{}).value||'';
     var qtype=(document.getElementById('lq-qtype')||{}).value||'';
     var termN=term?parseInt(term):0;
     var weekN=week?parseInt(week):0;
+    /* Allowed topics for this fg */
+    var allowedTopics=(fg==='7IT'||fg==='7DL')?(GRADE_TOPICS[fg]||[]):null;
 
     qs=bankQs.filter(function(q){
-      /* Only MCQ and True/False compatible with Live Quiz */
       if(q.type!=='mcq'&&q.type!=='tf') return false;
-      if(grade&&q.grade!==grade) return false;
+      if(gradeReal&&q.grade!==gradeReal) return false;
+      /* Restrict to IT or DL topic list when grade is 7IT or 7DL */
+      if(allowedTopics&&allowedTopics.indexOf(q.topic)<0) return false;
       if(topic&&q.topic!==topic) return false;
       if(qtype&&q.type!==qtype) return false;
-      /* Week/Term filter via scheme */
+      /* DL has no scheme — skip term/week filter */
+      if(fg==='7DL') return true;
+      /* Term/Week filter via scheme */
       if(termN||weekN){
         var match=(q.scheme||[]).some(function(s){
-          if(grade&&s.grade!==parseInt(grade)) return false;
+          if(gradeReal&&s.grade!==parseInt(gradeReal)) return false;
           if(termN&&s.term!==termN) return false;
           if(weekN&&s.week!==weekN) return false;
           return true;
