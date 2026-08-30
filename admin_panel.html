@@ -9962,7 +9962,16 @@ function lqRenderSetup(){
   h+='<div><div class="fl">Points Per Question</div><select class="fi-sel" id="lq-points"><option value="1000">1000 (classic)</option><option value="500">500</option><option value="100">100</option><option value="marks">Use question marks</option></select></div>';
   h+='</div>';
 
-  h+='<div id="lq-preview" style="margin-bottom:1rem;font-size:.82rem;color:#64748b;"></div>';
+  /* Question picker panel */
+  h+='<div style="margin-bottom:1rem;">';
+  h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;">';
+  h+='<div class="fl" style="margin:0;">Questions <span id="lq-pick-count" style="font-weight:400;color:#64748b;"></span></div>';
+  h+='<div style="display:flex;gap:6px;">';
+  h+='<button class="btn btn-ghost btn-sm" onclick="lqPickAll(true)">✅ All</button>';
+  h+='<button class="btn btn-ghost btn-sm" onclick="lqPickAll(false)">☐ None</button>';
+  h+='</div></div>';
+  h+='<div id="lq-qpicker" style="max-height:280px;overflow-y:auto;border:1px solid var(--dark3);border-radius:10px;padding:.4rem .5rem;background:var(--dark2);"><div style="padding:1rem;font-size:.82rem;color:#64748b;">Set your filters above to load questions.</div></div>';
+  h+='</div>';
 
   h+='<button class="btn btn-green" style="padding:12px 28px;font-size:.95rem;" onclick="lqLaunch()">🚀 Launch Session</button>';
   h+='<button class="btn btn-blue btn-sm" style="margin-left:10px;" onclick="lqPublishJoinPage()">📤 Publish Join Page to GitHub</button>';
@@ -9979,7 +9988,14 @@ function lqSetSource(src){
   document.getElementById('lq-src-bank').className='cls-tab'+(src==='bank'?' active':'');
   document.getElementById('lq-src-exam').className='cls-tab'+(src==='exam'?' active':'');
   document.getElementById('lq-bank-filters').style.display=src==='bank'?'block':'none';
-  lqPreviewCount();
+  if(src==='exam'){
+    var picker=document.getElementById('lq-qpicker');
+    var countEl=document.getElementById('lq-pick-count');
+    if(picker) picker.innerHTML='<div style="padding:.8rem 1rem;font-size:.82rem;color:#64748b;">Questions come from the current exam — all MCQ/T/F included automatically.</div>';
+    if(countEl) countEl.textContent='';
+  } else {
+    lqPreviewCount();
+  }
 }
 
 /* Called when grade changes — reset term, week, topic */
@@ -10090,63 +10106,121 @@ function lqUpdateTopics(){
   lqPreviewCount();
 }
 
+/* Refresh the question picker panel */
 function lqPreviewCount(){
-  var el=document.getElementById('lq-preview'); if(!el) return;
-  var qs=lqBuildQuestions();
-  el.textContent=qs.length+' question(s) match your filters (up to max will be used).';
+  var picker=document.getElementById('lq-qpicker');
+  var countEl=document.getElementById('lq-pick-count');
+  if(!picker) return;
+
+  var qs=lqBuildQuestions(true); /* true = get ALL matching, ignore max cap */
+
+  if(!qs.length){
+    picker.innerHTML='<div style="padding:.8rem 1rem;font-size:.82rem;color:#64748b;">No MCQ/T\u2060F questions match your filters.</div>';
+    if(countEl) countEl.textContent='';
+    return;
+  }
+
+  /* Preserve previously checked IDs */
+  var checked={};
+  picker.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+    checked[cb.dataset.id]=cb.checked;
+  });
+  /* Default: all checked */
+  var isFirstLoad=Object.keys(checked).length===0;
+
+  var typeBadge={mcq:'<span style="background:#1d4ed8;color:#fff;font-size:.65rem;font-weight:800;padding:1px 5px;border-radius:4px;margin-right:5px;">MCQ</span>',
+                 tf:'<span style="background:#0f766e;color:#fff;font-size:.65rem;font-weight:800;padding:1px 5px;border-radius:4px;margin-right:5px;">T/F</span>'};
+
+  picker.innerHTML=qs.map(function(q,i){
+    var isChecked=(isFirstLoad||checked[q.id]!==false)?'checked':'';
+    var badge=typeBadge[q.type]||'';
+    var qtext=escH((q.q||'').substring(0,90))+(q.q&&q.q.length>90?'…':'');
+    return '<label style="display:flex;align-items:flex-start;gap:8px;padding:.35rem .4rem;border-radius:6px;cursor:pointer;font-size:.8rem;line-height:1.4;'+(i%2===0?'background:rgba(255,255,255,.02)':'')+'" title="'+escH(q.q||'')+'">'
+      +'<input type="checkbox" data-id="'+escH(q.id||String(i))+'" '+(isChecked)+' onchange="lqUpdatePickCount()" style="margin-top:2px;flex-shrink:0;">'
+      +'<span>'+badge+qtext+'</span>'
+      +'</label>';
+  }).join('');
+
+  lqUpdatePickCount();
 }
 
-function lqBuildQuestions(){
+function lqUpdatePickCount(){
+  var countEl=document.getElementById('lq-pick-count');
+  if(!countEl) return;
+  var all=document.querySelectorAll('#lq-qpicker input[type=checkbox]');
+  var checked=document.querySelectorAll('#lq-qpicker input[type=checkbox]:checked');
+  countEl.textContent='('+checked.length+' / '+all.length+' selected)';
+}
+
+function lqPickAll(val){
+  document.querySelectorAll('#lq-qpicker input[type=checkbox]').forEach(function(cb){ cb.checked=val; });
+  lqUpdatePickCount();
+}
+
+function lqBuildQuestions(allMode){
+  /* allMode=true  → return all matching questions (for picker display)
+     allMode=false/undefined → return only the user-checked questions (for launch) */
   var src=document.getElementById('lq-src-exam')&&document.getElementById('lq-src-exam').classList.contains('active')?'exam':'bank';
   var maxq=parseInt((document.getElementById('lq-maxq')||{}).value||10)||10;
   var qs=[];
 
   if(src==='exam'){
     var d=examData||loadExam();
-    /* Only MCQ and True/False supported in Live Quiz */
     var types={mcq:'mcq',tf:'trueFalse'};
     Object.keys(types).forEach(function(k){
       (d[types[k]]||[]).forEach(function(q){
         qs.push(Object.assign({},q,{_type:k}));
       });
     });
-  } else {
-    var fg=(document.getElementById('lq-grade')||{}).value||'';
-    var gradeReal=fg==='7IT'||fg==='7DL'?'7':fg;
-    var term=(document.getElementById('lq-term')||{}).value||'';
-    var week=(document.getElementById('lq-week')||{}).value||'';
-    var topic=(document.getElementById('lq-topic')||{}).value||'';
-    var qtype=(document.getElementById('lq-qtype')||{}).value||'';
-    var termN=term?parseInt(term):0;
-    var weekN=week?parseInt(week):0;
-    /* Allowed topics for this fg */
-    var allowedTopics=(fg==='7IT'||fg==='7DL')?(GRADE_TOPICS[fg]||[]):null;
-
-    qs=bankQs.filter(function(q){
-      if(q.type!=='mcq'&&q.type!=='tf') return false;
-      if(gradeReal&&q.grade!==gradeReal) return false;
-      /* Restrict to IT or DL topic list when grade is 7IT or 7DL */
-      if(allowedTopics&&allowedTopics.indexOf(q.topic)<0) return false;
-      if(topic&&q.topic!==topic) return false;
-      if(qtype&&q.type!==qtype) return false;
-      /* DL has no scheme — skip term/week filter */
-      if(fg==='7DL') return true;
-      /* Term/Week filter via scheme */
-      if(termN||weekN){
-        var match=(q.scheme||[]).some(function(s){
-          if(gradeReal&&s.grade!==parseInt(gradeReal)) return false;
-          if(termN&&s.term!==termN) return false;
-          if(weekN&&s.week!==weekN) return false;
-          return true;
-        });
-        if(!match) return false;
-      }
-      return true;
-    }).map(function(q){ return Object.assign({},q,{_type:q.type}); });
-    /* Shuffle */
-    for(var i=qs.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=qs[i];qs[i]=qs[j];qs[j]=t; }
+    /* For exam source use max cap — no picker */
+    return qs.slice(0,maxq);
   }
-  return qs.slice(0,maxq);
+
+  /* Bank source — apply filters */
+  var fg=(document.getElementById('lq-grade')||{}).value||'';
+  var gradeReal=fg==='7IT'||fg==='7DL'?'7':fg;
+  var term=(document.getElementById('lq-term')||{}).value||'';
+  var week=(document.getElementById('lq-week')||{}).value||'';
+  var topic=(document.getElementById('lq-topic')||{}).value||'';
+  var qtype=(document.getElementById('lq-qtype')||{}).value||'';
+  var termN=term?parseInt(term):0;
+  var weekN=week?parseInt(week):0;
+  var allowedTopics=(fg==='7IT'||fg==='7DL')?(GRADE_TOPICS[fg]||[]):null;
+
+  qs=bankQs.filter(function(q){
+    if(q.type!=='mcq'&&q.type!=='tf') return false;
+    if(gradeReal&&q.grade!==gradeReal) return false;
+    if(allowedTopics&&allowedTopics.indexOf(q.topic)<0) return false;
+    if(topic&&q.topic!==topic) return false;
+    if(qtype&&q.type!==qtype) return false;
+    if(fg==='7DL') return true;
+    if(termN||weekN){
+      var match=(q.scheme||[]).some(function(s){
+        if(gradeReal&&s.grade!==parseInt(gradeReal)) return false;
+        if(termN&&s.term!==termN) return false;
+        if(weekN&&s.week!==weekN) return false;
+        return true;
+      });
+      if(!match) return false;
+    }
+    return true;
+  }).map(function(q){ return Object.assign({},q,{_type:q.type}); });
+
+  /* Shuffle for display order */
+  for(var i=qs.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=qs[i];qs[i]=qs[j];qs[j]=t; }
+
+  if(allMode) return qs; /* Return all matches for picker */
+
+  /* Return only user-checked questions */
+  var checkedIds={};
+  document.querySelectorAll('#lq-qpicker input[type=checkbox]:checked').forEach(function(cb){
+    checkedIds[cb.dataset.id]=true;
+  });
+  /* If picker has no checkboxes (not rendered), fall back to max cap */
+  var pickerCBs=document.querySelectorAll('#lq-qpicker input[type=checkbox]');
+  if(!pickerCBs.length) return qs.slice(0,maxq);
+
+  return qs.filter(function(q){ return checkedIds[q.id]; });
 }
 
 /* ── LAUNCH SESSION ── */
