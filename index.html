@@ -60,7 +60,7 @@ input:focus{border-color:#3b82f6;}
 <body>
 <div class="card" id="app"></div>
 <script>
-var SURL = 'YOUR_SURL_HERE';
+var SURL = 'https://script.google.com/macros/s/AKfycbxrrDxbVlTP1u5oyR776zVOfG3gTMK1mIPFeh9qFIbTFYaOA8RL5tFseH99-c0JTq7p/exec';
 var state='pin'; /* pin → name → teamjoin → waiting → teamtalk → question → answered → leaderboard → done */
 var pin='',myId='',myName='',myClass='',myTeam='',sessionData=null,currentQ=null;
 var pollTimer=null,countdownTimer=null,timeLeft=0,answered=false;
@@ -104,7 +104,7 @@ function showName(){
   var mode=sessionData.mode||'individual';
   render('<h1>👋 Your Name</h1><div class="sub">Session: <strong>'+esc(sessionData.name)+'</strong></div>'
     +'<input id="name-in" placeholder="Your name" maxlength="30">'
-    +'<select id="class-in" style="width:100%;padding:12px 16px;border:2px solid #334155;border-radius:10px;background:#0f172a;color:#fff;font-size:1rem;font-family:Nunito,sans-serif;outline:none;margin-bottom:.8rem;appearance:none;-webkit-appearance:none;cursor:pointer;"><option value="">Select your class</option><option value="7-1">7-1</option><option value="7-2">7-2</option><option value="7-3">7-3</option><option value="7-4">7-4</option><option value="8-1">8-1</option><option value="8-2">8-2</option><option value="8-3">8-3</option><option value="8-4">8-4</option><option value="9-1">9-1</option><option value="9-2">9-2</option><option value="9-3">9-3</option><option value="9-4">9-4</option><option value="10 Arts">10 Arts</option><option value="10 Business">10 Business</option><option value="10 TVET 1">10 TVET 1</option><option value="10 TVET 2">10 TVET 2</option><option value="10 CVQ 1">10 CVQ 1</option><option value="10 CVQ 2">10 CVQ 2</option><option value="11 Arts">11 Arts</option><option value="11 Business">11 Business</option><option value="11 TVET 1">11 TVET 1</option><option value="11 TVET 2">11 TVET 2</option><option value="11 CVQ 1">11 CVQ 1</option><option value="11 CVQ 2">11 CVQ 2</option></select>'
+    +'<input id="class-in" placeholder="Class (e.g. 9-1)" maxlength="10">'
     +'<div class="err" id="name-err"></div>'
     +'<button class="btn btn-blue" onclick="submitName()">Next →</button>');
   document.getElementById('name-in').focus();
@@ -377,31 +377,7 @@ function showDone(lbData){
       h+='<div class="lb-score">'+e.score+'</div></div>';
     });
   }
-  /* Play Again button */
-  h+='<div style="margin-top:1.5rem;text-align:center;">';
-  h+='<button class="btn btn-blue" onclick="playAgain()" style="padding:12px 28px;font-size:.95rem;">🔄 Play Again</button>';
-  h+='</div>';
-  h+='<div style="margin-top:.8rem;text-align:center;font-size:.75rem;color:#475569;" id="pa-countdown"></div>';
   render(h);
-
-  /* Auto-reset to join screen after 30 seconds */
-  var paCount=30;
-  var paTimer=setInterval(function(){
-    paCount--;
-    var el=document.getElementById('pa-countdown');
-    if(el) el.textContent='Returning to join screen in '+paCount+'s…';
-    if(paCount<=0){ clearInterval(paTimer); playAgain(); }
-  },1000);
-}
-
-function playAgain(){
-  /* Reset all state and go back to PIN screen */
-  pin=''; myId=''; myName=''; myClass=''; myTeam='';
-  sessionData=null; currentQ=null; answered=false;
-  stopPolling();
-  if(countdownTimer) clearInterval(countdownTimer);
-  if(teamTalkTimer) clearInterval(teamTalkTimer);
-  showPin();
 }
 
 /* ── POLLING ── */
