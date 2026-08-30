@@ -10425,7 +10425,7 @@ async function lqPushQuestion(idx){
      This keeps admin and student timers in sync.
   ─────────────────────────────────────────────────────────────────────────── */
   var mode=(lqSession&&lqSession.mode)||'individual';
-  var syncDelay=mode==='shared'?parseInt(lqSession.teamTalk||0):3;
+  var syncDelay=mode==='shared'?parseInt(lqSession.teamTalk||0):1;
 
   if(syncDelay>0){
     /* Show "Get Ready" countdown on the admin timer display */
