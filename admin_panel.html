@@ -5114,6 +5114,12 @@ function srGetStudents(cls){
 }
 
 /* ── RENDER ── */
+/* Parse YYYY-MM-DD date string in LOCAL time (avoids UTC timezone shift) */
+function srParseDate(dateStr){
+  var p=String(dateStr||'').split('-');
+  if(p.length===3) return new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2]));
+  return new Date(dateStr);
+}
 function renderSubjectRegister(){
   srLoad();
   var el=document.getElementById('sr-content');
@@ -5157,14 +5163,14 @@ function renderSubjectRegister(){
   /* ── Group sessions by month and week ── */
   var months=[],curM='',curMC=0;
   sessions.forEach(function(s){
-    var m=new Date(s.date).toLocaleString('en-GB',{month:'long'});
+    var m=srParseDate(s.date).toLocaleString('en-GB',{month:'long'});
     if(m===curM){curMC++;}else{if(curM)months.push({name:curM,count:curMC});curM=m;curMC=1;}
   });
   if(curM) months.push({name:curM,count:curMC});
 
   var weeks=[],curW='',curWC=0,wkNum=0;
   sessions.forEach(function(s){
-    var d=new Date(s.date);
+    var d=srParseDate(s.date);
     var wk=srGetWeekNum(d);
     var wkKey=d.getFullYear()+'-W'+wk;
     if(wkKey===curW){curWC++;}else{if(curW)weeks.push({name:'Wk '+wkNum,count:curWC});curW=wkKey;curWC=1;wkNum++;}
@@ -5220,7 +5226,7 @@ function renderSubjectRegister(){
   /* Row 3: Dates */
   h+='<tr>';
   sessions.forEach(function(s,si){
-    var d=new Date(s.date);
+    var d=srParseDate(s.date);
     var day=d.getDate();
     var suf=day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
     var isPast=d<today;
@@ -5238,7 +5244,7 @@ function renderSubjectRegister(){
     var bg=si%2===0?'#111827':'#1A1D23';
     h+='<tr style="background:'+bg+'">';
     sessions.forEach(function(s,ssi){
-      var d=new Date(s.date);
+      var d=srParseDate(s.date);
       var isPast=d<today;
       var checked=!!(s.attendance&&s.attendance[si]);
       var cellBg=checked?'background:rgba(16,185,129,.15);':'';
@@ -5342,7 +5348,7 @@ function srClearSessions(){
 function srDeleteSession(sessionIdx){
   var s=srData[srCurrentClass].sessions[sessionIdx];
   if(!s) return;
-  var d=new Date(s.date); var today=new Date(); today.setHours(0,0,0,0);
+  var d=srParseDate(s.date); var today=new Date(); today.setHours(0,0,0,0);
   if(d<today){alert('Cannot delete a past session.');return;}
   if(!confirm('Delete session '+s.date+'? This cannot be undone.')) return;
   srData[srCurrentClass].sessions.splice(sessionIdx,1);
@@ -5398,7 +5404,7 @@ function srExport(){
   h+='<th rowspan="3" class="nl">Surname</th><th rowspan="3" class="nl">First Name</th>';
   var expMonths=[],curEM='',curEMC=0;
   sessions.forEach(function(s){
-    var m=new Date(s.date).toLocaleString('en-GB',{month:'long'});
+    var m=srParseDate(s.date).toLocaleString('en-GB',{month:'long'});
     if(m===curEM){curEMC++;}else{if(curEM)expMonths.push({n:curEM,c:curEMC});curEM=m;curEMC=1;}
   });
   if(curEM) expMonths.push({n:curEM,c:curEMC});
@@ -5409,8 +5415,8 @@ function srExport(){
   h+='<tr>';
   var expWks=[],curEW='',curEWC=0,ewn=0;
   sessions.forEach(function(s){
-    var wk=srGetWeekNum(new Date(s.date));
-    var wkKey=new Date(s.date).getFullYear()+'-W'+wk;
+    var wk=srGetWeekNum(srParseDate(s.date));
+    var wkKey=srParseDate(s.date).getFullYear()+'-W'+wk;
     if(wkKey===curEW){curEWC++;}else{if(curEW)expWks.push({n:'Wk '+(++ewn),c:curEWC});curEW=wkKey;curEWC=1;}
   });
   if(curEW) expWks.push({n:'Wk '+(++ewn),c:curEWC});
@@ -5420,7 +5426,7 @@ function srExport(){
   /* Date row */
   h+='<tr>';
   sessions.forEach(function(s){
-    var day=new Date(s.date).getDate();
+    var day=srParseDate(s.date).getDate();
     var suf=day===1||day===21||day===31?'st':day===2||day===22?'nd':day===3||day===23?'rd':'th';
     h+='<th style="min-width:22px;">'+day+suf+'</th>';
   });
