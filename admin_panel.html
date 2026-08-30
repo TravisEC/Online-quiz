@@ -209,6 +209,141 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
   .btn{padding:6px 10px;font-size:.76rem;}
   .btn-sm{padding:4px 8px;font-size:.7rem;}
 }
+
+/* ══════════════════════════════════════════════════════════════
+   BOTTOM NAV BAR — mobile only
+   ══════════════════════════════════════════════════════════════ */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:var(--dark1);border-top:1px solid var(--dark3);
+  padding:0;safe-area-inset-bottom:env(safe-area-inset-bottom,0);
+  padding-bottom:env(safe-area-inset-bottom,0);
+}
+.bottom-nav-inner{
+  display:flex;align-items:stretch;height:56px;
+}
+.bnav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;border:none;background:none;
+  color:var(--g400);cursor:pointer;padding:4px 2px;
+  font-size:.58rem;font-weight:700;font-family:Nunito,sans-serif;
+  transition:color .15s;min-width:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.bnav-btn .bnav-icon{font-size:1.3rem;line-height:1;}
+.bnav-btn.active{color:var(--accent);}
+.bnav-btn:active{opacity:.7;}
+
+/* More drawer */
+.more-drawer{
+  display:none;position:fixed;bottom:56px;left:0;right:0;z-index:299;
+  background:var(--dark1);border-top:1px solid var(--dark3);
+  padding:.5rem;transform:translateY(100%);
+  transition:transform .25s ease;
+}
+.more-drawer.open{transform:translateY(0);}
+.more-drawer-overlay{
+  display:none;position:fixed;inset:0;z-index:298;
+}
+.more-drawer-overlay.open{display:block;}
+.more-drawer-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;
+}
+.more-drawer-item{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:.6rem .3rem;background:var(--dark2);border-radius:10px;
+  border:none;color:var(--g300);cursor:pointer;
+  font-size:.62rem;font-weight:700;font-family:Nunito,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+}
+.more-drawer-item .mdi{font-size:1.4rem;}
+.more-drawer-item:active{opacity:.7;}
+
+/* Mobile body padding so content doesn't hide behind bottom nav */
+@media(max-width:768px){
+  .bottom-nav{display:flex;flex-direction:column;}
+  .more-drawer{display:block;}
+  /* Push content above bottom nav */
+  .main{padding-bottom:64px;}
+  /* Hide desktop sidebar nav items — sidebar still works as drawer */
+  .sidebar .nav-item{font-size:.85rem;}
+
+  /* ── Sticky first column for tables ── */
+  .tbl-sticky{
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+    border-radius:10px;
+  }
+  .tbl-sticky table{border-collapse:collapse;min-width:600px;}
+  .tbl-sticky th:first-child,
+  .tbl-sticky td:first-child{
+    position:sticky;left:0;z-index:2;
+    background:var(--dark2);min-width:120px;
+  }
+  .tbl-sticky th:first-child{background:var(--dark1);}
+
+  /* ── Touch-friendly inputs and buttons ── */
+  input[type=text],input[type=number],input[type=date],
+  input[type=password],input[type=email],select,textarea{
+    min-height:44px;font-size:16px!important;/* prevent iOS zoom */
+  }
+  .btn{min-height:40px;padding:8px 14px;}
+  .btn-sm{min-height:36px;}
+
+  /* ── Live Quiz mobile ── */
+  #tab-livequiz .ed-card{padding:.8rem;}
+  /* Filter grid — 2 cols on mobile */
+  #tab-livequiz [style*="grid-template-columns:1fr 1fr 1fr"]{
+    grid-template-columns:1fr 1fr!important;
+  }
+  /* Question picker taller on mobile */
+  #lq-qpicker{max-height:220px!important;}
+  /* Mode buttons wrap */
+  #tab-livequiz .cls-tab{font-size:.75rem;padding:6px 10px;}
+  /* Week boxes wrap */
+  #lq-week-boxes{max-height:70px!important;}
+  /* Big PIN on lobby */
+  #lq-pin-display{font-size:3rem!important;letter-spacing:6px!important;}
+  /* Reveal/Next buttons full width on mobile */
+  #lq-next-btn,#lq-finish-btn,#lq-start-btn{
+    width:100%;margin-bottom:6px;
+  }
+  /* Question options 1 col on small screens */
+  .lq-opts-grid{grid-template-columns:1fr!important;}
+
+  /* ── Attendance mobile ── */
+  #tab-attendance .ph{gap:.4rem;}
+
+  /* ── Subject Register mobile ── */
+  #tab-subjectreg .btn-row{flex-wrap:wrap;}
+
+  /* ── Exam Control mobile ── */
+  .ec-btn-row{flex-direction:column;gap:.5rem;}
+  .ec-btn-row .btn{width:100%;padding:14px;font-size:1rem;justify-content:center;}
+
+  /* ── Dashboard mobile ── */
+  .stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:.5rem;}
+
+  /* ── Records mobile ── */
+  #tab-records .ph{flex-direction:column;align-items:stretch;}
+  #tab-records .ph input{width:100%;}
+
+  /* ── Marks Book / Edit Questions banner ── */
+  .desktop-only-banner{
+    display:flex;align-items:center;gap:.7rem;
+    background:var(--dark2);border:1px solid var(--dark3);
+    border-radius:12px;padding:1rem;margin-bottom:1rem;
+    font-size:.82rem;color:var(--g400);
+  }
+  .desktop-only-banner .doi{font-size:2rem;}
+}
+
+/* ── Very small phones ── */
+@media(max-width:380px){
+  .more-drawer-grid{grid-template-columns:repeat(3,1fr);}
+  .bnav-btn{font-size:.52rem;}
+  #lq-pin-display{font-size:2.5rem!important;}
+}
 </style>
 </head>
 <body>
@@ -534,6 +669,63 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
     </div>
 
     </div>
+  </div>
+</div>
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+<div class="bottom-nav" id="bottom-nav">
+  <div class="bottom-nav-inner">
+    <button class="bnav-btn active" id="bnav-dashboard" onclick="showTab('dashboard',null);bnavActive('dashboard');">
+      <span class="bnav-icon">📊</span><span>Dashboard</span>
+    </button>
+    <button class="bnav-btn" id="bnav-attendance" onclick="showTab('attendance',null);bnavActive('attendance');">
+      <span class="bnav-icon">✅</span><span>Attendance</span>
+    </button>
+    <button class="bnav-btn" id="bnav-subjectreg" onclick="showTab('subjectreg',null);bnavActive('subjectreg');">
+      <span class="bnav-icon">📋</span><span>Subject Reg</span>
+    </button>
+    <button class="bnav-btn" id="bnav-livequiz" onclick="showTab('livequiz',null);bnavActive('livequiz');">
+      <span class="bnav-icon">🎮</span><span>Live Quiz</span>
+    </button>
+    <button class="bnav-btn" id="bnav-examcontrol" onclick="showTab('examcontrol',null);bnavActive('examcontrol');">
+      <span class="bnav-icon">🖥️</span><span>Exam Ctrl</span>
+    </button>
+    <button class="bnav-btn" id="bnav-more" onclick="toggleMoreDrawer();">
+      <span class="bnav-icon">⋯</span><span>More</span>
+    </button>
+  </div>
+</div>
+
+<!-- ── MORE DRAWER OVERLAY ── -->
+<div class="more-drawer-overlay" id="more-drawer-overlay" onclick="closeMoreDrawer()"></div>
+
+<!-- ── MORE DRAWER ── -->
+<div class="more-drawer" id="more-drawer">
+  <div class="more-drawer-grid">
+    <button class="more-drawer-item" onclick="showTab('records',null);bnavActive('records');closeMoreDrawer();">
+      <span class="mdi">📁</span><span>Records</span>
+    </button>
+    <button class="more-drawer-item" onclick="showTab('marksbook',null);bnavActive('marksbook');closeMoreDrawer();">
+      <span class="mdi">📒</span><span>Marks Book</span>
+    </button>
+    <button class="more-drawer-item" onclick="showTab('termreport',null);bnavActive('termreport');closeMoreDrawer();">
+      <span class="mdi">📅</span><span>Term Sched</span>
+    </button>
+    <button class="more-drawer-item" onclick="showTab('reportcards',null);bnavActive('reportcards');closeMoreDrawer();">
+      <span class="mdi">📄</span><span>Report Cards</span>
+    </button>
+    <button class="more-drawer-item" onclick="showTab('logbook',null);bnavActive('logbook');closeMoreDrawer();">
+      <span class="mdi">📓</span><span>Log Book</span>
+    </button>
+    <button class="more-drawer-item" onclick="showTab('editor',null);bnavActive('editor');closeMoreDrawer();">
+      <span class="mdi">✏️</span><span>Edit Q's</span>
+    </button>
+    <button class="more-drawer-item" onclick="showTab('bank',null);bnavActive('bank');closeMoreDrawer();">
+      <span class="mdi">🏦</span><span>Q Bank</span>
+    </button>
+    <button class="more-drawer-item" onclick="showTab('settings',null);bnavActive('settings');closeMoreDrawer();">
+      <span class="mdi">⚙️</span><span>Settings</span>
+    </button>
   </div>
 </div>
 
@@ -2954,6 +3146,67 @@ function toggleSidebarCollapse(){
 
 function toggleSidebar(){var sb=document.getElementById('sidebar');var ov=document.getElementById('sidebar-overlay');sb.classList.toggle('open');ov.classList.toggle('open');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('open');}
+
+/* ══════════════════════════════════════════════
+   MOBILE HELPERS
+   ══════════════════════════════════════════════ */
+function isMobile(){ return window.innerWidth<=768; }
+
+function bnavActive(name){
+  /* Highlight the correct bottom nav button */
+  document.querySelectorAll('.bnav-btn').forEach(function(b){
+    b.classList.remove('active');
+  });
+  var btn=document.getElementById('bnav-'+name);
+  if(btn) btn.classList.add('active');
+  else{
+    /* Tab is in "More" drawer — highlight More button */
+    var more=document.getElementById('bnav-more');
+    if(more) more.classList.add('active');
+  }
+  /* Close sidebar if open */
+  closeSidebar();
+}
+
+function toggleMoreDrawer(){
+  var drawer=document.getElementById('more-drawer');
+  var overlay=document.getElementById('more-drawer-overlay');
+  if(!drawer) return;
+  var isOpen=drawer.classList.contains('open');
+  if(isOpen){ closeMoreDrawer(); }
+  else{ drawer.classList.add('open'); if(overlay) overlay.classList.add('open'); }
+}
+
+function closeMoreDrawer(){
+  var drawer=document.getElementById('more-drawer');
+  var overlay=document.getElementById('more-drawer-overlay');
+  if(drawer) drawer.classList.remove('open');
+  if(overlay) overlay.classList.remove('open');
+}
+
+/* Wrap attendance and subject register tables in sticky container */
+function wrapStickyTables(){
+  if(!isMobile()) return;
+  ['#tab-attendance table','#tab-subjectreg table'].forEach(function(sel){
+    var tbl=document.querySelector(sel);
+    if(!tbl||tbl.closest('.tbl-sticky')) return;
+    var wrap=document.createElement('div');
+    wrap.className='tbl-sticky';
+    tbl.parentNode.insertBefore(wrap,tbl);
+    wrap.appendChild(tbl);
+  });
+}
+
+/* Keep bnavActive in sync when showTab is called */
+(function(){
+  var _showTab=showTab;
+  showTab=function(name,el){
+    _showTab(name,el);
+    if(isMobile()) bnavActive(name);
+    /* Wrap tables after tab renders */
+    setTimeout(wrapStickyTables,100);
+  };
+})();
 
 
 /* ── RECORDS ── */
@@ -10484,7 +10737,7 @@ h+='<button class="btn btn-red btn-sm" id="lq-cancel-question-btn">✕ Cancel</b
 
   /* ── Row 4: Answer options ── */
   if(q._type==='mcq'||q._type==='ms'){
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.2rem;">';
+    h+='<div class="lq-opts-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.2rem;">';
     (q.opts||[]).forEach(function(opt,i){
       h+='<div style="background:'+colors[i%colors.length]+';border-radius:12px;padding:1rem 1.2rem;font-weight:800;font-size:.95rem;color:#fff;display:flex;align-items:center;gap:10px;">';
       h+='<span style="font-size:1.3rem;">'+shapes[i%shapes.length]+'</span><span>'+escH(opt)+'</span></div>';
@@ -11081,7 +11334,7 @@ function renderExamControl(){
   h+='</div>';
 
   /* Control buttons */
-  h+='<div style="display:flex;gap:.8rem;flex-wrap:wrap;">';
+  h+='<div class="ec-btn-row" style="display:flex;gap:.8rem;flex-wrap:wrap;">';
 
   /* Start button */
   h+='<button class="btn btn-green" id="ec-start-btn" '+(ecStatus==='running'?'disabled':'')+' style="flex:1;padding:14px;font-size:.95rem;">';
