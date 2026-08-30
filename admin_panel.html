@@ -132,7 +132,7 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
 .bk-row{transition:border-color .15s;}
 .conv-q-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--dark3);font-size:.83rem;}
 .conv-q-row:last-child{border-bottom:none;}
-@media(max-width:768px){.sidebar{display:none;}.stats-grid{grid-template-columns:1fr 1fr;}.fg,.opts-2{grid-template-columns:1fr;}}
+@media(max-width:768px){.stats-grid{grid-template-columns:1fr 1fr;}.fg,.opts-2{grid-template-columns:1fr;}}
 
 
 
@@ -162,12 +162,14 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
 
   /* Sidebar becomes slide-in drawer */
   .sidebar{
+    display:flex !important; /* override any display:none */
     position:fixed;top:0;left:0;bottom:0;z-index:200;
-    transform:translateX(-110%);
+    transform:translateX(-120%);
     transition:transform .25s ease;
     box-shadow:4px 0 24px rgba(0,0,0,.6);
+    width:260px !important;
   }
-  .sidebar.open{transform:translateX(0);}
+  .sidebar.open{transform:translateX(0) !important;}
   .sidebar-overlay.open{display:block;}
 
   /* Full width main */
@@ -399,6 +401,17 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
   .bnav-btn{ font-size:.5rem; }
   .bnav-btn .bnav-icon{ font-size:1.1rem; }
   .bottom-nav-inner{ height:50px; }
+}
+
+@media(max-width:768px){
+  /* Hide Connected status div in topbar — identified by sdot child */
+  .topbar-right > div{ display:none !important; }
+  /* Keep cloud indicator span visible but smaller */
+  .topbar-right > span#cloud-indicator{ display:inline !important; }
+  /* Sidebar overlay z-index above everything */
+  .sidebar-overlay{ z-index:195; }
+  /* Prevent sidebar nav items from showing behind overlay */
+  .sidebar{ overflow:hidden; }
 }
 </style>
 </head>
