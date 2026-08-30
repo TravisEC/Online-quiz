@@ -344,6 +344,62 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
   .bnav-btn{font-size:.52rem;}
   #lq-pin-display{font-size:2.5rem!important;}
 }
+
+/* ── MOBILE FIXES ── */
+@media(max-width:768px){
+
+  /* Topbar: hide cloud buttons and export on mobile — too cluttered */
+  .topbar-right > button{ display:none !important; }
+  .topbar-right > div[style*="Connected"]{ display:none !important; }
+  #cloud-indicator{ font-size:.68rem !important; }
+
+  /* Sidebar fully off-screen — prevent bleeding */
+  .sidebar{
+    transform:translateX(-120%) !important;
+    width:240px !important;
+  }
+  .sidebar.open{
+    transform:translateX(0) !important;
+  }
+
+  /* Bottom nav — fix sizing and prevent cutoff */
+  .bottom-nav{
+    padding-bottom:max(env(safe-area-inset-bottom,0px),4px);
+  }
+  .bottom-nav-inner{
+    height:54px;
+  }
+  .bnav-btn{
+    font-size:.56rem;
+    padding:4px 1px;
+  }
+  .bnav-btn .bnav-icon{
+    font-size:1.2rem;
+  }
+
+  /* Topbar title smaller on mobile */
+  .topbar-title{
+    font-size:.85rem !important;
+  }
+  .topbar-sub{
+    display:none;
+  }
+  .topbar{
+    padding:.5rem .7rem;
+  }
+
+  /* Ensure layout doesn't show sidebar ghost */
+  .layout{
+    overflow-x:hidden;
+  }
+}
+
+/* ── VERY SMALL (≤380px) bottom nav adjustments ── */
+@media(max-width:380px){
+  .bnav-btn{ font-size:.5rem; }
+  .bnav-btn .bnav-icon{ font-size:1.1rem; }
+  .bottom-nav-inner{ height:50px; }
+}
 </style>
 </head>
 <body>
