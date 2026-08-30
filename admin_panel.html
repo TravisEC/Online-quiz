@@ -9963,6 +9963,25 @@ function lqRenderSetup(){
   h+='</div></div>';
 
   /* Session settings */
+  /* Game Mode */
+  h+='<div style="margin-bottom:1rem;">';
+  h+='<div class="fl">Game Mode</div>';
+  h+='<div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap;">';
+  h+='<button id="lq-mode-individual" class="cls-tab active" onclick="lqSetMode(\'individual\')">👤 Individual</button>';
+  h+='<button id="lq-mode-shared" class="cls-tab" onclick="lqSetMode(\'shared\')">🤝 Team — Shared Device</button>';
+  h+='<button id="lq-mode-pooled" class="cls-tab" onclick="lqSetMode(\'pooled\')">👥 Team — Individual Devices</button>';
+  h+='</div></div>';
+
+  /* Team settings (hidden by default) */
+  h+='<div id="lq-team-settings" style="display:none;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:.8rem 1rem;margin-bottom:1rem;">';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.7rem;">';
+  h+='<div id="lq-team-count-wrap"><div class="fl">Number of Teams</div><input class="fi" type="number" id="lq-team-count" value="4" min="2" max="12"></div>';
+  h+='<div id="lq-team-talk-wrap" style="display:none;"><div class="fl">Team Talk (seconds)</div><input class="fi" type="number" id="lq-team-talk" value="5" min="0" max="30"></div>';
+  h+='</div>';
+  h+='<div id="lq-pooled-note" style="display:none;font-size:.78rem;color:#64748b;margin-top:.5rem;">Students will pick or create a team name when joining.</div>';
+  h+='</div>';
+
+  /* Session settings */
   h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin-bottom:1.2rem;">';
   h+='<div><div class="fl">Session Name</div><input class="fi" id="lq-name" placeholder="e.g. Grade 9 IT Quiz"></div>';
   h+='<div><div class="fl">Timer (seconds)</div><input class="fi" type="number" id="lq-timer" value="30" min="5" max="120"></div>';
@@ -10004,6 +10023,19 @@ function lqSetSource(src){
   } else {
     lqPreviewCount();
   }
+}
+
+function lqSetMode(mode){
+  ['individual','shared','pooled'].forEach(function(m){
+    var btn=document.getElementById('lq-mode-'+m);
+    if(btn) btn.className='cls-tab'+(m===mode?' active':'');
+  });
+  var teamSettings=document.getElementById('lq-team-settings');
+  var teamTalkWrap=document.getElementById('lq-team-talk-wrap');
+  var pooledNote=document.getElementById('lq-pooled-note');
+  if(teamSettings) teamSettings.style.display=mode==='individual'?'none':'block';
+  if(teamTalkWrap) teamTalkWrap.style.display=mode==='shared'?'block':'none';
+  if(pooledNote) pooledNote.style.display=mode==='pooled'?'block':'none';
 }
 
 /* Called when grade changes — reset term, week, topic */
@@ -10253,10 +10285,16 @@ async function lqLaunch(){
     return pub;
   });
 
+  var mode=(document.getElementById('lq-mode-shared')&&document.getElementById('lq-mode-shared').classList.contains('active'))?'shared'
+    :(document.getElementById('lq-mode-pooled')&&document.getElementById('lq-mode-pooled').classList.contains('active'))?'pooled':'individual';
+  var teamCount=parseInt((document.getElementById('lq-team-count')||{}).value||4)||4;
+  var teamTalk=parseInt((document.getElementById('lq-team-talk')||{}).value||5)||5;
+
   lqSession={
     pin:pin, name:name, timer:timer, scoreMode:scoreMode,
+    mode:mode, teamCount:teamCount, teamTalk:teamTalk,
     questions:qs, pubQuestions:pubQs,
-    currentQ:-1, /* -1 = lobby */
+    currentQ:-1,
     status:'lobby',
     createdAt:Date.now()
   };
@@ -10265,6 +10303,7 @@ async function lqLaunch(){
   lqAnswers={};
   lqScores={};
   lqPlayers={};
+  lqTeams={};
 
   /* Save session to Apps Script */
   try{
@@ -10273,6 +10312,9 @@ async function lqLaunch(){
       +'&name='+encodeURIComponent(name)
       +'&timer='+timer
       +'&scoreMode='+encodeURIComponent(scoreMode)
+      +'&mode='+encodeURIComponent(mode)
+      +'&teamCount='+teamCount
+      +'&teamTalk='+teamTalk
       +'&questions='+encodeURIComponent(JSON.stringify(pubQs))
       +'&totalQuestions='+qs.length
       +'&t='+Date.now();
@@ -10473,6 +10515,32 @@ async function lqReveal(){
     await fetch(SURL+'?action=lqReveal&pin='+encodeURIComponent(lqSession.pin)+'&currentQ='+lqCurrentIdx+'&correctAnswer='+correctAns+'&scores='+scoresParam+'&t='+Date.now(),{method:'GET',mode:'cors'});
   }catch(e){ console.warn('lqReveal error:',e); }
 
+  /* Compute team scores if team mode */
+  var mode=(lqSession&&lqSession.mode)||'individual';
+  if(mode!=='individual'){
+    lqTeams=lqComputeTeamScores();
+  }
+
+  /* Build leaderboard snapshot to push to students */
+  var lbData;
+  if(mode==='individual'){
+    lbData=Object.values(lqScores).sort(function(a,b){return b.total-a.total;}).slice(0,10).map(function(s,i){
+      return {rank:i+1,name:s.name,score:s.total,lastGain:s.lastGain||0,correct:s.lastCorrect||false};
+    });
+  } else {
+    lbData=Object.values(lqTeams).sort(function(a,b){return b.total-a.total;}).slice(0,10).map(function(t,i){
+      return {rank:i+1,name:t.name,score:t.total,lastGain:t.lastGain||0,members:t.members};
+    });
+  }
+
+  /* Push leaderboard state to server so students see it */
+  try{
+    await fetch(SURL+'?action=lqLeaderboard&pin='+encodeURIComponent(lqSession.pin)
+      +'&currentQ='+lqCurrentIdx
+      +'&leaderboard='+encodeURIComponent(JSON.stringify(lbData))
+      +'&t='+Date.now(),{method:'GET',mode:'cors'});
+  }catch(e){ console.warn('lqLeaderboard push error:',e); }
+
   lqState='reveal';
   renderLiveQuiz();
 }
@@ -10556,24 +10624,40 @@ h+='<button class="btn btn-red btn-sm" id="lq-cancel-reveal-btn">✕ Cancel</but
     h+='</div>';
   }
 
-  /* Mini leaderboard top 5 */
-  var sorted=Object.values(lqScores).sort(function(a,b){return b.total-a.total;}).slice(0,5);
-  if(sorted.length){
-    h+='<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:1rem;">';
-    h+='<div style="font-size:.76rem;font-weight:800;color:#94a3b8;margin-bottom:.7rem;">🏆 TOP 5 LEADERBOARD</div>';
+  /* Full leaderboard after this question */
+  var mode=(lqSession&&lqSession.mode)||'individual';
+  var medals=['🥇','🥈','🥉'];
+  h+='<div style="background:#1e293b;border:1px solid #334155;border-radius:10px;padding:1rem;margin-top:.5rem;">';
+  h+='<div style="font-size:.76rem;font-weight:800;color:#94a3b8;margin-bottom:.7rem;">🏆 LEADERBOARD — After Question '+(lqCurrentIdx+1)+'</div>';
+
+  if(mode==='individual'){
+    var sorted=Object.values(lqScores).sort(function(a,b){return b.total-a.total;});
     sorted.forEach(function(s,i){
-      var medals=['🥇','🥈','🥉','4️⃣','5️⃣'];
-      h+='<div style="display:flex;align-items:center;gap:10px;padding:.5rem 0;border-bottom:1px solid #334155;">';
-      h+='<span style="font-size:1.2rem;min-width:30px;">'+medals[i]+'</span>';
-      h+='<div style="flex:1;"><div style="font-weight:800;font-size:.88rem;">'+escH(s.name)+'</div>';
-      h+='<div style="font-size:.72rem;color:#64748b;">'+escH(s.cls)+'</div></div>';
+      var isTop=i<3;
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.05);">';
+      h+='<span style="font-size:'+(isTop?'1.2rem':'.82rem')+';min-width:30px;font-weight:900;color:'+(isTop?'inherit':'#64748b')+';text-align:center;">'+(isTop?medals[i]:'#'+(i+1))+'</span>';
+      h+='<div style="flex:1;"><div style="font-weight:800;font-size:.85rem;color:'+(isTop?'#fff':'#94a3b8')+';line-height:1.2;">'+escH(s.name)+'</div>';
+      h+='<div style="font-size:.68rem;color:#475569;">'+escH(s.cls)+'</div></div>';
       h+='<div style="text-align:right;">';
-      h+='<div style="font-weight:900;color:#f59e0b;font-size:.95rem;">'+s.total+'</div>';
-      if(s.lastGain>0)h+='<div style="font-size:.72rem;color:#22c55e;">+'+s.lastGain+'</div>';
+      h+='<div style="font-weight:900;color:'+(isTop?'#f59e0b':'#94a3b8')+';font-size:.9rem;">'+s.total+'</div>';
+      if(s.lastGain>0) h+='<div style="font-size:.68rem;color:#22c55e;">+'+s.lastGain+(s.lastCorrect?' ✓':' ✗')+'</div>';
       h+='</div></div>';
     });
-    h+='</div>';
+  } else {
+    var sortedTeams=Object.values(lqTeams||{}).sort(function(a,b){return b.total-a.total;});
+    sortedTeams.forEach(function(t,i){
+      var isTop=i<3;
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.05);">';
+      h+='<span style="font-size:'+(isTop?'1.2rem':'.82rem')+';min-width:30px;font-weight:900;color:'+(isTop?'inherit':'#64748b')+';text-align:center;">'+(isTop?medals[i]:'#'+(i+1))+'</span>';
+      h+='<div style="flex:1;"><div style="font-weight:800;font-size:.85rem;color:'+(isTop?'#fff':'#94a3b8')+';">'+escH(t.name)+'</div>';
+      h+='<div style="font-size:.68rem;color:#475569;">'+t.members.map(function(m){return escH(m);}).join(', ')+'</div></div>';
+      h+='<div style="text-align:right;">';
+      h+='<div style="font-weight:900;color:'+(isTop?'#f59e0b':'#94a3b8')+';font-size:.9rem;">'+t.total+'</div>';
+      if(t.lastGain>0) h+='<div style="font-size:.68rem;color:#22c55e;">+'+t.lastGain+'</div>';
+      h+='</div></div>';
+    });
   }
+  h+='</div>';
 
   return h;
 }
@@ -10595,8 +10679,55 @@ async function lqFinish(){
   renderLiveQuiz();
 }
 
+/* ── TEAM SCORE AGGREGATION ── */
+function lqComputeTeamScores(){
+  var teams={};
+  var mode=(lqSession&&lqSession.mode)||'individual';
+
+  if(mode==='shared'){
+    /* Shared device: each player IS the team — player.teamName = team */
+    Object.values(lqPlayers).forEach(function(p){
+      var tname=p.teamName||p.name;
+      var score=lqScores[p.id]||{total:0,lastGain:0};
+      teams[tname]={name:tname,total:score.total,lastGain:score.lastGain||0,members:p.members||[p.name]};
+    });
+  } else {
+    /* Pooled: aggregate individual scores by teamName */
+    var membersByTeam={};
+    var totalByTeam={};
+    var gainByTeam={};
+    var countByTeam={};
+    Object.values(lqPlayers).forEach(function(p){
+      var tname=p.teamName||'No Team';
+      if(!membersByTeam[tname]) membersByTeam[tname]=[];
+      membersByTeam[tname].push(p.name);
+      var score=lqScores[p.id]||{total:0,lastGain:0};
+      totalByTeam[tname]=(totalByTeam[tname]||0)+score.total;
+      gainByTeam[tname]=(gainByTeam[tname]||0)+(score.lastGain||0);
+      countByTeam[tname]=(countByTeam[tname]||0)+1;
+    });
+    Object.keys(membersByTeam).forEach(function(tname){
+      var cnt=countByTeam[tname]||1;
+      teams[tname]={
+        name:tname,
+        total:Math.round(totalByTeam[tname]/cnt), /* average */
+        lastGain:Math.round(gainByTeam[tname]/cnt),
+        members:membersByTeam[tname]
+      };
+    });
+  }
+  return teams;
+}
+
 function lqRenderFinalLeaderboard(){
-  var sorted=Object.values(lqScores).sort(function(a,b){return b.total-a.total;});
+  var mode=(lqSession&&lqSession.mode)||'individual';
+  var sorted;
+  if(mode==='individual'){
+    sorted=Object.values(lqScores).sort(function(a,b){return b.total-a.total;});
+  } else {
+    var teams=lqComputeTeamScores();
+    sorted=Object.values(teams).sort(function(a,b){return b.total-a.total;});
+  }
   var h='';
 
   /* ── Full-screen podium wrapper ── */
@@ -10756,6 +10887,9 @@ async function lqPoll(){
         var players=JSON.parse(srv.players);
         lqPlayers={};
         players.forEach(function(p){ lqPlayers[p.id]=p; });
+        /* Recompute team scores whenever players update */
+        var mode=(lqSession&&lqSession.mode)||'individual';
+        if(mode!=='individual') lqTeams=lqComputeTeamScores();
       }catch(e){}
     }
 
@@ -10783,9 +10917,28 @@ async function lqPoll(){
       if(countEl) countEl.textContent=playerCount;
       var chips=document.getElementById('lq-player-chips');
       if(chips){
-        chips.innerHTML=Object.values(lqPlayers).map(function(p){
-          return '<div style="background:#1e3a5f;border:1px solid #3b82f6;border-radius:8px;padding:6px 14px;font-size:.82rem;font-weight:700;">'+escH(p.name)+' <span style="color:#64748b;font-size:.72rem;">'+escH(p.cls)+'</span></div>';
-        }).join('');
+        var players=Object.values(lqPlayers);
+        var mode=(lqSession&&lqSession.mode)||'individual';
+        if(mode==='individual'){
+          chips.innerHTML=players.map(function(p){
+            return '<div style="background:#1e3a5f;border:1px solid #3b82f6;border-radius:8px;padding:6px 14px;font-size:.82rem;font-weight:700;">'+escH(p.name)+' <span style="color:#64748b;font-size:.72rem;">'+escH(p.cls)+'</span></div>';
+          }).join('');
+        } else {
+          /* Group by team */
+          var byTeam={};
+          players.forEach(function(p){
+            var t=p.teamName||'Unassigned';
+            if(!byTeam[t]) byTeam[t]=[];
+            byTeam[t].push(p);
+          });
+          chips.innerHTML=Object.keys(byTeam).map(function(tname){
+            var members=byTeam[tname];
+            return '<div style="background:#1e293b;border:1px solid #7c3aed;border-radius:10px;padding:8px 12px;min-width:120px;">'
+              +'<div style="font-size:.72rem;font-weight:900;color:#a78bfa;margin-bottom:4px;">'+escH(tname)+'</div>'
+              +members.map(function(p){return '<div style="font-size:.78rem;color:#e2e8f0;">'+escH(p.name)+'</div>';}).join('')
+              +'</div>';
+          }).join('');
+        }
       }
     }
   }catch(e){ console.warn('lqPoll error:',e); }
@@ -10815,6 +10968,7 @@ async function lqPublishJoinPage(){
 function lqBuildJoinPageHtml(){
   var tmpl=localStorage.getItem('quizJoinTemplate');
   if(tmpl){
+    /* Inject current SURL */
     var marker="var SURL = '";
     var si=tmpl.indexOf(marker);
     if(si>=0){
@@ -10823,7 +10977,7 @@ function lqBuildJoinPageHtml(){
     }
     return tmpl;
   }
-  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IT ExamPro</title></head><body><p>Please load quiz_join.html in Settings first.</p></body></html>';
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>IT ExamPro — Join Quiz</title></head><body style="font-family:sans-serif;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;min-height:100vh;"><p>No join page template found. Please go to Settings → Load Quiz Join Template.</p></body></html>';
 }
 
 /* ── EXAM CONTROL ── */
