@@ -9943,11 +9943,15 @@ function lqRenderSetup(){
 
   /* Bank filters (shown when bank selected) */
   h+='<div id="lq-bank-filters" style="margin-bottom:1.2rem;">';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:.7rem;">';
-  h+='<div><div class="fl">Grade</div><select class="fi-sel" id="lq-grade" onchange="lqUpdateTopics()"><option value="">All Grades</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option></select></div>';
-  h+='<div><div class="fl">Topic</div><select class="fi-sel" id="lq-topic"><option value="">All Topics</option></select></div>';
-  h+='<div><div class="fl">Question Type</div><select class="fi-sel" id="lq-qtype"><option value="">Mixed (MCQ + T/F)</option><option value="mcq">MCQ Only</option><option value="tf">True/False Only</option></select></div>';
-  h+='<div><div class="fl">Max Questions</div><input class="fi" type="number" id="lq-maxq" value="10" min="1" max="50" style="width:80px;"></div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;margin-bottom:.7rem;">';
+  h+='<div><div class="fl">Grade</div><select class="fi-sel" id="lq-grade" onchange="lqGradeChange()"><option value="">All Grades</option><option value="7">Grade 7</option><option value="8">Grade 8</option><option value="9">Grade 9</option><option value="10">Grade 10</option><option value="11">Grade 11</option></select></div>';
+  h+='<div><div class="fl">Term</div><select class="fi-sel" id="lq-term" onchange="lqTermChange()"><option value="">All Terms</option><option value="1">Term 1</option><option value="2">Term 2</option><option value="3">Term 3</option></select></div>';
+  h+='<div><div class="fl">Week</div><select class="fi-sel" id="lq-week" onchange="lqUpdateTopics()"><option value="">All Weeks</option></select></div>';
+  h+='</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.7rem;">';
+  h+='<div><div class="fl">Topic</div><select class="fi-sel" id="lq-topic" onchange="lqPreviewCount()"><option value="">All Topics</option></select></div>';
+  h+='<div><div class="fl">Question Type</div><select class="fi-sel" id="lq-qtype" onchange="lqPreviewCount()"><option value="">Mixed (MCQ + T/F)</option><option value="mcq">MCQ Only</option><option value="tf">True/False Only</option></select></div>';
+  h+='<div><div class="fl">Max Questions</div><input class="fi" type="number" id="lq-maxq" value="10" min="1" max="50" onchange="lqPreviewCount()"></div>';
   h+='</div></div>';
 
   /* Session settings */
@@ -9955,21 +9959,20 @@ function lqRenderSetup(){
   h+='<div><div class="fl">Session Name</div><input class="fi" id="lq-name" placeholder="e.g. Grade 9 IT Quiz"></div>';
   h+='<div><div class="fl">Timer (seconds)</div><input class="fi" type="number" id="lq-timer" value="30" min="5" max="120"></div>';
   h+='<div><div class="fl">Score Mode</div><select class="fi-sel" id="lq-scoremode"><option value="speed">⚡ Speed (faster = more points)</option><option value="accuracy">🎯 Accuracy (correct = full points)</option></select></div>';
-h+='<div><div class="fl">Points Per Question</div><select class="fi-sel" id="lq-points"><option value="1000">1000 (classic)</option><option value="500">500</option><option value="100">100</option><option value="marks">Use question marks</option></select></div>';
+  h+='<div><div class="fl">Points Per Question</div><select class="fi-sel" id="lq-points"><option value="1000">1000 (classic)</option><option value="500">500</option><option value="100">100</option><option value="marks">Use question marks</option></select></div>';
   h+='</div>';
 
   h+='<div id="lq-preview" style="margin-bottom:1rem;font-size:.82rem;color:#64748b;"></div>';
 
   h+='<button class="btn btn-green" style="padding:12px 28px;font-size:.95rem;" onclick="lqLaunch()">🚀 Launch Session</button>';
-h+='<button class="btn btn-blue btn-sm" style="margin-left:10px;" onclick="lqPublishJoinPage()">📤 Publish Join Page to GitHub</button>';
-h+='<div id="lq-publish-status" style="font-size:.78rem;margin-top:.5rem;color:#64748b;"></div>';
+  h+='<button class="btn btn-blue btn-sm" style="margin-left:10px;" onclick="lqPublishJoinPage()">📤 Publish Join Page to GitHub</button>';
+  h+='<div id="lq-publish-status" style="font-size:.78rem;margin-top:.5rem;color:#64748b;"></div>';
   h+='</div>';
   return h;
 }
 
 function lqInitSetup(){
-  lqUpdateTopics();
-  lqPreviewCount();
+  lqGradeChange();
 }
 
 function lqSetSource(src){
@@ -9979,21 +9982,99 @@ function lqSetSource(src){
   lqPreviewCount();
 }
 
+/* Called when grade changes — reset term, week, topic */
+function lqGradeChange(){
+  var termSel=document.getElementById('lq-term');
+  var weekSel=document.getElementById('lq-week');
+  if(termSel) termSel.value='';
+  if(weekSel){ weekSel.innerHTML='<option value="">All Weeks</option>'; }
+  lqUpdateTopics();
+}
+
+/* Called when term changes — rebuild week dropdown, reset topic */
+function lqTermChange(){
+  var grade=(document.getElementById('lq-grade')||{}).value||'';
+  var term=(document.getElementById('lq-term')||{}).value||'';
+  var weekSel=document.getElementById('lq-week'); if(!weekSel) return;
+
+  if(!grade||!term){
+    weekSel.innerHTML='<option value="">All Weeks</option>';
+    lqUpdateTopics();
+    return;
+  }
+
+  /* Determine week range for this term */
+  var termN=parseInt(term)||0;
+  var maxW=(grade==='11')?32:35;
+  /* T1: 1-15, T2: 16-26, T3: 27-maxW */
+  var ranges={1:[1,15],2:[16,26],3:[27,maxW]};
+  var range=ranges[termN]||[1,maxW];
+
+  /* Only show weeks that actually have questions for this grade+term */
+  var weeksWithQs={};
+  bankQs.forEach(function(q){
+    if(grade&&q.grade!==grade) return;
+    (q.scheme||[]).forEach(function(s){
+      if(s.grade===parseInt(grade)&&s.term===termN&&s.week>=range[0]&&s.week<=range[1]){
+        weeksWithQs[s.week]=true;
+      }
+    });
+  });
+
+  var weeks=Object.keys(weeksWithQs).map(Number).sort(function(a,b){return a-b;});
+  weekSel.innerHTML='<option value="">All Weeks</option>'+weeks.map(function(w){
+    return '<option value="'+w+'">Week '+w+'</option>';
+  }).join('');
+
+  lqUpdateTopics();
+}
+
+/* Rebuild topic dropdown in curriculum order; also refreshes preview count */
 function lqUpdateTopics(){
   var grade=(document.getElementById('lq-grade')||{}).value||'';
+  var term=(document.getElementById('lq-term')||{}).value||'';
+  var week=(document.getElementById('lq-week')||{}).value||'';
   var topicSel=document.getElementById('lq-topic'); if(!topicSel) return;
-  var topics={};
-  bankQs.forEach(function(q){ if((!grade||q.grade===grade)&&q.topic) topics[q.topic]=true; });
-  topicSel.innerHTML='<option value="">All Topics</option>'+Object.keys(topics).sort().map(function(t){
-    return '<option value="'+escH(t)+'">'+escH(t)+'</option>';
+
+  /* Collect topics present in the filtered question set */
+  var topicsPresent={};
+  bankQs.forEach(function(q){
+    if(q.type!=='mcq'&&q.type!=='tf') return;
+    if(grade&&q.grade!==grade) return;
+    if(term||week){
+      var termN=term?parseInt(term):0;
+      var weekN=week?parseInt(week):0;
+      var match=(q.scheme||[]).some(function(s){
+        if(grade&&s.grade!==parseInt(grade)) return false;
+        if(termN&&s.term!==termN) return false;
+        if(weekN&&s.week!==weekN) return false;
+        return true;
+      });
+      if(!match) return;
+    }
+    if(q.topic) topicsPresent[q.topic]=true;
+  });
+
+  /* Sort by curriculum order from GRADE_TOPICS */
+  var orderKey=grade||'';
+  var ordered=[];
+  var gtOrder=(GRADE_TOPICS[orderKey])||[];
+  gtOrder.forEach(function(t){ if(topicsPresent[t]) ordered.push(t); });
+  /* Append any topics not in GRADE_TOPICS order (e.g. General) */
+  Object.keys(topicsPresent).forEach(function(t){ if(ordered.indexOf(t)<0) ordered.push(t); });
+
+  var prevTopic=topicSel.value;
+  topicSel.innerHTML='<option value="">All Topics</option>'+ordered.map(function(t){
+    return '<option value="'+escH(t)+'"'+(t===prevTopic?' selected':'')+'>'+escH(t)+'</option>';
   }).join('');
+
   lqPreviewCount();
 }
 
 function lqPreviewCount(){
   var el=document.getElementById('lq-preview'); if(!el) return;
   var qs=lqBuildQuestions();
-  el.textContent=qs.length+' question(s) will be used in this session.';
+  el.textContent=qs.length+' question(s) match your filters (up to max will be used).';
 }
 
 function lqBuildQuestions(){
@@ -10012,15 +10093,29 @@ function lqBuildQuestions(){
     });
   } else {
     var grade=(document.getElementById('lq-grade')||{}).value||'';
+    var term=(document.getElementById('lq-term')||{}).value||'';
+    var week=(document.getElementById('lq-week')||{}).value||'';
     var topic=(document.getElementById('lq-topic')||{}).value||'';
     var qtype=(document.getElementById('lq-qtype')||{}).value||'';
+    var termN=term?parseInt(term):0;
+    var weekN=week?parseInt(week):0;
+
     qs=bankQs.filter(function(q){
       /* Only MCQ and True/False compatible with Live Quiz */
       if(q.type!=='mcq'&&q.type!=='tf') return false;
       if(grade&&q.grade!==grade) return false;
       if(topic&&q.topic!==topic) return false;
-      /* Empty qtype = Mixed (both MCQ and TF) */
       if(qtype&&q.type!==qtype) return false;
+      /* Week/Term filter via scheme */
+      if(termN||weekN){
+        var match=(q.scheme||[]).some(function(s){
+          if(grade&&s.grade!==parseInt(grade)) return false;
+          if(termN&&s.term!==termN) return false;
+          if(weekN&&s.week!==weekN) return false;
+          return true;
+        });
+        if(!match) return false;
+      }
       return true;
     }).map(function(q){ return Object.assign({},q,{_type:q.type}); });
     /* Shuffle */
