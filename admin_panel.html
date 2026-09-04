@@ -289,9 +289,14 @@ body{font-family:'Nunito',sans-serif;background:var(--dark);color:#fff;min-heigh
   .tbl-sticky th:first-child{background:var(--dark1);}
 
   /* ── Touch-friendly inputs and buttons ── */
-  input[type=text],input[type=number],input[type=date],
-  input[type=password],input[type=email],select,textarea{
+  input[type=text]:not(.tbl-input),input[type=number]:not(.tbl-input),
+  input[type=date],input[type=password],input[type=email],
+  select:not(.tbl-select),textarea{
     min-height:44px;font-size:16px!important;/* prevent iOS zoom */
+  }
+  /* Table cell inputs — no min-height, keep rows aligned */
+  table input[type=text],table input[type=checkbox]{
+    min-height:unset!important;font-size:14px!important;
   }
   .btn{min-height:40px;padding:8px 14px;}
   .btn-sm{min-height:36px;}
@@ -8165,6 +8170,66 @@ async function generateAndPublishStudentFile(){
   while(pos<template.length){if(template[pos]==='{'){depth++;started=true;}else if(template[pos]==='}'){ depth--;if(started&&depth===0){pos++;break;}}pos++;}
   if(template[pos]===';')pos++;
   var updated=template.substring(0,si)+'var EXAM_CONFIG = '+JSON.stringify(activeExam||examData,null,2)+';'+template.substring(pos);
+
+  /* Inject anti-cheat script if Secure Exam Mode is enabled */
+  if(localStorage.getItem('ecSecureMode')==='1'){
+    var antiCheatScript='<scr'+'ipt>'+[
+      '(function(){',
+      '  var SURL="'+SURL+'";',
+      '  var studentName=localStorage.getItem("studentName")||"Unknown";',
+      '  var MAX_VIOLATIONS=3;',
+      '  var violations={tabSwitch:0,blur:0,fullscreen:0};',
+      '  function reportViolation(type){',
+      '    violations[type]=(violations[type]||0)+1;',
+      '    var total=violations.tabSwitch+violations.blur+violations.fullscreen;',
+      '    showViolationWarning(type,total);',
+      '    fetch(SURL+"?action=ecSet&key=violation_"+encodeURIComponent(studentName)+"_"+type+"&value="+violations[type]+"&t="+Date.now()).catch(function(){});',
+      '    if(total>=MAX_VIOLATIONS){ autoSubmitExam(); }',
+      '  }',
+      '  function showViolationWarning(type,total){',
+      '    var msg=type==="tabSwitch"?"⚠️ Tab switch detected!":type==="blur"?"⚠️ Window focus lost!":"⚠️ Fullscreen exited!";',
+      '    var el=document.createElement("div");',
+      '    el.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7f1d1d;color:#fff;padding:14px;text-align:center;font-family:sans-serif;font-weight:800;font-size:1rem;";',
+      '    el.textContent=msg+" ("+total+"/'+3+' — exam auto-submits at '+3+')";',
+      '    document.body.appendChild(el);',
+      '    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},4000);',
+      '  }',
+      '  function autoSubmitExam(){',
+      '    var submitBtn=document.getElementById("submit-btn");',
+      '    if(submitBtn){submitBtn.click();}',
+      '    else{alert("Too many violations — exam has been auto-submitted.");}',
+      '  }',
+      '  /* Tab visibility */','  document.addEventListener("visibilitychange",function(){',
+      '    if(document.visibilityState==="hidden") reportViolation("tabSwitch");',
+      '  });',
+      '  /* Window blur */','  window.addEventListener("blur",function(){ reportViolation("blur"); });',
+      '  /* Fullscreen enforcement */','  document.addEventListener("fullscreenchange",function(){',
+      '    if(!document.fullscreenElement) reportViolation("fullscreen");',
+      '  });',
+      '  /* Block right-click */','  document.addEventListener("contextmenu",function(e){e.preventDefault();});',
+      '  /* Block copy/paste shortcuts */','  document.addEventListener("keydown",function(e){',
+      '    if((e.ctrlKey||e.metaKey)&&["c","v","a","u"].indexOf(e.key.toLowerCase())>=0){ e.preventDefault(); }',
+      '    if(e.key==="F12"||e.key==="F11"){e.preventDefault();}',
+      '  });',
+      '  /* Request fullscreen on load */','  window.addEventListener("load",function(){',
+      '    if(document.documentElement.requestFullscreen){',
+      '      document.documentElement.requestFullscreen().catch(function(){});',
+      '    }',
+      '  });',
+      '  /* Disable text selection on questions */','  document.addEventListener("DOMContentLoaded",function(){',
+      '    var style=document.createElement("style");',
+      '    style.textContent=".question-text,.option-text{user-select:none;-webkit-user-select:none;}";',
+      '    document.head.appendChild(style);',
+      '  });',
+      '})();'
+    ].join('\n')+'<'+'/scr'+'ipt>';
+    if(updated.indexOf('<'+'/body>')>=0){
+      updated=updated.replace('<'+'/body>',antiCheatScript+'<'+'/body>');
+    } else {
+      updated+=antiCheatScript;
+    }
+  }
+
   /* Try to push to GitHub */
   var pushed=false;
   try{
@@ -8195,6 +8260,12 @@ function generateStudentFile(){
     'await /* Embed exam config so admin panel always has the right questions */',
     '/* Embed exam config so admin panel always has the right questions */'
   );
+  /* Inject anti-cheat if Secure Exam Mode enabled */
+  if(localStorage.getItem('ecSecureMode')==='1'){
+    var acs='<scr'+'ipt>(function(){var SURL="'+SURL+'";var MAX_VIOLATIONS=3;var violations={tabSwitch:0,blur:0,fullscreen:0};function rv(type){violations[type]=(violations[type]||0)+1;var tot=violations.tabSwitch+violations.blur+violations.fullscreen;var el=document.createElement("div");el.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7f1d1d;color:#fff;padding:14px;text-align:center;font-family:sans-serif;font-weight:800;font-size:1rem;";el.textContent=(type==="tabSwitch"?"⚠️ Tab switch!":type==="blur"?"⚠️ Focus lost!":"⚠️ Fullscreen exited!")+" ("+tot+"/3 — auto-submits at 3)";document.body.appendChild(el);setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},4000);if(tot>=MAX_VIOLATIONS){var btn=document.getElementById("submit-btn");if(btn)btn.click();}}document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")rv("tabSwitch");});window.addEventListener("blur",function(){rv("blur");});document.addEventListener("fullscreenchange",function(){if(!document.fullscreenElement)rv("fullscreen");});document.addEventListener("contextmenu",function(e){e.preventDefault();});document.addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&["c","v","a","u"].indexOf(e.key.toLowerCase())>=0)e.preventDefault();if(e.key==="F12"||e.key==="F11")e.preventDefault();});window.addEventListener("load",function(){if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(function(){});});})();<'+'/scr'+'ipt>';
+    if(updated.indexOf('<'+'/body>')>=0) updated=updated.replace('<'+'/body>',acs+'<'+'/body>');
+    else updated+=acs;
+  }
   var blob=new Blob([updated],{type:'text/html'});var url=URL.createObjectURL(blob);
   var link=document.createElement('a');link.href=url;link.download='student_exam.html';link.style.display='none';
   document.body.appendChild(link);link.click();document.body.removeChild(link);setTimeout(function(){URL.revokeObjectURL(url);},2000);
@@ -11649,6 +11720,18 @@ function renderExamControl(){
   h+='<div style="font-size:1rem;font-weight:900;color:'+statusColor+';background:'+statusColor+'22;padding:.4rem 1rem;border-radius:999px;border:1px solid '+statusColor+'55;">'+statusLabel+'</div>';
   h+='</div>';
 
+  /* Secure Exam Mode toggle */
+  var secureMode=localStorage.getItem('ecSecureMode')==='1';
+  h+='<div style="display:flex;align-items:center;gap:.7rem;padding:.6rem .8rem;background:#0f172a;border-radius:8px;margin-bottom:.8rem;">';
+  h+='<span style="font-size:1.1rem;">🔒</span>';
+  h+='<div style="flex:1;"><div style="font-weight:800;font-size:.85rem;color:#e2e8f0;">Secure Exam Mode</div>';
+  h+='<div style="font-size:.72rem;color:#64748b;">Fullscreen + tab detection + violation logging</div></div>';
+  h+='<label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">';
+  h+='<input type="checkbox" '+(secureMode?'checked':'')+' onchange="ecToggleSecureMode(this.checked)" style="opacity:0;width:0;height:0;position:absolute;">';
+  h+='<span onclick="ecToggleSecureMode(!'+secureMode+')" style="display:block;position:absolute;inset:0;background:'+(secureMode?'#22c55e':'#334155')+';border-radius:24px;transition:.3s;cursor:pointer;"></span>';
+  h+='<span style="position:absolute;left:'+(secureMode?'22':'2')+'px;top:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.3s;pointer-events:none;"></span>';
+  h+='</label></div>';
+
   /* Control buttons */
   h+='<div class="ec-btn-row" style="display:flex;gap:.8rem;flex-wrap:wrap;">';
 
@@ -11685,6 +11768,26 @@ function renderExamControl(){
   h+='<br><b style="color:#e2e8f0;">Student link:</b> <a href="https://travisec.github.io/Online-quiz/student_exam.html" target="_blank" style="color:#3B82F6;">travisec.github.io/Online-quiz/student_exam.html</a>';
   h+='</div></div>';
 
+  /* Violation log panel */
+  var violations=JSON.parse(localStorage.getItem('ecViolations')||'{}');
+  var vKeys=Object.keys(violations);
+  if(vKeys.length){
+    h+='<div class="ed-card" style="margin-top:1rem;">';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;">';
+    h+='<div style="font-weight:800;font-size:.9rem;color:#fca5a5;">⚠️ Violations Detected</div>';
+    h+='<button class="btn btn-ghost btn-sm" style="font-size:.72rem;" onclick="ecClearViolations()">🗑 Clear</button>';
+    h+='</div>';
+    vKeys.forEach(function(name){
+      var v=violations[name];
+      var total=(v.tabSwitch||0)+(v.blur||0)+(v.fullscreen||0);
+      var severity=total>=5?'#ef4444':total>=2?'#f59e0b':'#64748b';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:.4rem .5rem;border-radius:6px;margin-bottom:.3rem;background:rgba(239,68,68,.06);">';
+      h+='<span style="font-weight:800;font-size:.82rem;color:'+severity+';">'+escH(name)+'</span>';
+      h+='<span style="font-size:.72rem;color:#94a3b8;">Tab: '+(v.tabSwitch||0)+' | Blur: '+(v.blur||0)+' | FS: '+(v.fullscreen||0)+'</span>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
   el.innerHTML=h;
   ecWireButtons();
   ecStartPolling();
@@ -11737,6 +11840,30 @@ async function ecSend(action, timer, newStatus){
 }
 
 /* ── POLLING ── */
+/* ── SECURE EXAM MODE ── */
+function ecToggleSecureMode(enabled){
+  localStorage.setItem('ecSecureMode',enabled?'1':'0');
+  fetch(SURL+'?action=ecSet&key=secureMode&value='+(enabled?'1':'0')+'&t='+Date.now(),{method:'GET',mode:'cors'})
+    .catch(function(e){console.warn('ecSet secureMode error:',e);});
+  renderExamControl();
+  showToast('Secure Exam Mode '+(enabled?'enabled 🔒':'disabled'),'success');
+}
+
+function ecClearViolations(){
+  localStorage.removeItem('ecViolations');
+  renderExamControl();
+  showToast('Violation log cleared','success');
+}
+
+/* Receive a violation report pushed by the student exam page via the sheet */
+function ecReceiveViolation(studentName,type){
+  var violations=JSON.parse(localStorage.getItem('ecViolations')||'{}');
+  if(!violations[studentName]) violations[studentName]={tabSwitch:0,blur:0,fullscreen:0,log:[]};
+  violations[studentName][type]=(violations[studentName][type]||0)+1;
+  violations[studentName].log.push({type:type,time:new Date().toLocaleTimeString()});
+  localStorage.setItem('ecViolations',JSON.stringify(violations));
+}
+
 function ecStartPolling(){
   ecStopPolling();
   ecPollTimer=setInterval(ecPoll, 3000);
