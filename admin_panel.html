@@ -5543,53 +5543,25 @@ function renderSubjectRegister(){
   });
   if(curW) weeks.push({name:'Wk '+wkNum,count:curWC});
 
-  /* ── Split layout: left=names fixed, right=dates scrollable ── */
-  h+='<div style="display:flex;border:1px solid #334155;border-radius:8px;overflow:hidden;margin-bottom:.8rem;">';
-
-  /* LEFT — fixed name columns */
-  h+='<div style="flex-shrink:0;border-right:2px solid #3b82f6;">';
-  h+='<table style="border-collapse:collapse;font-size:.78rem;">';
-  h+='<thead>';
-  h+='<tr>';
-  h+='<th style="'+SR_STH_STICKY+'width:32px;">No.</th>';
-  h+='<th style="'+SR_STH_STICKY2+'min-width:90px;">Surname</th>';
-  h+='<th style="'+SR_STH_STICKY3+'min-width:80px;">First Name</th>';
-  h+='</tr>';
-  h+='<tr><th colspan="3" style="'+SR_STH2+'white-space:nowrap;position:sticky;left:0;z-index:3;">IT — '+escH(cls)+'</th></tr>';
-  h+='<tr><th colspan="3" style="'+SR_STH2+'position:sticky;left:0;z-index:3;">Name / Date</th></tr>';
-  h+='</thead><tbody>';
-  students.forEach(function(stu,si){
-    var bg=si%2===0?'#111827':'#1A1D23';
-    h+='<tr style="background:'+bg+'">';
-    h+='<td style="'+SR_STD_STICKY+'color:#64748b;">'+stu.no+'</td>';
-    h+='<td style="'+SR_STDL_STICKY2+'font-weight:700;color:#e2e8f0;">';
-    if(stu.surname){ h+=escH(stu.surname); }
-    else{ h+='<input type="text" value="" placeholder="Surname" style="background:transparent;border:none;outline:none;color:#e2e8f0;font-weight:700;width:80px;" onchange="srUpdateStudent('+si+',\'surname\',this.value)">'; }
-    h+='</td>';
-    h+='<td style="'+SR_STDL_STICKY3+'color:#94a3b8;">';
-    if(stu.first){ h+=escH(stu.first); }
-    else{ h+='<input type="text" value="" placeholder="First" style="background:transparent;border:none;outline:none;color:#94a3b8;width:70px;" onchange="srUpdateStudent('+si+',\'first\',this.value)">'; }
-    h+='</td>';
-    h+='</tr>';
-  });
-  h+='</tbody></table></div>';
-
-  /* RIGHT — scrollable date columns */
-  h+='<div style="flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;">';
-  h+='<table style="border-collapse:collapse;font-size:.78rem;">';
+  /* ── Single table with sticky first three columns ── */
+  h+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid #334155;border-radius:8px;margin-bottom:.8rem;">';
+  h+='<table style="border-collapse:collapse;font-size:.78rem;min-width:max-content;">';
   h+='<thead>';
 
-  /* Row 1: Month */
+  /* Row 1: blank cols + months */
   h+='<tr>';
+  h+='<th style="'+SR_STH_STICKY+'width:32px;" rowspan="3">No.</th>';
+  h+='<th style="'+SR_STH_STICKY2+'min-width:90px;" rowspan="3">Surname</th>';
+  h+='<th style="'+SR_STH_STICKY3+'min-width:80px;" rowspan="3">First Name</th>';
   months.forEach(function(m){ h+='<th colspan="'+m.count+'" style="'+SR_STH+'">'+m.name+'</th>'; });
   h+='</tr>';
 
-  /* Row 2: Week */
+  /* Row 2: weeks */
   h+='<tr>';
   weeks.forEach(function(w){ h+='<th colspan="'+w.count+'" style="'+SR_STH2+'">'+w.name+'</th>'; });
   h+='</tr>';
 
-  /* Row 3: Dates */
+  /* Row 3: dates */
   h+='<tr>';
   sessions.forEach(function(s,si){
     var d=srParseDate(s.date);
@@ -5603,29 +5575,46 @@ function renderSubjectRegister(){
     h+='</th>';
   });
   h+='</tr>';
+
+  /* Class label row */
+  h+='<tr>';
+  h+='<td colspan="3" style="'+SR_STH2+'position:sticky;left:0;z-index:2;text-align:center;">IT — '+escH(cls)+'</td>';
+  h+='<td colspan="'+sessions.length+'" style="'+SR_STH2+'text-align:center;">Name / Date</td>';
+  h+='</tr>';
+
   h+='</thead><tbody>';
 
-  /* Student attendance rows */
+  /* Student rows — all in one table */
   students.forEach(function(stu,si){
     var bg=si%2===0?'#111827':'#1A1D23';
     h+='<tr style="background:'+bg+'">';
+    /* Sticky name cells */
+    h+='<td style="'+SR_STD_STICKY+'color:#64748b;background:'+bg+';vertical-align:middle;">'+stu.no+'</td>';
+    h+='<td style="'+SR_STDL_STICKY2+'font-weight:700;color:#e2e8f0;background:'+bg+';vertical-align:middle;">';
+    if(stu.surname){ h+=escH(stu.surname); }
+    else{ h+='<input type="text" value="" placeholder="Surname" style="background:transparent;border:none;outline:none;color:#e2e8f0;font-weight:700;width:80px;font-size:.78rem;" onchange="srUpdateStudent('+si+',\'surname\',this.value)">'; }
+    h+='</td>';
+    h+='<td style="'+SR_STDL_STICKY3+'color:#94a3b8;background:'+bg+';vertical-align:middle;">';
+    if(stu.first){ h+=escH(stu.first); }
+    else{ h+='<input type="text" value="" placeholder="First" style="background:transparent;border:none;outline:none;color:#94a3b8;width:70px;font-size:.78rem;" onchange="srUpdateStudent('+si+',\'first\',this.value)">'; }
+    h+='</td>';
+    /* Date checkbox cells */
     sessions.forEach(function(s,ssi){
       var d=srParseDate(s.date);
       var isPast=d<today;
       var checked=!!(s.attendance&&s.attendance[si]);
       var cellBg=checked?'background:rgba(16,185,129,.15);':'';
-      h+='<td style="'+SR_STD+cellBg+'">';
+      h+='<td style="'+SR_STD+cellBg+'vertical-align:middle;">';
       if(isPast){
         h+='<span style="font-size:1rem;color:'+(checked?'#10B981':'#334155')+'">'+(checked?'✓':'—')+'</span>';
       } else {
-        h+='<input type="checkbox"'+(checked?' checked':'')+' style="width:16px;height:16px;accent-color:#10B981;cursor:pointer;" onchange="srToggle('+ssi+','+si+',this.checked)">';
+        h+='<input type="checkbox"'+(checked?' checked':'')+' style="width:18px;height:18px;accent-color:#10B981;cursor:pointer;display:block;margin:auto;" onchange="srToggle('+ssi+','+si+',this.checked)">';
       }
       h+='</td>';
     });
     h+='</tr>';
   });
   h+='</tbody></table></div>';
-  h+='</div>'; /* end split layout */
 
   /* Summary cards */
   var totalPresent=0;
