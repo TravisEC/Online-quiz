@@ -2670,7 +2670,11 @@ function buildConfigMap(cfg){
     (mq.pairs||[]).forEach(function(p){map.match[p.left]=p.right;});
   });
   /* Multi-select */
-  (cfg.multiSelect||[]).forEach(function(q,i){map.ms['MultiSelect Q'+(i+1)]=q;});
+  (cfg.multiSelect||[]).forEach(function(q,i){
+    map.ms['MultiSelect Q'+(i+1)]=q;
+    map.ms['Multi Select Q'+(i+1)]=q;
+    map.ms['MS Q'+(i+1)]=q;
+  });
   /* Essay — keyed by "Essay Q1", "Essay Q2" etc */
   (cfg.essay||[]).forEach(function(q,i){map.essay['Essay Q'+(i+1)]=q;});
   return map;
@@ -2868,7 +2872,7 @@ function buildAcc(rows){
     var tfKs  =keys.filter(function(k){return /^TF Q\d+$/.test(k);});
     var fillKs=keys.filter(function(k){return /^Fill Q\d+$/.test(k);});
     var matchKs=keys.filter(function(k){return /^Match \d+ .+/.test(k);});
-    var msKs  =keys.filter(function(k){return /^MultiSelect Q\d+$/.test(k);});
+    var msKs  =keys.filter(function(k){return /^MultiSelect Q\d+$/.test(k)||/^Multi Select Q\d+$/.test(k)||/^MS Q\d+$/.test(k);});
     var essAKs=keys.filter(function(k){return /^Essay Q\d+_Answer$/.test(k);});
     var essMKs=keys.filter(function(k){return /^Essay Q\d+_AutoMark$/.test(k);});
 
@@ -2994,7 +2998,7 @@ function buildAcc(rows){
       msKs.forEach(function(k){
         var q=cfgMap.ms[k];
         var corr=q?(q.correct||[]).map(function(j){return L[j]+') '+q.opts[j];}).join(', '):'—';
-        var qNum=k.replace('MultiSelect Q','');
+        var qNum=k.replace('MultiSelect Q','').replace('Multi Select Q','').replace('MS Q','');
         html+='<tr><td style="'+TD+'font-family:monospace;font-size:.72rem;color:#64748b;">Q'+qNum+'</td>';
         html+='<td style="'+TD+'">'+escH(q?q.q:k)+'</td>';
         html+='<td style="'+TD+'font-weight:700;color:#a855f7;">'+escH(String(r[k]||'Not answered'))+'</td>';
@@ -3452,7 +3456,7 @@ function saveToRecords(s, overrideScore){
     var corr=cfgMap.match[term]||'—';
     breakdown.push({section:'Matching',qnum:term,question:term,studentAns:ans,correctAns:corr,marks:isC?1:0,maxMarks:1,correct:isC});
   });
-  keys.filter(function(k){return /^MultiSelect Q\d+$/.test(k);}).sort(function(a,b){return parseInt(a.replace(/\D/g,''))-parseInt(b.replace(/\D/g,''));}).forEach(function(k){
+  keys.filter(function(k){return /^MultiSelect Q\d+$/.test(k)||/^Multi Select Q\d+$/.test(k)||/^MS Q\d+$/.test(k);}).sort(function(a,b){return parseInt(a.replace(/\D/g,''))-parseInt(b.replace(/\D/g,''));}).forEach(function(k){
     var v=String(s[k]||''); var q=cfgMap.ms[k];
     var corr=q?(q.correct||[]).map(function(j){return L[j]+') '+q.opts[j];}).join(', '):'—';
     breakdown.push({section:'Multi-Select',qnum:k.replace('MultiSelect Q',''),question:q?q.q:k,studentAns:v,correctAns:corr,marks:0,maxMarks:q?q.marks:2,correct:false,partial:true});
