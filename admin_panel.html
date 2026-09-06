@@ -8166,7 +8166,21 @@ async function generateAndPublishStudentFile(){
   var depth=0,pos=si+marker.length,started=false;
   while(pos<template.length){if(template[pos]==='{'){depth++;started=true;}else if(template[pos]==='}'){ depth--;if(started&&depth===0){pos++;break;}}pos++;}
   if(template[pos]===';')pos++;
-  var updated=template.substring(0,si)+'var EXAM_CONFIG = '+JSON.stringify(activeExam||examData,null,2)+';'+template.substring(pos);
+  var examToPublish=JSON.parse(JSON.stringify(activeExam||examData||{}));
+  examToPublish._publishedAt=Date.now();
+  var updated=template.substring(0,si)+'var EXAM_CONFIG = '+JSON.stringify(examToPublish,null,2)+';'+template.substring(pos);
+
+  /* ── Cache busting: inject no-cache meta + version comment ── */
+  var vStamp='<!-- ExamPro v'+Date.now()+' -->';
+  /* Add version comment at top */
+  updated=vStamp+'\n'+updated;
+  /* Inject no-cache headers into <head> so browsers always fetch fresh */
+  var noCacheMeta='<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">';
+  if(updated.indexOf('<head>')>=0){
+    updated=updated.replace('<head>','<head>'+noCacheMeta);
+  } else if(updated.indexOf('<meta charset')>=0){
+    updated=updated.replace('<meta charset',''+noCacheMeta+'<meta charset');
+  }
 
   /* Inject anti-cheat script if Secure Exam Mode is enabled */
   if(localStorage.getItem('ecSecureMode')==='1'){
@@ -8248,6 +8262,9 @@ function generateStudentFile(){
   while(pos<template.length){if(template[pos]==='{'){depth++;started=true;}else if(template[pos]==='}'){ depth--;if(started&&depth===0){pos++;break;}}pos++;}
   if(template[pos]===';')pos++;
   var updated=template.substring(0,si)+'var EXAM_CONFIG = '+JSON.stringify(activeExam,null,2)+';'+template.substring(pos);
+  /* Cache bust for local download too */
+  var noCacheMeta2='<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">';
+  if(updated.indexOf('<head>')>=0) updated=updated.replace('<head>','<head>'+noCacheMeta2);
   /* Fix any broken await comment from old template versions */
   updated=updated.replace(
     'await /* Embed compact exam config so admin panel never needs to load it manually */',
