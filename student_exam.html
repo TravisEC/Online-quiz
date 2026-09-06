@@ -1,4 +1,4 @@
-<!-- ExamPro v1788733256919 -->
+<!-- ExamPro v1788733532881 -->
 <!DOCTYPE html>
 <html lang="en">
 <head><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
@@ -265,7 +265,7 @@ var EXAM_CONFIG = {
     }
   ],
   "essay": [],
-  "_publishedAt": 1788733256919
+  "_publishedAt": 1788733532880
 };
 
 /* ── CONFIG ── */
@@ -824,59 +824,5 @@ function ecStartPolling(){
 render();
 ecStartPolling();
 </script>
-<script>(function(){
-  var SURL="https://script.google.com/macros/s/AKfycbxrrDxbVlTP1u5oyR776zVOfG3gTMK1mIPFeh9qFIbTFYaOA8RL5tFseH99-c0JTq7p/exec";
-  var studentName=localStorage.getItem("studentName")||"Unknown";
-  var MAX_VIOLATIONS=3;
-  var violations={tabSwitch:0,blur:0,fullscreen:0};
-  function reportViolation(type){
-    violations[type]=(violations[type]||0)+1;
-    var total=violations.tabSwitch+violations.blur+violations.fullscreen;
-    showViolationWarning(type,total);
-    fetch(SURL+"?action=ecSet&key=violation_"+encodeURIComponent(studentName)+"_"+type+"&value="+violations[type]+"&t="+Date.now()).catch(function(){});
-    if(total>=MAX_VIOLATIONS){ autoSubmitExam(); }
-  }
-  function showViolationWarning(type,total){
-    var msg=type==="tabSwitch"?"⚠️ Tab switch detected!":type==="blur"?"⚠️ Window focus lost!":"⚠️ Fullscreen exited!";
-    var el=document.createElement("div");
-    el.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99999;background:#7f1d1d;color:#fff;padding:14px;text-align:center;font-family:sans-serif;font-weight:800;font-size:1rem;";
-    el.textContent=msg+" ("+total+"/3 — exam auto-submits at 3)";
-    document.body.appendChild(el);
-    setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},4000);
-  }
-  function autoSubmitExam(){
-    var submitBtn=document.getElementById("submit-btn");
-    if(submitBtn){submitBtn.click();}
-    else{alert("Too many violations — exam has been auto-submitted.");}
-  }
-  /* Tab visibility */
-  document.addEventListener("visibilitychange",function(){
-    if(document.visibilityState==="hidden") reportViolation("tabSwitch");
-  });
-  /* Window blur */
-  window.addEventListener("blur",function(){ reportViolation("blur"); });
-  /* Fullscreen enforcement */
-  document.addEventListener("fullscreenchange",function(){
-    if(!document.fullscreenElement) reportViolation("fullscreen");
-  });
-  /* Block right-click */
-  document.addEventListener("contextmenu",function(e){e.preventDefault();});
-  /* Block copy/paste shortcuts */
-  document.addEventListener("keydown",function(e){
-    if((e.ctrlKey||e.metaKey)&&["c","v","a","u"].indexOf(e.key.toLowerCase())>=0){ e.preventDefault(); }
-    if(e.key==="F12"||e.key==="F11"){e.preventDefault();}
-  });
-  /* Request fullscreen on load */
-  window.addEventListener("load",function(){
-    if(document.documentElement.requestFullscreen){
-      document.documentElement.requestFullscreen().catch(function(){});
-    }
-  });
-  /* Disable text selection on questions */
-  document.addEventListener("DOMContentLoaded",function(){
-    var style=document.createElement("style");
-    style.textContent=".question-text,.option-text{user-select:none;-webkit-user-select:none;}";
-    document.head.appendChild(style);
-  });
-})();</script></body>
+</body>
 </html>
