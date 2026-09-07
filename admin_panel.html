@@ -2622,9 +2622,23 @@ function setCls(id,cls){
   localStorage.setItem('classOverrides',JSON.stringify(clsOver));cloudQueueSave('classOverrides');
 }
 function getAutoScore(s){return parseFloat(s['Auto Score']||s.Score||0)||0;}
+function awardMsMarkEl(el){
+  var sid=el.getAttribute('data-sid');
+  var qNum=el.getAttribute('data-qnum');
+  var maxMk=parseFloat(el.getAttribute('data-max'))||2;
+  var mk=Math.min(Math.max(parseFloat(el.value)||0,0),maxMk);
+  var key=sid+'_ms_'+qNum;
+  awd[key]=mk;
+  localStorage.setItem('awardedMarks',JSON.stringify(awd));
+  cloudQueueSave('awardedMarks');
+  showToast('MS Q'+qNum+' mark set to '+mk+'/'+maxMk,'success');
+}
 function getFinalScore(s){
   var id=subId(s),base=getAutoScore(s),awd=awarded[id]||{};
-  if(!Object.keys(awd).length)return Math.round(base*10)/10;
+  /* Check for any overrides (essay teacher marks or MCQ/TF manual overrides) */
+  var ovrKeys=Object.keys(awd).filter(function(k){return k.indexOf(id+'_ovr_')===0;});
+  var essKeys=Object.keys(awd).filter(function(k){return k.indexOf('Essay Q')===0&&k.indexOf('_Answer')>0;});
+  if(!ovrKeys.length&&!essKeys.length)return Math.round(base*10)/10;
   var keys=Object.keys(s);
   var essAKs=keys.filter(function(k){return k.indexOf('Essay Q')===0&&k.indexOf('_Answer')>0;});
   var essMKs=keys.filter(function(k){return k.indexOf('Essay Q')===0&&k.indexOf('_AutoMark')>0;});
@@ -2634,8 +2648,17 @@ function getFinalScore(s){
     var m=raw.match(/^(\d+(?:\.\d+)?)\//);var autoA=m?parseFloat(m[1]):0;
     if(awd[ak]!==undefined){autoEss+=autoA;teachEss+=parseFloat(awd[ak])||0;hasOvr=true;}
   });
+  /* MCQ/TF/Match/MS overrides — adjust score delta */
+  var ovrDelta=0;
+  ovrKeys.forEach(function(k){
+    /* key format: sid_ovr_mcq_1 or sid_ovr_tf_1 */
+    ovrDelta+=parseFloat(awd[k])||0;
+    hasOvr=true;
+  });
   if(!hasOvr)return Math.round(base*10)/10;
-  return Math.round((base-autoEss+teachEss)*10)/10;
+  /* For override questions: subtract auto score for those Qs and add override */
+  /* Simple approach: base + override delta - original auto for overridden Qs */
+  return Math.round((base-autoEss+teachEss+ovrDelta)*10)/10;
 }
 function maxMarks(s){return parseFloat(s['Total Marks']||40)||40;}
 function pillCls(sc,mx){var p=sc/mx*100;return p>=70?'pill-grn':p>=50?'pill-yel':'pill-red';}
@@ -2923,12 +2946,19 @@ function buildAcc(rows){
     if(mcqKs.length){
       var mcqSc=0;
       html+=secBar('#2563eb','📝 MULTIPLE CHOICE');
-      html+=tblStart(['Q#','Question','Student Answer','Correct Answer','Result']);
+      html+=tblStart(['Q#','Question','Student Answer','Correct Answer','Result','Mark']);
       mcqKs.forEach(function(k){
-        var v=String(r[k]||''),isC=v.indexOf('Correct')>-1,ans=v.split('[')[0].trim();
-        var q=cfgMap.mcq[k]; /* lookup by exact key name */
+        var v=String(r[k]||''),ans=v.split('[')[0].trim();
+        var isC=v.indexOf('[Correct]')>-1;
+        var q=cfgMap.mcq[k];
         var qText=q?q.q:k;
         var corr=q?(L[q.ans]+') '+q.opts[q.ans]):'—';
+        /* Fallback: compare answer text directly */
+        if(!isC&&q&&q.opts&&q.ans!==undefined){
+          var corrTxt=(L[q.ans]+') '+q.opts[q.ans]).trim().toLowerCase();
+          var studTxt=ans.trim().toLowerCase();
+          isC=(studTxt===corrTxt||studTxt===q.opts[q.ans].trim().toLowerCase());
+        }
         var mk=q?q.marks:2;if(isC)mcqSc+=mk;
         var qNum=k.replace('MCQ Q','');
         html+='<tr style="background:'+(isC?'rgba(34,197,94,.05)':'rgba(239,68,68,.05)')+';">';
@@ -2936,26 +2966,50 @@ function buildAcc(rows){
         html+='<td style="'+TD+'">'+escH(qText)+'</td>';
         html+='<td style="'+TD+'font-weight:700;color:'+(isC?'#22c55e':'#ef4444')+';">'+escH(ans)+'</td>';
         html+='<td style="'+TD+'color:#22c55e;font-weight:700;">'+escH(corr)+'</td>';
-        html+='<td style="'+TD+'font-weight:800;color:'+(isC?'#22c55e':'#ef4444')+';text-align:center;">'+(isC?'✅':'❌')+'</td></tr>';
+        var ovKey='mcq_'+qNum; var ovVal=awd[sid+'_ovr_'+ovKey];
+        var dispMk=ovVal!==undefined?ovVal:(isC?mk:0);
+        if(ovVal!==undefined){if(parseFloat(ovVal)>=mk){isC=true;}else if(parseFloat(ovVal)>0){isC=null;}else{isC=false;}mcqSc-=mk;mcqSc+=parseFloat(ovVal)||0;}
+        html+='<td style="'+TD+'font-weight:800;color:'+(isC===true?'#22c55e':isC===null?'#f59e0b':'#ef4444')+';text-align:center;">'+(isC===true?'✅':isC===null?'½':'❌')+'</td>';
+        html+='<td style="'+TD+'text-align:center;min-width:70px;">'
+          +'<input type="number" min="0" max="'+mk+'" step="0.5" value="'+dispMk+'" '
+          +'data-sid="'+sid+'" data-key="'+ovKey+'" data-max="'+mk+'" '
+          +'style="width:45px;padding:2px 4px;border-radius:5px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:.75rem;text-align:center;" '
+          +'onchange="saveOvrMark(this)" title="Override mark">'
+          +'<span style="font-size:.65rem;color:#475569;">/'+mk+'</span>'
+          +'</td></tr>';
       });
       html+=tblEnd();
       var mcqMax=(examD.mcq||[]).reduce(function(a,q){return a+(q.marks||0);},0);
-      html+='<div style="background:rgba(37,99,235,.15);padding:4px 12px;font-size:.78rem;font-weight:800;color:#93c5fd;text-align:right;">MCQ: '+mcqSc+(mcqMax?' / '+mcqMax:'')+'</div>';
+      html+='<div style="background:rgba(37,99,235,.15);padding:4px 12px;font-size:.78rem;font-weight:800;color:#93c5fd;text-align:right;">MCQ: '+Math.round(mcqSc*10)/10+(mcqMax?' / '+mcqMax:'')+'</div>';
     }
     /* T/F */
     if(tfKs.length){
       html+=secBar('#0d9488','✅ TRUE / FALSE');
-      html+=tblStart(['Q#','Statement','Student Answer','Correct','Result']);
+      html+=tblStart(['Q#','Statement','Student Answer','Correct','Result','Mark']);
       tfKs.forEach(function(k){
-        var v=String(r[k]||''),isC=v.indexOf('Correct')>-1,ans=v.split('[')[0].trim();
+        var v=String(r[k]||''),ans=v.split('[')[0].trim();
+        var isC=v.indexOf('[Correct]')>-1;
         var q=cfgMap.tf[k];
+        if(!isC&&q){
+          var corrTF=(q.ans===true||q.ans==='true')?'true':'false';
+          isC=ans.trim().toLowerCase()===corrTF;
+        }
         var qNum=k.replace('TF Q','');
         html+='<tr style="background:'+(isC?'rgba(34,197,94,.05)':'rgba(239,68,68,.05)')+';">';
         html+='<td style="'+TD+'font-family:monospace;font-size:.72rem;color:#64748b;">Q'+qNum+'</td>';
         html+='<td style="'+TD+'">'+escH(q?q.q:k)+'</td>';
         html+='<td style="'+TD+'font-weight:700;color:'+(isC?'#22c55e':'#ef4444')+';">'+escH(ans)+'</td>';
         html+='<td style="'+TD+'color:#22c55e;font-weight:700;">'+(q?q.ans?'True':'False':'—')+'</td>';
-        html+='<td style="'+TD+'font-weight:800;color:'+(isC?'#22c55e':'#ef4444')+';text-align:center;">'+(isC?'✅':'❌')+'</td></tr>';
+        var tfMk=q?q.marks:1; var tfOvKey='tf_'+qNum; var tfOv=awd[sid+'_ovr_'+tfOvKey];
+        var tfDisp=tfOv!==undefined?tfOv:(isC?tfMk:0);
+        html+='<td style="'+TD+'font-weight:800;color:'+(isC?'#22c55e':'#ef4444')+';text-align:center;">'+(isC?'✅':'❌')+'</td>';
+        html+='<td style="'+TD+'text-align:center;min-width:70px;">'
+          +'<input type="number" min="0" max="'+tfMk+'" step="0.5" value="'+tfDisp+'" '
+          +'data-sid="'+sid+'" data-key="'+tfOvKey+'" data-max="'+tfMk+'" '
+          +'style="width:45px;padding:2px 4px;border-radius:5px;border:1px solid #334155;background:#1e293b;color:#94a3b8;font-size:.75rem;text-align:center;" '
+          +'onchange="saveOvrMark(this)" title="Override mark">'
+          +'<span style="font-size:.65rem;color:#475569;">/'+tfMk+'</span>'
+          +'</td></tr>';
       });
       html+=tblEnd();
     }
@@ -2980,9 +3034,11 @@ function buildAcc(rows){
       html+=secBar('#db2777','🔗 MATCHING');
       html+=tblStart(['Term','Student Answer','Correct Match','Result']);
       matchKs.forEach(function(k){
-        var v=String(r[k]||''),isC=v.indexOf('Correct')>-1,ans=v.split('[')[0].trim();
+        var v=String(r[k]||''),ans=v.split('[')[0].trim();
+        var isC=v.indexOf('[Correct]')>-1;
         var term=k.replace(/^Match \d+ /,'');
-        var corr=cfgMap.match[term]||'—'; /* lookup by term name */
+        var corr=cfgMap.match[term]||'—';
+        if(!isC&&corr&&corr!=='—') isC=ans.trim().toLowerCase()===corr.trim().toLowerCase();
         html+='<tr style="background:'+(isC?'rgba(34,197,94,.05)':'rgba(239,68,68,.05)')+';">';
         html+='<td style="'+TD+'font-weight:700;color:#ec4899;">'+escH(term)+'</td>';
         html+='<td style="'+TD+'font-weight:700;color:'+(isC?'#22c55e':'#ef4444')+';">'+escH(ans)+'</td>';
@@ -2994,16 +3050,42 @@ function buildAcc(rows){
     /* Multi-select */
     if(msKs.length){
       html+=secBar('#7c3aed','☑️ MULTIPLE SELECT');
-      html+=tblStart(['Q#','Question','Student Selected','Correct Answers']);
+      html+=tblStart(['Q#','Question','Student Selected','Correct Answers','Marks']);
+      var msTotalSc=0;
       msKs.forEach(function(k){
         var q=cfgMap.ms[k];
         var corr=q?(q.correct||[]).map(function(j){return L[j]+') '+q.opts[j];}).join(', '):'—';
         var qNum=k.replace('MultiSelect Q','').replace('Multi Select Q','').replace('MS Q','');
+        /* Auto-score MS: count how many correct options student selected */
+        var maxMk=q?q.marks:2;
+        var studentSelRaw=String(r[k]||'');
+        var autoMsMark=0;
+        if(q&&q.correct&&q.opts&&studentSelRaw){
+          var corrSet=new Set((q.correct||[]).map(function(j){return (L[j]+') '+q.opts[j]).trim().toLowerCase();}));
+          var wrongSet=[];
+          var studParts=studentSelRaw.split(',').map(function(p){return p.trim().toLowerCase();}).filter(Boolean);
+          var correctHits=studParts.filter(function(p){return corrSet.has(p);}).length;
+          var wrongHits=studParts.filter(function(p){return !corrSet.has(p);}).length;
+          /* Full marks if all correct selected and none wrong; partial for partial */
+          if(correctHits===corrSet.size&&wrongHits===0) autoMsMark=maxMk;
+          else if(correctHits>0&&wrongHits===0) autoMsMark=Math.round((correctHits/corrSet.size)*maxMk*10)/10;
+        }
+        var msMark=awd[sid+'_ms_'+qNum]!==undefined?parseFloat(awd[sid+'_ms_'+qNum])||0:autoMsMark;
+        msTotalSc+=msMark;
+        var msColor=msMark>=maxMk?'#22c55e':msMark>0?'#f59e0b':'#ef4444';
         html+='<tr><td style="'+TD+'font-family:monospace;font-size:.72rem;color:#64748b;">Q'+qNum+'</td>';
         html+='<td style="'+TD+'">'+escH(q?q.q:k)+'</td>';
-        html+='<td style="'+TD+'font-weight:700;color:#a855f7;">'+escH(String(r[k]||'Not answered'))+'</td>';
-        html+='<td style="'+TD+'color:#22c55e;font-weight:700;">'+escH(corr)+'</td></tr>';
+        html+='<td style="'+TD+'font-weight:700;color:#a855f7;">'+escH(studentSelRaw||'Not answered')+'</td>';
+        html+='<td style="'+TD+'color:#22c55e;font-weight:700;">'+escH(corr)+'</td>';
+        html+='<td style="'+TD+'text-align:center;">'
+          +'<input type="number" min="0" max="'+maxMk+'" step="0.5" value="'+msMark+'" '
+          +'style="width:52px;padding:3px 4px;border-radius:5px;border:1px solid #334155;background:#1e293b;color:'+msColor+';font-weight:800;text-align:center;font-size:.82rem;" '
+          +'onchange="awardMsMarkEl(this)" data-sid="'+sid+'" data-qnum="'+qNum+'" data-max="'+maxMk+'" title="Override mark (max '+maxMk+')">'
+          +'<span style="font-size:.7rem;color:#64748b;">/'+maxMk+'</span>'
+          +'</td></tr>';
       });
+      var msMax=(examD.multiSelect||[]).reduce(function(a,q){return a+(q.marks||0);},0);
+      html+='<div style="background:rgba(124,58,237,.15);padding:4px 12px;font-size:.78rem;font-weight:800;color:#a78bfa;text-align:right;">Multi-Select: '+msTotalSc+(msMax?' / '+msMax:'')+'</div>';
       html+=tblEnd();
     }
     /* Essay */
@@ -3060,6 +3142,20 @@ function toggleAcc(id){
 }
 
 /* ── MARKS ── */
+function saveOvrMark(el){
+  var sid=el.getAttribute('data-sid');
+  var key=el.getAttribute('data-key');
+  var maxMk=parseFloat(el.getAttribute('data-max'))||1;
+  var mk=Math.min(Math.max(parseFloat(el.value)||0,0),maxMk);
+  if(!awd[sid]) awd[sid]={};
+  awd[sid+'_ovr_'+key]=mk;
+  awd[sid]=awd[sid]||{};
+  /* Store flat for getFinalScore */
+  localStorage.setItem('awardedMarks',JSON.stringify(awd));
+  cloudQueueSave('awardedMarks');
+  el.style.color=mk>=maxMk?'#22c55e':mk>0?'#f59e0b':'#94a3b8';
+  showToast(key.toUpperCase()+' mark set to '+mk+'/'+maxMk,'success');
+}
 function saveMark(ssid,fid,fkey){
   var inp=document.getElementById(fid);if(!inp)return;
   var val=parseFloat(inp.value)||0;
